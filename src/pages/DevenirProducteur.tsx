@@ -226,44 +226,22 @@ const DevenirProducteur = () => {
           </div>
         </section>
 
-        {/* Sign-up Form */}
+        {/* Sign-up CTA */}
         <section id="inscription" className="py-24 px-8">
           <div className="max-w-4xl mx-auto bg-card p-12 md:p-20 rounded-xl shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary-container/10 rounded-full -mr-32 -mt-32" />
-            <div className="relative z-10">
-              <div className="text-center mb-12">
-                <h2 className="text-4xl font-extrabold tracking-tight mb-4">Prêt à changer de dimension ?</h2>
-                <p className="text-on-surface-variant">Inscrivez-vous aujourd'hui et commencez à vendre dès demain.</p>
+            <div className="relative z-10 text-center space-y-6">
+              <h2 className="text-4xl font-extrabold tracking-tight mb-4">Prêt à changer de dimension ?</h2>
+              <p className="text-on-surface-variant max-w-lg mx-auto">Créez votre compte vendeur en quelques clics et commencez à vendre vos récoltes directement aux consommateurs de Dakar.</p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                <a href="/auth?role=seller" className="bg-primary-container text-primary-container-foreground px-10 py-5 rounded-full font-black text-xl hover:scale-[0.98] transition-all duration-300 shadow-lg shadow-primary/10 inline-block">
+                  Créer mon compte Vendeur
+                </a>
+                <a href="/auth" className="bg-surface-container-high text-foreground px-10 py-5 rounded-full font-semibold text-lg hover:bg-surface-container-highest transition-all inline-block">
+                  J'ai déjà un compte
+                </a>
               </div>
-              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-on-surface-variant ml-1">Nom complet</label>
-                    <input className="w-full bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary-container p-4" placeholder="Prénom et Nom" type="text" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-on-surface-variant ml-1">Localisation</label>
-                    <input className="w-full bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary-container p-4" placeholder="ex: Sangalkam, Kayar..." type="text" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-on-surface-variant ml-1">Type de culture principal</label>
-                  <select className="w-full bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary-container p-4">
-                    <option>Maraîchage (Légumes)</option>
-                    <option>Arboriculture (Fruits)</option>
-                    <option>Céréales</option>
-                    <option>Autre</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-on-surface-variant ml-1">Numéro de téléphone (Orange Money / Wave)</label>
-                  <input className="w-full bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary-container p-4" placeholder="77 000 00 00" type="tel" />
-                </div>
-                <button className="w-full bg-primary-container text-primary-container-foreground py-5 rounded-full font-black text-xl hover:scale-[0.98] transition-all duration-300 mt-8" type="submit">
-                  S'inscrire comme Producteur
-                </button>
-                <p className="text-center text-xs text-on-surface-variant">En vous inscrivant, vous acceptez nos conditions générales d'utilisation.</p>
-              </form>
+              <p className="text-xs text-on-surface-variant">En vous inscrivant, vous acceptez nos conditions générales d'utilisation.</p>
             </div>
           </div>
         </section>

@@ -1,8 +1,11 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const { totalItems, setIsOpen } = useCart();
+  const { user, role, signOut } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl shadow-[0_12px_40px_rgba(45,47,46,0.06)]">
@@ -12,22 +15,33 @@ const Navbar = () => {
         </Link>
         <div className="hidden md:flex items-center gap-8">
           <Link to="/" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground hover:scale-95 transition-transform duration-200">
-            Market
+            Marché
           </Link>
           <Link to="/devenir-producteur" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground hover:scale-95 transition-transform duration-200">
-            Artisans
+            Vendeurs
           </Link>
-          <a href="#" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground hover:scale-95 transition-transform duration-200">
-            Notre Histoire
-          </a>
-          <a href="#" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground hover:scale-95 transition-transform duration-200">
-            Journal
-          </a>
         </div>
         <div className="flex items-center gap-4">
-          <Link to="/dashboard" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
-            Connexion
-          </Link>
+          {user ? (
+            <>
+              {role === "seller" ? (
+                <Link to="/dashboard" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
+                  Ma Boutique
+                </Link>
+              ) : (
+                <Link to="/mes-commandes" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
+                  Mes Commandes
+                </Link>
+              )}
+              <button onClick={() => signOut()} className="font-headline font-bold text-sm text-on-surface-variant hover:text-destructive px-3 py-2">
+                <span className="material-symbols-outlined text-lg">logout</span>
+              </button>
+            </>
+          ) : (
+            <Link to="/auth" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
+              Connexion
+            </Link>
+          )}
           <button
             onClick={() => setIsOpen(true)}
             className="relative bg-primary-container text-primary-container-foreground font-headline font-extrabold uppercase tracking-tight text-sm px-6 py-2 rounded-full hover:scale-95 transition-transform duration-200"

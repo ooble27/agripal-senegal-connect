@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -43,18 +43,18 @@ const Auth = () => {
         className="w-full max-w-md"
       >
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-headline font-extrabold tracking-tighter text-primary">Agrumen</h1>
-          <p className="text-on-surface-variant mt-2">{isLogin ? "Connectez-vous à votre compte" : "Créez votre compte"}</p>
+          <Link to="/" className="text-3xl font-headline font-extrabold tracking-tighter text-primary">Agrumen</Link>
+          <p className="text-on-surface-variant mt-2 text-sm">{isLogin ? "Connectez-vous à votre compte" : "Créez votre compte"}</p>
         </div>
 
-        <div className="bg-card rounded-xl p-8 shadow-xl">
+        <div className="bg-surface-container-lowest rounded-3xl p-8">
           {!isLogin && (
             <div className="flex gap-3 mb-6">
               <button
                 type="button"
                 onClick={() => setRole("buyer")}
-                className={`flex-1 py-3 rounded-xl font-headline font-bold text-sm flex items-center justify-center gap-2 transition-all ${
-                  role === "buyer" ? "bg-primary-container text-primary-container-foreground" : "bg-surface-container text-on-surface-variant"
+                className={`flex-1 py-3.5 rounded-2xl font-headline font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+                  role === "buyer" ? "bg-primary-container text-primary-container-foreground" : "bg-surface-container-low text-on-surface-variant"
                 }`}
               >
                 <span className="material-symbols-outlined text-lg">shopping_bag</span>
@@ -63,8 +63,8 @@ const Auth = () => {
               <button
                 type="button"
                 onClick={() => setRole("seller")}
-                className={`flex-1 py-3 rounded-xl font-headline font-bold text-sm flex items-center justify-center gap-2 transition-all ${
-                  role === "seller" ? "bg-primary-container text-primary-container-foreground" : "bg-surface-container text-on-surface-variant"
+                className={`flex-1 py-3.5 rounded-2xl font-headline font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+                  role === "seller" ? "bg-primary-container text-primary-container-foreground" : "bg-surface-container-low text-on-surface-variant"
                 }`}
               >
                 <span className="material-symbols-outlined text-lg">storefront</span>
@@ -76,35 +76,35 @@ const Auth = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label className="text-sm font-semibold text-on-surface-variant mb-1 block">Nom complet</label>
+                <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Nom complet</label>
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-surface-container-low rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary-container"
+                  className="w-full bg-surface-container-low rounded-2xl p-3.5 outline-none focus:ring-2 focus:ring-primary-container text-sm"
                   placeholder="Prénom et Nom"
                   required
                 />
               </div>
             )}
             <div>
-              <label className="text-sm font-semibold text-on-surface-variant mb-1 block">Email</label>
+              <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-surface-container-low rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary-container"
+                className="w-full bg-surface-container-low rounded-2xl p-3.5 outline-none focus:ring-2 focus:ring-primary-container text-sm"
                 placeholder="votre@email.com"
                 required
               />
             </div>
             <div>
-              <label className="text-sm font-semibold text-on-surface-variant mb-1 block">Mot de passe</label>
+              <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Mot de passe</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-surface-container-low rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary-container"
+                className="w-full bg-surface-container-low rounded-2xl p-3.5 outline-none focus:ring-2 focus:ring-primary-container text-sm"
                 placeholder="••••••••"
                 required
                 minLength={6}
@@ -113,7 +113,7 @@ const Auth = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary-container text-primary-container-foreground py-4 rounded-full font-headline font-extrabold text-lg hover:scale-[0.97] transition-transform disabled:opacity-50"
+              className="w-full bg-primary-container text-primary-container-foreground py-4 rounded-full font-headline font-extrabold text-base hover:scale-[0.97] transition-transform disabled:opacity-50 mt-2"
             >
               {loading ? "Chargement..." : isLogin ? "Se connecter" : "Créer mon compte"}
             </button>

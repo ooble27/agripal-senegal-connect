@@ -9,36 +9,15 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products"> & { shops: { name: string; location: string | null; seller_id: string } | null };
 
-const testimonials = [
-  {
-    text: "En tant que restauratrice, la qualité des produits est ma priorité. Agrumen me livre des produits d'une fraîcheur incroyable.",
-    name: "Fatou B.",
-    role: "Chef de Cuisine",
-    featured: false,
-  },
-  {
-    text: "Savoir exactement qui a fait pousser mes légumes change tout. L'équité du prix payé au producteur est ce qui m'a convaincu.",
-    name: "Moussa D.",
-    role: "Ingénieur",
-    featured: true,
-  },
-  {
-    text: "L'application est tellement fluide ! Commander mon panier de la semaine prend 2 minutes, et je suis livré directement au bureau.",
-    name: "Ousmane S.",
-    role: "Client Particulier",
-    featured: false,
-  },
-];
-
 const values = [
   {
     icon: "handshake",
     title: "Équité Radicale",
-    description: "Les agriculteurs fixent leurs propres prix. Agrumen encaisse, puis paye le vendeur après validation de la commande.",
+    description: "Les vendeurs fixent leurs propres prix. Agrumen encaisse, puis paye le vendeur après validation de la commande.",
   },
   {
     icon: "temp_preferences_custom",
-    title: "Traçabilité",
+    title: "Traçabilité Complète",
     description: "Chaque produit est lié à un vendeur vérifié. Vous savez exactement d'où viennent vos achats.",
   },
   {
@@ -96,42 +75,64 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-24">
-        {/* Hero Section */}
+        {/* Hero Section — Clean gradient, no background image */}
         <section className="px-6 md:px-12 py-12 max-w-[1440px] mx-auto overflow-hidden">
-          <div className="relative rounded-xl overflow-hidden bg-surface-container-low min-h-[600px] flex items-center">
-            <div className="absolute inset-0 z-0">
-              <img
-                alt="Agriculture au Sénégal"
-                className="w-full h-full object-cover"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAoBJes82HWZeaoia4V0RuCQz1eG93U7vBumVQuOkIbkOYZ4OyPx7k6XuONUUj1skMw58FLDaOhu_rbGMvQE9A7TExBkF7LN9kEqRrnvJHxX71HtF6OBof2MxE9_ZmcqR76pr9RSigi4rY6wfQdd06Xo1ElTCGPU99TWzESAHJWGXg2jPwuRj5UOXJo_K-gz8-kkCf9hbXtqLNSkJTTOV1nhmxK3FwAEpEbXmXow9wN2RrjiX2Y9NN4NfCmsqYTFN8Mlp58D4y4aw6_"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-foreground/80 via-foreground/40 to-transparent" />
-            </div>
+          <div className="relative rounded-3xl overflow-hidden min-h-[560px] flex items-center bg-gradient-to-br from-primary via-primary/80 to-primary-container">
+            {/* Abstract shapes */}
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-primary-container/30 blur-3xl -mr-40 -mt-40" />
+            <div className="absolute bottom-0 left-1/2 w-[400px] h-[400px] rounded-full bg-tertiary/20 blur-3xl -mb-32" />
+            <div className="absolute top-1/2 right-1/4 w-64 h-64 rounded-full border-2 border-surface/10" />
+
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="relative z-10 px-8 md:px-16 w-full md:w-2/3"
+              className="relative z-10 px-8 md:px-16 w-full md:w-2/3 py-16"
             >
-              <span className="inline-block px-4 py-1.5 rounded-full bg-primary-container text-primary-container-foreground font-headline font-extrabold text-xs uppercase tracking-widest mb-6">
+              <span className="inline-block px-4 py-1.5 rounded-full bg-surface/20 backdrop-blur-sm text-surface font-headline font-extrabold text-xs uppercase tracking-widest mb-6">
                 Marketplace Agricole du Sénégal
               </span>
               <h1 className="text-5xl md:text-7xl font-headline font-extrabold text-surface tracking-tighter leading-[0.9] mb-8">
                 Achetez directement aux producteurs sénégalais.
               </h1>
-              <p className="text-xl text-surface-container-highest font-body max-w-xl leading-relaxed mb-10">
+              <p className="text-xl text-surface/80 font-body max-w-xl leading-relaxed mb-10">
                 Agrumen connecte acheteurs et vendeurs. Produits frais, prix justes, paiement sécurisé via Wave et Orange Money.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Link to="/auth" className="bg-primary-container text-primary-container-foreground px-10 py-5 rounded-full font-headline font-extrabold text-lg flex items-center gap-3 hover:scale-95 transition-transform shadow-xl">
+                <Link to="/auth" className="bg-surface text-primary px-10 py-5 rounded-full font-headline font-extrabold text-lg flex items-center gap-3 hover:scale-95 transition-transform shadow-xl">
                   Créer un compte
                   <span className="material-symbols-outlined">arrow_forward</span>
                 </Link>
-                <Link to="/devenir-producteur" className="bg-surface/10 backdrop-blur-md text-surface border border-surface/20 px-10 py-5 rounded-full font-headline font-extrabold text-lg hover:bg-surface hover:text-foreground transition-all">
+                <Link to="/devenir-producteur" className="bg-surface/10 backdrop-blur-md text-surface border border-surface/20 px-10 py-5 rounded-full font-headline font-extrabold text-lg hover:bg-surface/20 transition-all">
                   Vendre sur Agrumen
                 </Link>
               </div>
             </motion.div>
+
+            {/* Right side illustration elements */}
+            <div className="hidden lg:flex absolute right-12 top-1/2 -translate-y-1/2 flex-col gap-4 z-10">
+              <div className="bg-surface/15 backdrop-blur-md rounded-2xl p-6 w-56">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="material-symbols-outlined text-surface text-2xl">eco</span>
+                  <span className="text-surface font-headline font-bold text-sm">100% Local</span>
+                </div>
+                <p className="text-surface/70 text-xs">Produits cultivés au Sénégal par des agriculteurs vérifiés</p>
+              </div>
+              <div className="bg-surface/15 backdrop-blur-md rounded-2xl p-6 w-56 ml-8">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="material-symbols-outlined text-surface text-2xl">payments</span>
+                  <span className="text-surface font-headline font-bold text-sm">Paiement Mobile</span>
+                </div>
+                <p className="text-surface/70 text-xs">Wave & Orange Money acceptés</p>
+              </div>
+              <div className="bg-surface/15 backdrop-blur-md rounded-2xl p-6 w-56">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="material-symbols-outlined text-surface text-2xl">local_shipping</span>
+                  <span className="text-surface font-headline font-bold text-sm">Livraison Dakar</span>
+                </div>
+                <p className="text-surface/70 text-xs">Livré frais directement chez vous</p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -259,75 +260,29 @@ const Index = () => {
                 </div>
               </div>
               <Link
-                to="/auth"
+                to="/auth?role=seller"
                 className="inline-block bg-primary-container text-primary-container-foreground px-10 py-5 rounded-full font-headline font-extrabold text-lg hover:scale-95 transition-transform"
               >
                 S'inscrire comme vendeur
               </Link>
             </div>
             <div className="flex-1 relative">
-              <div className="relative w-full aspect-square md:aspect-auto md:h-[400px] rounded-lg overflow-hidden">
-                <img
-                  alt="Vendeur Agrumen"
-                  className="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuB767-96WqPQEG_urSqrAvXwpsSdTT5CnrY3tb-jo-WUUS76j8-usg5gpsPNuMoe9CjEYlwI1q1_LUt6A0GGU6Be1Ma_IlFiw12H692fG4KLCmE3aWvX8e1Emc5OnNj8s2kOCvpasqjGlnVoyUm8wBc5mbsCK6Po_ZgAGjewsJSGsVB9kQoRoEX4gsU5GEVvjPPZmuLZp4bfutS1M_IdYnBt5Z6GgCuOnJ5YyCOsc0F6ATntbAspcSSTy7LWBOP-WS5wqvfz7s7PAJx"
-                />
+              <div className="relative w-full aspect-square md:aspect-auto md:h-[400px] rounded-lg overflow-hidden bg-inverse-on-surface/10 flex items-center justify-center">
+                <div className="text-center p-8">
+                  <span className="material-symbols-outlined text-primary-container text-[80px] mb-4">agriculture</span>
+                  <p className="text-surface font-headline font-extrabold text-2xl">Vendez vos récoltes</p>
+                  <p className="text-inverse-on-surface mt-2">Directement aux consommateurs</p>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* Testimonials */}
-        <section className="py-24 px-6 md:px-12 max-w-[1440px] mx-auto bg-surface-container-low rounded-t-[4rem]">
-          <div className="text-center mb-20">
-            <span className="text-primary font-headline font-extrabold text-sm uppercase tracking-widest">Témoignages</span>
-            <h2 className="text-4xl md:text-6xl font-headline font-extrabold tracking-tighter mt-2">Ils utilisent Agrumen.</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={t.name}
-                custom={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                className={`p-10 rounded-lg flex flex-col ${
-                  t.featured
-                    ? "bg-inverse-surface text-surface scale-105 shadow-2xl relative z-10"
-                    : "bg-surface-container-lowest shadow-sm"
-                }`}
-              >
-                <div className="flex gap-1 mb-6">
-                  {[...Array(5)].map((_, j) => (
-                    <span
-                      key={j}
-                      className={`material-symbols-outlined filled ${t.featured ? "text-primary-container" : "text-primary"}`}
-                    >
-                      star
-                    </span>
-                  ))}
-                </div>
-                <p className={`text-lg font-body italic leading-relaxed mb-10 ${t.featured ? "text-inverse-on-surface" : "text-on-surface-variant"}`}>
-                  "{t.text}"
-                </p>
-                <div className="mt-auto flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center font-headline font-bold text-lg">
-                    {t.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div className={`font-headline font-extrabold ${t.featured ? "text-surface" : ""}`}>{t.name}</div>
-                    <div className={`text-xs uppercase font-bold ${t.featured ? "text-inverse-on-surface" : "text-on-surface-variant"}`}>{t.role}</div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
           </div>
         </section>
 
         {/* CTA Section */}
         <section className="py-24 px-6 md:px-12 max-w-[1440px] mx-auto text-center">
           <div className="bg-primary-container rounded-xl p-16 md:p-32 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full -mr-48 -mt-48" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-tertiary/10 rounded-full -ml-32 -mb-32" />
             <h2 className="text-5xl md:text-7xl font-headline font-extrabold text-primary-container-foreground tracking-tighter mb-8 relative z-10">
               Achetez local.<br />Soutenez nos producteurs.
             </h2>

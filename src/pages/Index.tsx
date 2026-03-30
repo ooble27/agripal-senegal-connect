@@ -221,14 +221,14 @@ const Index = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {products.map((product, i) => (
+              <Link to={`/produit/${product.id}`} key={product.id}>
               <motion.div
-                key={product.name}
                 custom={i}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
                 variants={fadeUp}
-                className="group bg-surface-container-lowest rounded-lg overflow-hidden flex flex-col hover:shadow-2xl transition-all duration-500"
+                className="group bg-surface-container-lowest rounded-lg overflow-hidden flex flex-col hover:shadow-2xl transition-all duration-500 h-full"
               >
                 <div className="relative h-64 overflow-hidden">
                   <img

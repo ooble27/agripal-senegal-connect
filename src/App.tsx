@@ -29,6 +29,7 @@ const App = () => (
             <CartDrawer />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/marche" element={<Marche />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/devenir-producteur" element={<DevenirProducteur />} />
               <Route path="/dashboard" element={<SellerDashboard />} />

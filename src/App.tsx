@@ -12,6 +12,7 @@ import Checkout from "./pages/Checkout";
 import MyOrders from "./pages/MyOrders";
 import BuyerAccount from "./pages/BuyerAccount";
 import Marche from "./pages/Marche";
+import ShopPage from "./pages/ShopPage";
 import NotFound from "./pages/NotFound";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";

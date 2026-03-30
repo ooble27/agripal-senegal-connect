@@ -80,6 +80,8 @@ const BuyerAccount = () => {
     }
   };
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   if (authLoading || !user) return null;
 
   const recentOrders = orders.slice(0, 3);
@@ -93,8 +95,6 @@ const BuyerAccount = () => {
     { id: "profile", label: "Profil", icon: "person" },
     { id: "addresses", label: "Adresses", icon: "location_on" },
   ];
-
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">

@@ -57,7 +57,7 @@ const Index = () => {
                   Découvrir le Marché
                   <span className="material-symbols-outlined">arrow_forward</span>
                 </Link>
-                <Link to="/devenir-producteur" className="bg-primary-foreground/10 backdrop-blur-md text-primary-foreground border border-primary-foreground/20 px-8 py-4 md:px-10 md:py-5 rounded-full font-headline font-extrabold text-base md:text-lg hover:bg-primary-foreground hover:text-primary transition-all text-center">
+                <Link to="/devenir-producteur" className="bg-surface/10 backdrop-blur-md text-surface border border-surface/20 px-8 py-4 md:px-10 md:py-5 rounded-full font-headline font-extrabold text-base md:text-lg hover:bg-surface hover:text-foreground transition-all text-center">
                   Devenir Vendeur
                 </Link>
               </div>

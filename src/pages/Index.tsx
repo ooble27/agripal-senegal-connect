@@ -33,17 +33,8 @@ const Index = () => {
           <div className="relative rounded-2xl md:rounded-3xl overflow-hidden bg-primary min-h-[520px] md:min-h-[700px] flex items-end md:items-center">
             {/* Abstract background pattern */}
             <div className="absolute inset-0 z-0 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary via-hsl(78,100%,14%) to-primary" />
-              {/* Decorative circles */}
-              <div className="absolute -right-20 -top-20 w-[500px] h-[500px] rounded-full border border-primary-foreground/10" />
-              <div className="absolute -right-10 -top-10 w-[400px] h-[400px] rounded-full border border-primary-foreground/8" />
-              <div className="absolute right-20 top-20 w-[300px] h-[300px] rounded-full bg-primary-foreground/5" />
-              <div className="absolute -left-32 bottom-0 w-[350px] h-[350px] rounded-full bg-primary-container/15" />
-              {/* Subtle leaf/organic shapes */}
-              <svg className="absolute right-0 top-0 w-2/3 h-full opacity-[0.07]" viewBox="0 0 600 700" fill="none">
-                <path d="M300 0C450 150 600 300 500 500C400 700 200 650 100 500C0 350 150 -150 300 0Z" fill="currentColor" className="text-primary-foreground"/>
-                <path d="M400 100C500 200 550 400 450 550C350 700 250 600 200 450C150 300 300 0 400 100Z" fill="currentColor" className="text-primary-container"/>
-              </svg>
+              <img src={heroBg} alt="Terres agricoles du Sénégal" className="w-full h-full object-cover" width={1920} height={1080} />
+              <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-foreground/85 via-foreground/60 to-foreground/20" />
             </div>
 
             <motion.div

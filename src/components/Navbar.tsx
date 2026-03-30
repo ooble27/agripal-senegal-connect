@@ -108,11 +108,11 @@ const Navbar = () => {
                   </Link>
                 ) : (
                   <Link
-                    to="/mes-commandes"
+                    to="/mon-compte"
                     onClick={() => setMobileOpen(false)}
                     className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 border-b border-border/20"
                   >
-                    Mes Commandes
+                    Mon Compte
                   </Link>
                 )}
                 <button

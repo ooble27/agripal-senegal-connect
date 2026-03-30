@@ -269,7 +269,10 @@ const Index = () => {
                       <div className="text-sm text-on-surface-variant">{product.unit}</div>
                       <div className="text-2xl font-headline font-extrabold">{product.price}</div>
                     </div>
-                    <button className="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center hover:bg-primary-container transition-colors">
+                    <button
+                      onClick={(e) => handleAddToCart(product, e)}
+                      className="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center hover:bg-primary-container transition-colors"
+                    >
                       <span className="material-symbols-outlined text-xl">add_shopping_cart</span>
                     </button>
                   </div>

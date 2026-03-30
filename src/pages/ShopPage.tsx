@@ -93,7 +93,7 @@ const ShopPage = () => {
       <main className="pt-20">
 
         {/* ═══════ HERO BANNER ═══════ */}
-        <section className="relative h-[500px] md:h-[614px] min-h-[400px] w-full overflow-hidden">
+        <section className="relative h-[420px] md:h-[614px] min-h-[350px] w-full overflow-hidden">
           <img
             src={shopHeroDefault}
             alt={`Ferme ${shop.name}`}
@@ -103,22 +103,22 @@ const ShopPage = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 via-transparent to-transparent" />
 
-          <div className="absolute bottom-0 left-0 w-full p-6 md:p-16 max-w-[1440px] mx-auto flex flex-col md:flex-row items-end justify-between gap-6">
-            <div className="flex items-center gap-4 md:gap-6">
+          <div className="absolute bottom-0 left-0 w-full p-4 md:p-16 max-w-[1440px] mx-auto flex flex-col md:flex-row items-end justify-between gap-4 md:gap-6">
+            <div className="flex items-center gap-3 md:gap-6">
               <div className="relative shrink-0">
                 {shop.logo_url ? (
-                  <img src={shop.logo_url} alt={shop.name} className="w-24 h-24 md:w-36 md:h-36 rounded-xl object-cover border-4 border-primary-container shadow-2xl" />
+                  <img src={shop.logo_url} alt={shop.name} className="w-20 h-20 md:w-36 md:h-36 rounded-xl object-cover border-4 border-primary-container shadow-2xl" />
                 ) : (
-                  <div className="w-24 h-24 md:w-36 md:h-36 rounded-xl bg-primary-container border-4 border-primary-container shadow-2xl flex items-center justify-center">
-                    <span className="material-symbols-outlined text-4xl md:text-5xl text-on-primary-container">storefront</span>
+                  <div className="w-20 h-20 md:w-36 md:h-36 rounded-xl bg-primary-container border-4 border-primary-container shadow-2xl flex items-center justify-center">
+                    <span className="material-symbols-outlined text-3xl md:text-5xl text-on-primary-container">storefront</span>
                   </div>
                 )}
-                <div className="absolute -bottom-2 -right-2 bg-primary-container text-on-primary-container px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg">
+                <div className="absolute -bottom-2 -right-2 bg-primary-container text-on-primary-container px-2 py-0.5 md:px-2.5 md:py-1 rounded-full text-[8px] md:text-[10px] font-bold uppercase tracking-widest shadow-lg">
                   Certifié Bio
                 </div>
               </div>
               <div className="text-white">
-                <h1 className="font-headline text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter mb-2">{shop.name}</h1>
+                <h1 className="font-headline text-2xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter mb-1 md:mb-2">{shop.name}</h1>
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
                     <span className="material-symbols-outlined text-primary-container text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>

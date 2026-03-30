@@ -45,7 +45,6 @@ const ProductDetail = () => {
           const product = data as Product;
           setProduct(product);
 
-          // Load seller profile for avatar
           if (product.shops?.seller_id) {
             const { data: profile } = await supabase
               .from("profiles")
@@ -55,14 +54,13 @@ const ProductDetail = () => {
             if (profile) setSellerProfile(profile);
           }
 
-          // Load related products from same shop
           supabase
             .from("products")
             .select("*, shops(name, location, seller_id, description, logo_url, city, phone)")
             .eq("shop_id", data.shop_id)
             .neq("id", data.id)
             .eq("is_active", true)
-            .limit(3)
+            .limit(4)
             .then(({ data: rel }) => {
               if (rel) setRelated(rel as Product[]);
             });
@@ -78,7 +76,7 @@ const ProductDetail = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-32 text-center">
-          <span className="material-symbols-outlined text-4xl text-on-surface-variant animate-spin">progress_activity</span>
+          <span className="material-symbols-outlined text-4xl text-muted-foreground animate-spin">progress_activity</span>
         </main>
       </div>
     );
@@ -89,9 +87,9 @@ const ProductDetail = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-32 pb-24 px-6 md:px-12 max-w-[1440px] mx-auto text-center">
-          <span className="material-symbols-outlined text-6xl text-on-surface-variant mb-6">search_off</span>
+          <span className="material-symbols-outlined text-6xl text-muted-foreground mb-6">search_off</span>
           <h1 className="text-4xl font-headline font-extrabold mb-4">Produit introuvable</h1>
-          <p className="text-on-surface-variant mb-8">Ce produit n'existe pas ou a été retiré.</p>
+          <p className="text-muted-foreground mb-8">Ce produit n'existe pas ou a été retiré.</p>
           <Link to="/" className="inline-block bg-primary text-primary-foreground px-8 py-4 rounded-full font-headline font-extrabold hover:scale-95 transition-transform">
             Retour au Marché
           </Link>
@@ -104,140 +102,209 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-24">
+      <main className="pt-24 pb-16">
         {/* Breadcrumb */}
-        <div className="px-6 md:px-12 max-w-[1440px] mx-auto py-6">
-          <nav className="flex items-center gap-2 text-sm text-on-surface-variant font-body">
+        <div className="px-6 md:px-12 max-w-[1200px] mx-auto py-4">
+          <nav className="flex items-center gap-2 text-sm text-muted-foreground font-body">
             <Link to="/" className="hover:text-primary transition-colors">Marché</Link>
             <span className="material-symbols-outlined text-base">chevron_right</span>
             <span className="text-foreground font-medium">{product.name}</span>
           </nav>
         </div>
 
-        {/* Product Hero */}
-        <section className="px-6 md:px-12 max-w-[1440px] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6 }}
-              className="relative rounded-xl overflow-hidden aspect-square bg-surface-container"
-            >
-              {product.image_url ? (
-                <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="material-symbols-outlined text-8xl text-on-surface-variant/20">eco</span>
-                </div>
-              )}
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex flex-col"
-            >
-              <h1 className="text-4xl md:text-6xl font-headline font-extrabold tracking-tighter mb-4">{product.name}</h1>
-
-              {product.description && (
-                <p className="text-lg text-on-surface-variant font-body leading-relaxed mb-8">{product.description}</p>
-              )}
-
-              <div className="flex items-end gap-4 mb-8">
-                <div>
-                  <div className="text-sm text-on-surface-variant">{product.unit}</div>
-                  <div className="text-4xl font-headline font-extrabold">{formatPrice(product.price)}</div>
-                </div>
-                <div className={`px-3 py-1 rounded-full text-xs font-bold ${product.stock > 0 ? "bg-primary-container/20 text-primary" : "bg-destructive/10 text-destructive"}`}>
-                  {product.stock > 0 ? `${product.stock} en stock` : "Épuisé"}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-4 mb-12">
-                <button
-                  onClick={() => addItem({
-                    id: product.id,
-                    name: product.name,
-                    price: formatPrice(product.price),
-                    priceNum: product.price,
-                    unit: product.unit,
-                    image: product.image_url || "/placeholder.svg",
-                    farmer: product.shops?.name || "Vendeur",
-                    shopId: product.shop_id,
-                  })}
-                  disabled={product.stock <= 0}
-                  className="flex-1 min-w-[200px] bg-primary-container text-primary-container-foreground px-8 py-5 rounded-full font-headline font-extrabold text-lg flex items-center justify-center gap-3 hover:scale-[0.97] transition-transform shadow-xl disabled:opacity-50"
-                >
-                  <span className="material-symbols-outlined">add_shopping_cart</span>
-                  Ajouter au Panier
-                </button>
-              </div>
-
-              {/* Seller Card */}
-              {product.shops && (
-                <div className="bg-surface-container-lowest rounded-2xl p-6 border border-border/30">
-                  <div className="flex items-center gap-4 mb-4">
-                    {sellerProfile?.avatar_url ? (
-                      <img
-                        src={sellerProfile.avatar_url}
-                        alt={sellerProfile.full_name}
-                        className="w-14 h-14 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-14 h-14 rounded-full bg-primary-container flex items-center justify-center">
-                        <span className="material-symbols-outlined text-primary-container-foreground text-xl">person</span>
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="font-headline font-extrabold text-lg">{product.shops.name}</h3>
-                      <div className="flex items-center gap-2 text-sm text-on-surface-variant">
-                        {product.shops.location && (
-                          <span className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-sm">location_on</span>
-                            {product.shops.location}
-                          </span>
-                        )}
-                        {product.shops.city && (
-                          <span>• {product.shops.city}</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="ml-auto">
-                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary-container/20 rounded-full text-xs font-bold text-primary">
-                        <span className="material-symbols-outlined text-sm filled">verified</span>
-                        Vérifié
-                      </span>
-                    </div>
+        {/* Product Section */}
+        <section className="px-6 md:px-12 max-w-[1200px] mx-auto">
+          <div className="bg-card rounded-3xl overflow-hidden border border-border/50">
+            <div className="grid grid-cols-1 lg:grid-cols-2">
+              {/* Image */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="aspect-square bg-muted"
+              >
+                {product.image_url ? (
+                  <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="material-symbols-outlined text-8xl text-muted-foreground/30">eco</span>
                   </div>
-                  {product.shops.description && (
-                    <p className="text-sm text-on-surface-variant leading-relaxed">{product.shops.description}</p>
+                )}
+              </motion.div>
+
+              {/* Details */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.15 }}
+                className="p-8 lg:p-12 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold uppercase tracking-wider">
+                      <span className="material-symbols-outlined text-sm">eco</span>
+                      Produit frais
+                    </span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${product.stock > 0 ? "bg-primary/15 text-primary" : "bg-destructive/10 text-destructive"}`}>
+                      {product.stock > 0 ? `${product.stock} en stock` : "Épuisé"}
+                    </span>
+                  </div>
+
+                  <h1 className="text-4xl lg:text-5xl font-headline font-extrabold tracking-tight text-foreground mb-3">
+                    {product.name}
+                  </h1>
+
+                  {product.description && (
+                    <p className="text-muted-foreground font-body text-base leading-relaxed mb-6">
+                      {product.description}
+                    </p>
                   )}
+
+                  <div className="mb-8">
+                    <span className="text-sm text-muted-foreground block mb-1">{product.unit}</span>
+                    <span className="text-4xl font-headline font-extrabold text-foreground">{formatPrice(product.price)}</span>
+                  </div>
                 </div>
-              )}
-            </motion.div>
+
+                {/* Add to cart */}
+                <div className="space-y-4">
+                  <button
+                    onClick={() => addItem({
+                      id: product.id,
+                      name: product.name,
+                      price: formatPrice(product.price),
+                      priceNum: product.price,
+                      unit: product.unit,
+                      image: product.image_url || "/placeholder.svg",
+                      farmer: product.shops?.name || "Vendeur",
+                      shopId: product.shop_id,
+                    })}
+                    disabled={product.stock <= 0}
+                    className="w-full bg-primary text-primary-foreground px-8 py-4 rounded-full font-headline font-extrabold text-lg flex items-center justify-center gap-3 hover:brightness-95 active:scale-[0.98] transition-all disabled:opacity-50"
+                  >
+                    <span className="material-symbols-outlined">add_shopping_cart</span>
+                    Ajouter au Panier
+                  </button>
+
+                  {/* Traceability badges */}
+                  <div className="flex items-center gap-3 justify-center">
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <span className="material-symbols-outlined text-sm text-primary">verified</span>
+                      Origine certifiée
+                    </span>
+                    <span className="text-border">•</span>
+                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <span className="material-symbols-outlined text-sm text-primary">local_shipping</span>
+                      Livraison Dakar
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
           </div>
         </section>
 
+        {/* Seller Profile Section */}
+        {product.shops && (
+          <section className="px-6 md:px-12 max-w-[1200px] mx-auto mt-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="bg-card rounded-3xl border border-border/50 p-8"
+            >
+              <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-6">À propos du producteur</h2>
+              <div className="flex items-start gap-5">
+                {/* Avatar */}
+                <div className="shrink-0">
+                  {sellerProfile?.avatar_url ? (
+                    <img
+                      src={sellerProfile.avatar_url}
+                      alt={sellerProfile.full_name}
+                      className="w-20 h-20 rounded-2xl object-cover"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-3xl text-primary">person</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-1">
+                    <h3 className="text-xl font-headline font-extrabold text-foreground">{product.shops.name}</h3>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-primary/10 rounded-full text-xs font-bold text-primary">
+                      <span className="material-symbols-outlined text-sm filled">verified</span>
+                      Certifié
+                    </span>
+                  </div>
+                  {sellerProfile?.full_name && (
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Géré par <span className="font-semibold text-foreground">{sellerProfile.full_name}</span>
+                    </p>
+                  )}
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                    {product.shops.location && (
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">location_on</span>
+                        {product.shops.location}
+                      </span>
+                    )}
+                    {product.shops.city && (
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">apartment</span>
+                        {product.shops.city}
+                      </span>
+                    )}
+                    {product.shops.phone && (
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">call</span>
+                        {product.shops.phone}
+                      </span>
+                    )}
+                  </div>
+                  {product.shops.description && (
+                    <p className="text-sm text-muted-foreground leading-relaxed">{product.shops.description}</p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </section>
+        )}
+
         {/* Related Products */}
         {related.length > 0 && (
-          <section className="py-24 px-6 md:px-12 max-w-[1440px] mx-auto">
-            <h2 className="text-3xl font-headline font-extrabold tracking-tighter mb-8">Du même vendeur</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+          <section className="px-6 md:px-12 max-w-[1200px] mx-auto mt-12">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-headline font-extrabold tracking-tight text-foreground">Autres produits du même vendeur</h2>
+              <Link to="/" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
+                Tout le Marché
+                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {related.map(p => (
-                <Link to={`/produit/${p.id}`} key={p.id} className="bg-surface-container-lowest rounded-lg overflow-hidden hover:shadow-xl transition-shadow">
-                  <div className="h-48 bg-surface-container">
+                <Link
+                  to={`/produit/${p.id}`}
+                  key={p.id}
+                  className="group bg-card rounded-2xl overflow-hidden border border-border/50 hover:shadow-lg transition-all"
+                >
+                  <div className="aspect-square bg-muted overflow-hidden">
                     {p.image_url ? (
-                      <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                      <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <span className="material-symbols-outlined text-4xl text-on-surface-variant/30">eco</span>
+                        <span className="material-symbols-outlined text-4xl text-muted-foreground/30">eco</span>
                       </div>
                     )}
                   </div>
-                  <div className="p-5">
-                    <h3 className="font-headline font-bold">{p.name}</h3>
-                    <div className="text-xl font-headline font-extrabold mt-2">{formatPrice(p.price)}</div>
+                  <div className="p-4">
+                    <h3 className="font-headline font-bold text-sm text-foreground mb-1">{p.name}</h3>
+                    <div className="flex items-center justify-between">
+                      <span className="text-base font-headline font-extrabold text-foreground">{formatPrice(p.price)}</span>
+                      <span className="text-xs text-muted-foreground">{p.unit}</span>
+                    </div>
                   </div>
                 </Link>
               ))}

@@ -103,6 +103,22 @@ const fadeUp = {
 };
 
 const Index = () => {
+  const { addItem } = useCart();
+
+  const handleAddToCart = (product: typeof products[0], e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      priceNum: parseInt(product.price.replace(/[.\s]/g, "").replace("FCFA", "").trim()),
+      unit: product.unit,
+      image: product.image,
+      farmer: product.farmer,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

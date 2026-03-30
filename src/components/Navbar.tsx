@@ -35,9 +35,11 @@ const Navbar = () => {
                     Ma Boutique
                   </Link>
                 ) : (
-                  <Link to="/mes-commandes" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
-                    Mes Commandes
-                  </Link>
+                  <>
+                    <Link to="/mon-compte" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
+                      Mon Compte
+                    </Link>
+                  </>
                 )}
                 <button onClick={() => signOut()} className="font-headline font-bold text-sm text-on-surface-variant hover:text-destructive px-3 py-2">
                   <span className="material-symbols-outlined text-lg">logout</span>
@@ -106,11 +108,11 @@ const Navbar = () => {
                   </Link>
                 ) : (
                   <Link
-                    to="/mes-commandes"
+                    to="/mon-compte"
                     onClick={() => setMobileOpen(false)}
                     className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 border-b border-border/20"
                   >
-                    Mes Commandes
+                    Mon Compte
                   </Link>
                 )}
                 <button

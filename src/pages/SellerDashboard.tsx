@@ -18,6 +18,7 @@ const SellerDashboard = () => {
   const [orders, setOrders] = useState<OrderItemWithProduct[]>([]);
   const [showCreateShop, setShowCreateShop] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [categories, setCategories] = useState<Tables<"categories">[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeNav, setActiveNav] = useState("overview");
@@ -41,6 +42,15 @@ const SellerDashboard = () => {
   const [prodCategory, setProdCategory] = useState("");
   const [prodImage, setProdImage] = useState<File | null>(null);
 
+  // Settings form
+  const [settingsName, setSettingsName] = useState("");
+  const [settingsDesc, setSettingsDesc] = useState("");
+  const [settingsLocation, setSettingsLocation] = useState("");
+  const [settingsCity, setSettingsCity] = useState("");
+  const [settingsPhone, setSettingsPhone] = useState("");
+  const [settingsFullName, setSettingsFullName] = useState("");
+  const [settingsUserPhone, setSettingsUserPhone] = useState("");
+
   useEffect(() => {
     if (role !== "seller") {
       navigate("/");
@@ -49,11 +59,28 @@ const SellerDashboard = () => {
     loadData();
   }, [user, role]);
 
+  // Populate settings form when shop/profile loaded
+  useEffect(() => {
+    if (shop) {
+      setSettingsName(shop.name);
+      setSettingsDesc(shop.description || "");
+      setSettingsLocation(shop.location || "");
+      setSettingsCity(shop.city || "");
+      setSettingsPhone(shop.phone || "");
+    }
+  }, [shop]);
+
+  useEffect(() => {
+    if (profile) {
+      setSettingsFullName(profile.full_name);
+      setSettingsUserPhone(profile.phone || "");
+    }
+  }, [profile]);
+
   const loadData = async () => {
     if (!user) return;
     setLoading(true);
 
-    // Load profile avatar
     const { data: prof } = await supabase.from("profiles").select("avatar_url").eq("user_id", user.id).single();
     if (prof?.avatar_url) setAvatarUrl(prof.avatar_url);
 
@@ -66,7 +93,7 @@ const SellerDashboard = () => {
       setShop(shopData);
       const [{ data: prods }, { data: orderItems }] = await Promise.all([
         supabase.from("products").select("*").eq("shop_id", shopData.id).order("created_at", { ascending: false }),
-        supabase.from("order_items").select("*, products(name, image_url)").eq("shop_id", shopData.id).order("created_at", { ascending: false }).limit(20),
+        supabase.from("order_items").select("*, products(name, image_url)").eq("shop_id", shopData.id).order("created_at", { ascending: false }).limit(50),
       ]);
       if (prods) setProducts(prods);
       if (orderItems) setOrders(orderItems as OrderItemWithProduct[]);
@@ -83,9 +110,8 @@ const SellerDashboard = () => {
     const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
     if (uploadErr) { toast.error("Erreur upload photo"); return; }
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-    const publicUrl = urlData.publicUrl;
-    await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("user_id", user.id);
-    setAvatarUrl(publicUrl);
+    await supabase.from("profiles").update({ avatar_url: urlData.publicUrl }).eq("user_id", user.id);
+    setAvatarUrl(urlData.publicUrl);
     toast.success("Photo de profil mise à jour !");
   };
 
@@ -93,12 +119,8 @@ const SellerDashboard = () => {
     e.preventDefault();
     if (!user) return;
     const { data, error } = await supabase.from("shops").insert({
-      seller_id: user.id,
-      name: shopName,
-      description: shopDesc,
-      location: shopLocation,
-      city: shopCity,
-      phone: shopPhone,
+      seller_id: user.id, name: shopName, description: shopDesc,
+      location: shopLocation, city: shopCity, phone: shopPhone,
     }).select().single();
     if (error) { toast.error(error.message); return; }
     setShop(data);
@@ -106,10 +128,27 @@ const SellerDashboard = () => {
     toast.success("Boutique créée !");
   };
 
+  const openEditProduct = (p: Product) => {
+    setEditingProduct(p);
+    setProdName(p.name);
+    setProdDesc(p.description || "");
+    setProdPrice(String(p.price));
+    setProdUnit(p.unit);
+    setProdStock(String(p.stock));
+    setProdCategory(p.category_id || "");
+    setProdImage(null);
+    setShowAddProduct(true);
+  };
+
+  const resetProductForm = () => {
+    setProdName(""); setProdDesc(""); setProdPrice(""); setProdStock(""); setProdCategory("");
+    setProdImage(null); setEditingProduct(null);
+  };
+
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!shop) return;
-    let imageUrl: string | null = null;
+    let imageUrl: string | null = editingProduct?.image_url || null;
     if (prodImage) {
       const ext = prodImage.name.split(".").pop();
       const path = `${shop.id}/${Date.now()}.${ext}`;
@@ -118,29 +157,62 @@ const SellerDashboard = () => {
       const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
       imageUrl = urlData.publicUrl;
     }
-    const { error } = await supabase.from("products").insert({
-      shop_id: shop.id,
-      name: prodName,
-      description: prodDesc,
-      price: parseInt(prodPrice),
-      unit: prodUnit,
-      stock: parseInt(prodStock) || 0,
-      category_id: prodCategory || null,
-      image_url: imageUrl,
-    });
-    if (error) { toast.error(error.message); return; }
-    toast.success("Produit ajouté !");
+
+    if (editingProduct) {
+      const { error } = await supabase.from("products").update({
+        name: prodName, description: prodDesc, price: parseInt(prodPrice),
+        unit: prodUnit, stock: parseInt(prodStock) || 0, category_id: prodCategory || null, image_url: imageUrl,
+      }).eq("id", editingProduct.id);
+      if (error) { toast.error(error.message); return; }
+      toast.success("Produit mis à jour !");
+    } else {
+      const { error } = await supabase.from("products").insert({
+        shop_id: shop.id, name: prodName, description: prodDesc, price: parseInt(prodPrice),
+        unit: prodUnit, stock: parseInt(prodStock) || 0, category_id: prodCategory || null, image_url: imageUrl,
+      });
+      if (error) { toast.error(error.message); return; }
+      toast.success("Produit ajouté !");
+    }
     setShowAddProduct(false);
-    setProdName(""); setProdDesc(""); setProdPrice(""); setProdStock(""); setProdCategory("");
-    setProdImage(null);
+    resetProductForm();
+    loadData();
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    if (!confirm("Supprimer ce produit ?")) return;
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Produit supprimé");
+    loadData();
+  };
+
+  const handleToggleProduct = async (p: Product) => {
+    const { error } = await supabase.from("products").update({ is_active: !p.is_active }).eq("id", p.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(p.is_active ? "Produit désactivé" : "Produit activé");
+    loadData();
+  };
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!shop || !user) return;
+    const [{ error: shopErr }, { error: profErr }] = await Promise.all([
+      supabase.from("shops").update({
+        name: settingsName, description: settingsDesc, location: settingsLocation,
+        city: settingsCity, phone: settingsPhone,
+      }).eq("id", shop.id),
+      supabase.from("profiles").update({
+        full_name: settingsFullName, phone: settingsUserPhone,
+      }).eq("user_id", user.id),
+    ]);
+    if (shopErr || profErr) { toast.error("Erreur lors de la sauvegarde"); return; }
+    toast.success("Paramètres mis à jour !");
     loadData();
   };
 
   const formatPrice = (n: number) => n.toLocaleString("fr-FR") + " FCFA";
-
   const totalRevenue = orders.reduce((s, o) => s + o.unit_price * o.quantity, 0);
 
-  // Chart data based on real orders grouped by week
   const chartData = orders.length > 0
     ? (() => {
         const weeks: Record<string, number> = {};
@@ -163,6 +235,7 @@ const SellerDashboard = () => {
   ];
 
   const getProductStatus = (p: Product) => {
+    if (!p.is_active) return { label: "Désactivé", cls: "bg-surface-container text-on-surface-variant" };
     if (p.stock === 0) return { label: "Épuisé", cls: "bg-destructive/10 text-destructive" };
     if (p.stock <= 10) return { label: "Stock faible", cls: "bg-tertiary/20 text-tertiary-foreground" };
     return { label: "En vente", cls: "bg-primary-container/20 text-primary" };
@@ -174,10 +247,438 @@ const SellerDashboard = () => {
     </div>
   );
 
+  // ====== SECTION RENDERERS ======
+
+  const renderOverview = () => (
+    <>
+      <div className="mb-10 mt-8">
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Bonjour, {profile?.full_name || "Vendeur"}</h1>
+        <p className="text-on-surface-variant mt-1 flex items-center gap-2">
+          <span className="material-symbols-outlined text-lg">storefront</span>
+          {shop?.name}
+        </p>
+      </div>
+
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 mb-10">
+        <div className="bg-primary-container p-5 md:p-7 rounded-3xl">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="material-symbols-outlined text-primary-container-foreground/60 text-xl">account_balance</span>
+            <span className="text-[9px] md:text-[10px] font-extrabold text-primary-container-foreground/60 uppercase tracking-[0.15em]">Solde</span>
+          </div>
+          <div className="text-xl md:text-3xl font-black text-primary-container-foreground">{formatPrice(totalRevenue)}</div>
+        </div>
+        <div className="bg-surface-container-lowest p-5 md:p-7 rounded-3xl">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="material-symbols-outlined text-on-surface-variant text-xl">trending_up</span>
+            <span className="text-[9px] md:text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Ventes</span>
+          </div>
+          <div className="text-xl md:text-3xl font-black text-foreground">{formatPrice(totalRevenue)}</div>
+        </div>
+        <div className="bg-surface-container-lowest p-5 md:p-7 rounded-3xl">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="material-symbols-outlined text-on-surface-variant text-xl">shopping_cart</span>
+            <span className="text-[9px] md:text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Commandes</span>
+          </div>
+          <div className="text-xl md:text-3xl font-black text-foreground">{orders.length}</div>
+        </div>
+        <div className="bg-surface-container-lowest p-5 md:p-7 rounded-3xl">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="material-symbols-outlined text-on-surface-variant text-xl">inventory_2</span>
+            <span className="text-[9px] md:text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Produits</span>
+          </div>
+          <div className="text-xl md:text-3xl font-black text-foreground">{products.filter(p => p.is_active).length}</div>
+        </div>
+      </div>
+
+      {/* Chart + Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+        <div className="lg:col-span-2 bg-surface-container-lowest p-6 md:p-8 rounded-3xl">
+          <h3 className="text-xl font-extrabold mb-6">Aperçu des ventes</h3>
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={chartData}>
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "hsl(var(--on-surface-variant))" }} />
+                <YAxis hide />
+                <Tooltip formatter={(value: number) => formatPrice(value)} />
+                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[200px] flex items-center justify-center text-on-surface-variant">
+              <div className="text-center">
+                <span className="material-symbols-outlined text-4xl text-on-surface-variant/30 mb-2">bar_chart</span>
+                <p className="text-sm">Les données de ventes apparaîtront ici</p>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="space-y-4">
+          <h3 className="text-xl font-extrabold">Actions Rapides</h3>
+          <button onClick={() => { resetProductForm(); setShowAddProduct(true); }} className="w-full flex items-center gap-4 bg-surface-container-lowest p-5 rounded-3xl hover:bg-surface-container-low transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-primary-container flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-primary-container-foreground">add</span>
+            </div>
+            <div className="text-left">
+              <div className="font-bold text-sm">Ajouter un produit</div>
+              <div className="text-xs text-on-surface-variant">Publier un nouveau produit</div>
+            </div>
+          </button>
+          <button onClick={() => setActiveNav("payments")} className="w-full flex items-center gap-4 bg-surface-container-lowest p-5 rounded-3xl hover:bg-surface-container-low transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-surface-container-high flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-on-surface-variant">account_balance</span>
+            </div>
+            <div className="text-left">
+              <div className="font-bold text-sm">Voir les paiements</div>
+              <div className="text-xs text-on-surface-variant">Wave / Orange Money</div>
+            </div>
+          </button>
+          <button onClick={() => avatarInputRef.current?.click()} className="w-full flex items-center gap-4 bg-surface-container-lowest p-5 rounded-3xl hover:bg-surface-container-low transition-colors">
+            <div className="w-12 h-12 rounded-2xl bg-surface-container-high flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-on-surface-variant">photo_camera</span>
+            </div>
+            <div className="text-left">
+              <div className="font-bold text-sm">Photo de profil</div>
+              <div className="text-xs text-on-surface-variant">Visible par les acheteurs</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Recent sales */}
+      <div>
+        <h3 className="text-xl font-extrabold mb-6">Dernières Ventes</h3>
+        {orders.length === 0 ? (
+          <div className="bg-surface-container-lowest rounded-3xl p-12 text-center">
+            <span className="material-symbols-outlined text-5xl text-on-surface-variant/40 mb-4">receipt_long</span>
+            <p className="font-headline font-bold text-lg">Aucune vente</p>
+            <p className="text-on-surface-variant text-sm mt-1">Vos ventes apparaîtront ici.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {orders.slice(0, 6).map(o => (
+              <div key={o.id} className="bg-surface-container-lowest rounded-3xl p-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-xs font-extrabold text-primary">
+                    {(o.products?.name || "?").slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="font-bold text-sm">{o.products?.name || "Produit"}</div>
+                    <div className="text-xs text-on-surface-variant">{o.quantity}x · {formatPrice(o.unit_price)}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-extrabold text-sm text-primary">{formatPrice(o.unit_price * o.quantity)}</div>
+                  <div className="text-[10px] text-on-surface-variant">{new Date(o.created_at).toLocaleDateString("fr-FR")}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  const renderProducts = () => (
+    <>
+      <div className="flex items-center justify-between mb-8 mt-8">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight">Mes Produits</h1>
+          <p className="text-on-surface-variant text-sm mt-1">{products.length} produit(s) au total</p>
+        </div>
+        <button
+          onClick={() => { resetProductForm(); setShowAddProduct(true); }}
+          className="bg-primary-container text-primary-container-foreground px-5 md:px-6 py-3 rounded-full font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-transform"
+        >
+          <span className="material-symbols-outlined text-lg">add</span>
+          <span className="hidden sm:inline">Nouveau Produit</span>
+        </button>
+      </div>
+
+      {products.length === 0 ? (
+        <div className="bg-surface-container-lowest rounded-3xl p-12 text-center">
+          <span className="material-symbols-outlined text-5xl text-on-surface-variant/40 mb-4">inventory_2</span>
+          <p className="font-headline font-bold text-lg mb-2">Aucun produit</p>
+          <p className="text-on-surface-variant text-sm">Ajoutez votre premier produit pour commencer à vendre.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {products.map(p => {
+            const status = getProductStatus(p);
+            return (
+              <div key={p.id} className="bg-surface-container-lowest rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  {p.image_url ? (
+                    <img src={p.image_url} alt={p.name} className="w-14 h-14 rounded-2xl object-cover shrink-0" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-2xl bg-surface-container-high flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-on-surface-variant text-2xl">eco</span>
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="font-bold text-sm truncate">{p.name}</div>
+                    <div className="text-xs text-on-surface-variant mt-0.5">{p.stock} {p.unit} · {formatPrice(p.price)}</div>
+                    <span className={`inline-block mt-1.5 px-3 py-1 rounded-full text-[10px] font-bold ${status.cls}`}>{status.label}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button onClick={() => handleToggleProduct(p)} className="p-2 rounded-full hover:bg-surface-container" title={p.is_active ? "Désactiver" : "Activer"}>
+                    <span className="material-symbols-outlined text-on-surface-variant text-lg">{p.is_active ? "visibility_off" : "visibility"}</span>
+                  </button>
+                  <button onClick={() => openEditProduct(p)} className="p-2 rounded-full hover:bg-surface-container" title="Modifier">
+                    <span className="material-symbols-outlined text-on-surface-variant text-lg">edit</span>
+                  </button>
+                  <button onClick={() => handleDeleteProduct(p.id)} className="p-2 rounded-full hover:bg-destructive/10" title="Supprimer">
+                    <span className="material-symbols-outlined text-destructive text-lg">delete</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+
+  const renderSales = () => (
+    <>
+      <div className="mb-8 mt-8">
+        <h1 className="text-3xl font-extrabold tracking-tight">Ventes</h1>
+        <p className="text-on-surface-variant text-sm mt-1">{orders.length} article(s) vendu(s)</p>
+      </div>
+
+      {/* Sales chart */}
+      <div className="bg-surface-container-lowest p-6 md:p-8 rounded-3xl mb-8">
+        <h3 className="text-lg font-extrabold mb-4">Évolution des ventes</h3>
+        {chartData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={chartData}>
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "hsl(var(--on-surface-variant))" }} />
+              <YAxis hide />
+              <Tooltip formatter={(value: number) => formatPrice(value)} />
+              <Bar dataKey="value" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-[200px] flex items-center justify-center text-on-surface-variant text-sm">
+            Aucune donnée de vente pour le moment
+          </div>
+        )}
+      </div>
+
+      {/* Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+        <div className="bg-primary-container p-6 rounded-3xl">
+          <div className="text-[10px] font-extrabold text-primary-container-foreground/60 uppercase tracking-[0.15em] mb-2">Total ventes</div>
+          <div className="text-2xl font-black text-primary-container-foreground">{formatPrice(totalRevenue)}</div>
+        </div>
+        <div className="bg-surface-container-lowest p-6 rounded-3xl">
+          <div className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em] mb-2">Articles vendus</div>
+          <div className="text-2xl font-black text-foreground">{orders.reduce((s, o) => s + o.quantity, 0)}</div>
+        </div>
+        <div className="bg-surface-container-lowest p-6 rounded-3xl">
+          <div className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em] mb-2">Panier moyen</div>
+          <div className="text-2xl font-black text-foreground">
+            {orders.length > 0 ? formatPrice(Math.round(totalRevenue / orders.length)) : "—"}
+          </div>
+        </div>
+      </div>
+
+      {/* All orders */}
+      <h3 className="text-lg font-extrabold mb-4">Toutes les ventes</h3>
+      {orders.length === 0 ? (
+        <div className="bg-surface-container-lowest rounded-3xl p-12 text-center">
+          <span className="material-symbols-outlined text-5xl text-on-surface-variant/40 mb-4">receipt_long</span>
+          <p className="font-bold text-lg">Aucune vente</p>
+          <p className="text-on-surface-variant text-sm mt-1">Vos ventes apparaîtront ici.</p>
+        </div>
+      ) : (
+        <div className="bg-surface-container-lowest rounded-3xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left min-w-[500px]">
+              <thead>
+                <tr>
+                  <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Produit</th>
+                  <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Qté</th>
+                  <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Prix unitaire</th>
+                  <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Total</th>
+                  <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map(o => (
+                  <tr key={o.id} className="border-t border-border/10">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        {o.products?.image_url ? (
+                          <img src={o.products.image_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center">
+                            <span className="material-symbols-outlined text-on-surface-variant text-sm">eco</span>
+                          </div>
+                        )}
+                        <span className="font-bold text-sm">{o.products?.name || "Produit"}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-on-surface-variant">{o.quantity}</td>
+                    <td className="px-6 py-4 text-sm">{formatPrice(o.unit_price)}</td>
+                    <td className="px-6 py-4 text-sm font-bold text-primary">{formatPrice(o.unit_price * o.quantity)}</td>
+                    <td className="px-6 py-4 text-sm text-on-surface-variant">{new Date(o.created_at).toLocaleDateString("fr-FR")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  const renderPayments = () => (
+    <>
+      <div className="mb-8 mt-8">
+        <h1 className="text-3xl font-extrabold tracking-tight">Paiements</h1>
+        <p className="text-on-surface-variant text-sm mt-1">Gérez vos revenus et virements</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
+        <div className="bg-primary-container p-8 rounded-3xl">
+          <div className="text-[10px] font-extrabold text-primary-container-foreground/60 uppercase tracking-[0.15em] mb-3">Solde disponible</div>
+          <div className="text-4xl font-black text-primary-container-foreground mb-4">{formatPrice(totalRevenue)}</div>
+          <p className="text-xs text-primary-container-foreground/70">Montant total de vos ventes cumulées</p>
+        </div>
+        <div className="bg-surface-container-lowest p-8 rounded-3xl">
+          <div className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em] mb-3">Méthodes de retrait</div>
+          <div className="space-y-3 mt-4">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-surface-container-low">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-blue-600">waves</span>
+              </div>
+              <div>
+                <div className="font-bold text-sm">Wave</div>
+                <div className="text-xs text-on-surface-variant">Virement instantané</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-surface-container-low">
+              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-orange-600">phone_android</span>
+              </div>
+              <div>
+                <div className="font-bold text-sm">Orange Money</div>
+                <div className="text-xs text-on-surface-variant">Virement mobile</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-surface-container-lowest rounded-3xl p-8 text-center">
+        <span className="material-symbols-outlined text-5xl text-on-surface-variant/30 mb-4">account_balance_wallet</span>
+        <h3 className="font-headline font-bold text-lg mb-2">Historique des virements</h3>
+        <p className="text-on-surface-variant text-sm max-w-md mx-auto">
+          L'historique de vos virements apparaîtra ici une fois que vous aurez effectué votre premier retrait.
+        </p>
+      </div>
+    </>
+  );
+
+  const renderSettings = () => (
+    <>
+      <div className="mb-8 mt-8">
+        <h1 className="text-3xl font-extrabold tracking-tight">Paramètres</h1>
+        <p className="text-on-surface-variant text-sm mt-1">Gérez votre profil et votre boutique</p>
+      </div>
+
+      <form onSubmit={handleSaveSettings} className="space-y-8 max-w-2xl">
+        {/* Profile section */}
+        <div className="bg-surface-container-lowest rounded-3xl p-6 md:p-8">
+          <h3 className="text-lg font-extrabold mb-6 flex items-center gap-2">
+            <span className="material-symbols-outlined text-on-surface-variant">person</span>
+            Mon Profil
+          </h3>
+          <div className="flex items-center gap-5 mb-6">
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              className="relative w-20 h-20 rounded-full overflow-hidden bg-surface-container-high flex items-center justify-center group shrink-0"
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profil" className="w-full h-full object-cover" />
+              ) : (
+                <span className="material-symbols-outlined text-on-surface-variant text-3xl">person</span>
+              )}
+              <div className="absolute inset-0 bg-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="material-symbols-outlined text-surface">photo_camera</span>
+              </div>
+            </button>
+            <div>
+              <div className="font-bold">{profile?.full_name || "Vendeur"}</div>
+              <div className="text-xs text-on-surface-variant">Cliquez sur la photo pour la changer</div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Nom complet</label>
+              <input value={settingsFullName} onChange={e => setSettingsFullName(e.target.value)} className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Téléphone</label>
+              <input value={settingsUserPhone} onChange={e => setSettingsUserPhone(e.target.value)} type="tel" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+            </div>
+          </div>
+        </div>
+
+        {/* Shop section */}
+        <div className="bg-surface-container-lowest rounded-3xl p-6 md:p-8">
+          <h3 className="text-lg font-extrabold mb-6 flex items-center gap-2">
+            <span className="material-symbols-outlined text-on-surface-variant">storefront</span>
+            Ma Boutique
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Nom de la boutique</label>
+              <input value={settingsName} onChange={e => setSettingsName(e.target.value)} className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Description</label>
+              <textarea value={settingsDesc} onChange={e => setSettingsDesc(e.target.value)} rows={3} className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Localisation</label>
+                <input value={settingsLocation} onChange={e => setSettingsLocation(e.target.value)} className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Ville</label>
+                <input value={settingsCity} onChange={e => setSettingsCity(e.target.value)} className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Téléphone boutique</label>
+              <input value={settingsPhone} onChange={e => setSettingsPhone(e.target.value)} type="tel" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" className="bg-primary-container text-primary-container-foreground px-8 py-4 rounded-full font-headline font-extrabold text-base hover:scale-[0.97] transition-transform">
+          Sauvegarder les modifications
+        </button>
+      </form>
+    </>
+  );
+
+  const renderContent = () => {
+    switch (activeNav) {
+      case "products": return renderProducts();
+      case "sales": return renderSales();
+      case "payments": return renderPayments();
+      case "settings": return renderSettings();
+      default: return renderOverview();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background font-body flex">
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-foreground/40 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
@@ -221,17 +722,18 @@ const SellerDashboard = () => {
 
       {/* Main Content */}
       <main className="lg:ml-72 flex-1 min-h-screen">
-        {/* Top Bar */}
         <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl px-5 md:px-10 py-4 md:py-5 flex items-center justify-between border-b border-border/20">
           <div className="flex items-center gap-3">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-full hover:bg-surface-container">
               <span className="material-symbols-outlined text-2xl">menu</span>
             </button>
-            <h3 className="text-lg font-headline font-bold text-on-surface-variant">Tableau de Bord</h3>
+            <h3 className="text-lg font-headline font-bold text-on-surface-variant">
+              {navItems.find(n => n.id === activeNav)?.label || "Tableau de Bord"}
+            </h3>
           </div>
-          <div className="flex items-center gap-4 md:gap-6">
+          <div className="flex items-center gap-4">
             <div className="text-right hidden md:block">
-              <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Solde disponible</div>
+              <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Solde</div>
               <div className="text-base font-headline font-extrabold text-primary">{formatPrice(totalRevenue)}</div>
             </div>
             <button className="relative p-2">
@@ -240,7 +742,6 @@ const SellerDashboard = () => {
             <button
               onClick={() => avatarInputRef.current?.click()}
               className="relative w-10 h-10 rounded-full overflow-hidden bg-surface-container-high flex items-center justify-center group"
-              title="Changer la photo de profil"
             >
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Profil" className="w-full h-full object-cover" />
@@ -256,10 +757,7 @@ const SellerDashboard = () => {
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={e => {
-                const file = e.target.files?.[0];
-                if (file) handleAvatarUpload(file);
-              }}
+              onChange={e => { const file = e.target.files?.[0]; if (file) handleAvatarUpload(file); }}
             />
           </div>
         </header>
@@ -268,17 +766,17 @@ const SellerDashboard = () => {
           {/* Create Shop Modal */}
           {showCreateShop && (
             <div className="fixed inset-0 bg-foreground/50 z-[100] flex items-center justify-center p-6">
-              <div className="bg-card rounded-3xl p-10 max-w-lg w-full shadow-2xl">
+              <div className="bg-card rounded-3xl p-8 md:p-10 max-w-lg w-full shadow-2xl">
                 <h2 className="text-2xl font-headline font-extrabold mb-2">Créer votre boutique</h2>
                 <p className="text-on-surface-variant text-sm mb-8">Remplissez les informations de votre boutique pour commencer à vendre.</p>
                 <form onSubmit={handleCreateShop} className="space-y-4">
-                  <input value={shopName} onChange={e => setShopName(e.target.value)} required placeholder="Nom de la boutique (ex: Ferme Keur Moussa)" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
-                  <textarea value={shopDesc} onChange={e => setShopDesc(e.target.value)} placeholder="Description de votre boutique" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" rows={3} />
+                  <input value={shopName} onChange={e => setShopName(e.target.value)} required placeholder="Nom de la boutique" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+                  <textarea value={shopDesc} onChange={e => setShopDesc(e.target.value)} placeholder="Description" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" rows={3} />
                   <div className="grid grid-cols-2 gap-4">
-                    <input value={shopLocation} onChange={e => setShopLocation(e.target.value)} placeholder="Localisation (ex: Sangalkam)" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
-                    <input value={shopCity} onChange={e => setShopCity(e.target.value)} placeholder="Ville (ex: Thiès)" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+                    <input value={shopLocation} onChange={e => setShopLocation(e.target.value)} placeholder="Localisation" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+                    <input value={shopCity} onChange={e => setShopCity(e.target.value)} placeholder="Ville" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
                   </div>
-                  <input value={shopPhone} onChange={e => setShopPhone(e.target.value)} placeholder="Téléphone (77 000 00 00)" type="tel" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+                  <input value={shopPhone} onChange={e => setShopPhone(e.target.value)} placeholder="Téléphone" type="tel" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
                   <button type="submit" className="w-full bg-primary-container text-primary-container-foreground py-4 rounded-full font-headline font-extrabold text-base hover:scale-[0.97] transition-transform mt-4">
                     Créer ma boutique
                   </button>
@@ -287,43 +785,38 @@ const SellerDashboard = () => {
             </div>
           )}
 
-          {/* Add Product Modal */}
+          {/* Add/Edit Product Modal */}
           {showAddProduct && (
             <div className="fixed inset-0 bg-foreground/50 z-[100] flex items-center justify-center p-6">
-              <div className="bg-card rounded-3xl p-10 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+              <div className="bg-card rounded-3xl p-8 md:p-10 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-6">
                   <div>
-                    <h2 className="text-2xl font-headline font-extrabold">Nouveau Produit</h2>
-                    <p className="text-on-surface-variant text-sm">Publiez un nouveau produit sur le marché.</p>
+                    <h2 className="text-2xl font-headline font-extrabold">{editingProduct ? "Modifier le Produit" : "Nouveau Produit"}</h2>
+                    <p className="text-on-surface-variant text-sm">{editingProduct ? "Modifiez les informations du produit." : "Publiez un nouveau produit sur le marché."}</p>
                   </div>
-                  <button onClick={() => setShowAddProduct(false)} className="text-on-surface-variant hover:text-foreground p-2 rounded-full hover:bg-surface-container-low">
+                  <button onClick={() => { setShowAddProduct(false); resetProductForm(); }} className="text-on-surface-variant hover:text-foreground p-2 rounded-full hover:bg-surface-container-low">
                     <span className="material-symbols-outlined">close</span>
                   </button>
                 </div>
                 <form onSubmit={handleAddProduct} className="space-y-4">
-                  <input value={prodName} onChange={e => setProdName(e.target.value)} required placeholder="Nom du produit (ex: Carottes de Niayes)" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
-                  <textarea value={prodDesc} onChange={e => setProdDesc(e.target.value)} placeholder="Description du produit" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" rows={3} />
+                  <input value={prodName} onChange={e => setProdName(e.target.value)} required placeholder="Nom du produit" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+                  <textarea value={prodDesc} onChange={e => setProdDesc(e.target.value)} placeholder="Description" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" rows={3} />
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Prix (FCFA)</label>
-                      <input value={prodPrice} onChange={e => setProdPrice(e.target.value)} required type="number" min="1" placeholder="1250" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+                      <input value={prodPrice} onChange={e => setProdPrice(e.target.value)} required type="number" min="1" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
                     </div>
                     <div>
                       <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Unité</label>
                       <select value={prodUnit} onChange={e => setProdUnit(e.target.value)} className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm">
-                        <option>le kg</option>
-                        <option>la caisse</option>
-                        <option>le lot</option>
-                        <option>la pièce</option>
-                        <option>250g</option>
-                        <option>500g</option>
+                        <option>le kg</option><option>la caisse</option><option>le lot</option><option>la pièce</option><option>250g</option><option>500g</option>
                       </select>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Stock</label>
-                      <input value={prodStock} onChange={e => setProdStock(e.target.value)} type="number" min="0" placeholder="500" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+                      <input value={prodStock} onChange={e => setProdStock(e.target.value)} type="number" min="0" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
                     </div>
                     <div>
                       <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Catégorie</label>
@@ -335,224 +828,23 @@ const SellerDashboard = () => {
                   </div>
                   <div>
                     <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Photo du produit</label>
+                    {editingProduct?.image_url && !prodImage && (
+                      <div className="mb-2 flex items-center gap-2">
+                        <img src={editingProduct.image_url} alt="" className="w-12 h-12 rounded-xl object-cover" />
+                        <span className="text-xs text-on-surface-variant">Photo actuelle</span>
+                      </div>
+                    )}
                     <input type="file" accept="image/*" onChange={e => setProdImage(e.target.files?.[0] || null)} className="w-full bg-surface-container-low rounded-2xl p-4 text-sm" />
                   </div>
                   <button type="submit" className="w-full bg-primary-container text-primary-container-foreground py-4 rounded-full font-headline font-extrabold text-base hover:scale-[0.97] transition-transform mt-4">
-                    Publier le produit
+                    {editingProduct ? "Enregistrer" : "Publier le produit"}
                   </button>
                 </form>
               </div>
             </div>
           )}
 
-          {shop && (
-            <>
-              {/* Welcome */}
-              <div className="mb-10 mt-8">
-                <h1 className="text-4xl font-extrabold tracking-tight">Bonjour, {profile?.full_name || "Vendeur"}</h1>
-                <p className="text-on-surface-variant mt-1 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-lg">storefront</span>
-                  {shop.name}
-                </p>
-              </div>
-
-              {/* Stat Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
-                <div className="bg-primary-container p-7 rounded-3xl">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="material-symbols-outlined text-primary-container-foreground/60 text-2xl">account_balance</span>
-                    <span className="text-[10px] font-extrabold text-primary-container-foreground/60 uppercase tracking-[0.15em]">Solde actuel</span>
-                  </div>
-                  <div className="text-3xl font-black text-primary-container-foreground">{formatPrice(totalRevenue)}</div>
-                </div>
-                <div className="bg-surface-container-lowest p-7 rounded-3xl">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="material-symbols-outlined text-on-surface-variant text-2xl">trending_up</span>
-                    <span className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Ventes totales</span>
-                  </div>
-                  <div className="text-3xl font-black text-foreground">{formatPrice(totalRevenue)}</div>
-                </div>
-                <div className="bg-surface-container-lowest p-7 rounded-3xl">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="material-symbols-outlined text-on-surface-variant text-2xl">shopping_cart</span>
-                    <span className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Commandes</span>
-                  </div>
-                  <div className="text-3xl font-black text-foreground">{orders.length}</div>
-                </div>
-                <div className="bg-surface-container-lowest p-7 rounded-3xl">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="material-symbols-outlined text-on-surface-variant text-2xl">inventory_2</span>
-                    <span className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Produits actifs</span>
-                  </div>
-                  <div className="text-3xl font-black text-foreground">{products.filter(p => p.is_active).length}</div>
-                </div>
-              </div>
-
-              {/* Chart + Quick Actions */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-                <div className="lg:col-span-2 bg-surface-container-lowest p-8 rounded-3xl">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-extrabold">Aperçu des ventes</h3>
-                  </div>
-                  {chartData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={chartData}>
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "hsl(var(--on-surface-variant))" }} />
-                        <YAxis hide />
-                        <Tooltip formatter={(value: number) => formatPrice(value)} />
-                        <Bar dataKey="value" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="h-[200px] flex items-center justify-center text-on-surface-variant">
-                      <div className="text-center">
-                        <span className="material-symbols-outlined text-4xl text-on-surface-variant/30 mb-2">bar_chart</span>
-                        <p className="text-sm">Les données de ventes apparaîtront ici</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-xl font-extrabold">Actions Rapides</h3>
-                  <button
-                    onClick={() => setShowAddProduct(true)}
-                    className="w-full flex items-center gap-4 bg-surface-container-lowest p-5 rounded-3xl hover:bg-surface-container-low transition-colors group"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-primary-container flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-primary-container-foreground">add</span>
-                    </div>
-                    <div className="text-left">
-                      <div className="font-bold text-sm">Ajouter un produit</div>
-                      <div className="text-xs text-on-surface-variant">Publier un nouveau produit</div>
-                    </div>
-                  </button>
-                  <button className="w-full flex items-center gap-4 bg-surface-container-lowest p-5 rounded-3xl hover:bg-surface-container-low transition-colors">
-                    <div className="w-12 h-12 rounded-2xl bg-surface-container-high flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-on-surface-variant">account_balance</span>
-                    </div>
-                    <div className="text-left">
-                      <div className="font-bold text-sm">Demander un virement</div>
-                      <div className="text-xs text-on-surface-variant">Wave / Orange Money</div>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => avatarInputRef.current?.click()}
-                    className="w-full flex items-center gap-4 bg-surface-container-lowest p-5 rounded-3xl hover:bg-surface-container-low transition-colors"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-surface-container-high flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-on-surface-variant">photo_camera</span>
-                    </div>
-                    <div className="text-left">
-                      <div className="font-bold text-sm">Photo de profil</div>
-                      <div className="text-xs text-on-surface-variant">Visible par les acheteurs</div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Products + Sales in two columns */}
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                {/* Products Table */}
-                <div className="lg:col-span-3">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-extrabold">Gestion des Produits</h3>
-                    <button
-                      onClick={() => setShowAddProduct(true)}
-                      className="bg-primary-container text-primary-container-foreground px-6 py-3 rounded-full font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-transform"
-                    >
-                      <span className="material-symbols-outlined text-lg">add</span>
-                      Nouveau Produit
-                    </button>
-                  </div>
-
-                  {products.length === 0 ? (
-                    <div className="bg-surface-container-lowest rounded-3xl p-12 text-center">
-                      <span className="material-symbols-outlined text-5xl text-on-surface-variant/40 mb-4">inventory_2</span>
-                      <p className="font-headline font-bold text-lg mb-2">Aucun produit</p>
-                      <p className="text-on-surface-variant text-sm">Ajoutez votre premier produit pour commencer à vendre.</p>
-                    </div>
-                  ) : (
-                    <div className="bg-surface-container-lowest rounded-3xl overflow-hidden">
-                      <table className="w-full text-left">
-                        <thead>
-                          <tr>
-                            <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Produit</th>
-                            <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Quantité</th>
-                            <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Prix</th>
-                            <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Statut</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {products.map(p => {
-                            const status = getProductStatus(p);
-                            return (
-                              <tr key={p.id} className="border-t border-border/10">
-                                <td className="px-6 py-4">
-                                  <div className="flex items-center gap-3">
-                                    {p.image_url ? (
-                                      <img src={p.image_url} alt={p.name} className="w-10 h-10 rounded-full object-cover" />
-                                    ) : (
-                                      <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
-                                        <span className="material-symbols-outlined text-on-surface-variant text-lg">eco</span>
-                                      </div>
-                                    )}
-                                    <span className="font-bold text-sm">{p.name}</span>
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 text-sm text-on-surface-variant">{p.stock} {p.unit}</td>
-                                <td className="px-6 py-4 text-sm font-bold">{formatPrice(p.price)}</td>
-                                <td className="px-6 py-4">
-                                  <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${status.cls}`}>{status.label}</span>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-
-                {/* Recent Sales */}
-                <div className="lg:col-span-2">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-extrabold">Dernières Ventes</h3>
-                  </div>
-
-                  {orders.length === 0 ? (
-                    <div className="bg-surface-container-lowest rounded-3xl p-12 text-center">
-                      <span className="material-symbols-outlined text-5xl text-on-surface-variant/40 mb-4">receipt_long</span>
-                      <p className="font-headline font-bold text-lg">Aucune vente</p>
-                      <p className="text-on-surface-variant text-sm mt-1">Vos ventes apparaîtront ici.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {orders.slice(0, 5).map(o => (
-                        <div key={o.id} className="bg-surface-container-lowest rounded-3xl p-5 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center text-xs font-extrabold text-primary">
-                              {(o.products?.name || "?").slice(0, 2).toUpperCase()}
-                            </div>
-                            <div>
-                              <div className="font-bold text-sm">{o.products?.name || "Produit"}</div>
-                              <div className="text-xs text-on-surface-variant">{o.quantity}x · {formatPrice(o.unit_price)}</div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-extrabold text-sm text-primary">{formatPrice(o.unit_price * o.quantity)}</div>
-                            <div className="text-[10px] text-on-surface-variant uppercase tracking-wider">
-                              {new Date(o.created_at).toLocaleDateString("fr-FR")}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
+          {shop && renderContent()}
         </div>
       </main>
     </div>

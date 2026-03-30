@@ -20,24 +20,44 @@ const Checkout = () => {
 
   const formatPrice = (n: number) => n.toLocaleString("fr-FR") + " FCFA";
 
-  if (!user) { navigate("/auth"); return null; }
-  if (items.length === 0) { navigate("/"); return null; }
+  if (!user) {
+    navigate("/auth");
+    return null;
+  }
+
+  if (items.length === 0) {
+    navigate("/");
+    return null;
+  }
 
   const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     setLoading(true);
+
     try {
+      // Create order
       const { data: order, error: orderErr } = await supabase.from("orders").insert({
-        buyer_id: user.id, total: totalPrice, shipping_address: address,
-        shipping_city: city, phone, payment_method: paymentMethod,
+        buyer_id: user.id,
+        total: totalPrice,
+        shipping_address: address,
+        shipping_city: city,
+        phone,
+        payment_method: paymentMethod,
       }).select().single();
+
       if (orderErr) throw orderErr;
 
+      // Create order items - need to resolve product/shop info
+      // Items in cart have product DB IDs if from DB, or legacy string IDs
       const orderItems = items.map(item => ({
-        order_id: order.id, product_id: item.id, shop_id: item.shopId || "",
-        quantity: item.quantity, unit_price: item.priceNum,
+        order_id: order.id,
+        product_id: item.id,
+        shop_id: item.shopId || "",
+        quantity: item.quantity,
+        unit_price: item.priceNum,
       }));
+
       const { error: itemsErr } = await supabase.from("order_items").insert(orderItems);
       if (itemsErr) throw itemsErr;
 
@@ -54,25 +74,26 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-28 pb-24 px-6 md:px-12 max-w-5xl mx-auto">
+      <main className="pt-28 pb-24 px-6 md:px-12 max-w-4xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-4xl font-headline font-extrabold tracking-tighter mb-10">Finaliser ma commande</h1>
+          <h1 className="text-4xl font-headline font-extrabold tracking-tighter mb-8">Finaliser ma commande</h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            {/* Form */}
             <form onSubmit={handleOrder} className="lg:col-span-3 space-y-6">
-              <div className="bg-surface-container-lowest rounded-3xl p-8 space-y-5">
+              <div className="bg-card rounded-xl p-6 space-y-4">
                 <h2 className="text-lg font-headline font-extrabold flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary">location_on</span>
                   Adresse de livraison
                 </h2>
-                <input value={address} onChange={e => setAddress(e.target.value)} required placeholder="Adresse complète" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+                <input value={address} onChange={e => setAddress(e.target.value)} required placeholder="Adresse complète" className="w-full bg-surface-container-low rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary-container" />
                 <div className="grid grid-cols-2 gap-4">
-                  <input value={city} onChange={e => setCity(e.target.value)} required placeholder="Ville" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
-                  <input value={phone} onChange={e => setPhone(e.target.value)} required placeholder="Téléphone" type="tel" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+                  <input value={city} onChange={e => setCity(e.target.value)} required placeholder="Ville" className="w-full bg-surface-container-low rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary-container" />
+                  <input value={phone} onChange={e => setPhone(e.target.value)} required placeholder="Téléphone" type="tel" className="w-full bg-surface-container-low rounded-lg p-3 outline-none focus:ring-2 focus:ring-primary-container" />
                 </div>
               </div>
 
-              <div className="bg-surface-container-lowest rounded-3xl p-8 space-y-5">
+              <div className="bg-card rounded-xl p-6 space-y-4">
                 <h2 className="text-lg font-headline font-extrabold flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary">payments</span>
                   Mode de paiement
@@ -81,46 +102,47 @@ const Checkout = () => {
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("wave")}
-                    className={`flex-1 p-5 rounded-3xl font-bold text-center transition-all ${paymentMethod === "wave" ? "bg-primary-container/20 ring-2 ring-primary" : "bg-surface-container-low"}`}
+                    className={`flex-1 p-4 rounded-xl border-2 font-bold text-center transition-all ${paymentMethod === "wave" ? "border-primary bg-primary-container/10" : "border-border"}`}
                   >
-                    <div className="text-2xl mb-2">🌊</div>
-                    <div className="text-sm font-headline font-bold">Wave</div>
+                    <div className="text-2xl mb-1">🌊</div>
+                    Wave
                   </button>
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("orange_money")}
-                    className={`flex-1 p-5 rounded-3xl font-bold text-center transition-all ${paymentMethod === "orange_money" ? "bg-primary-container/20 ring-2 ring-primary" : "bg-surface-container-low"}`}
+                    className={`flex-1 p-4 rounded-xl border-2 font-bold text-center transition-all ${paymentMethod === "orange_money" ? "border-primary bg-primary-container/10" : "border-border"}`}
                   >
-                    <div className="text-2xl mb-2">🍊</div>
-                    <div className="text-sm font-headline font-bold">Orange Money</div>
+                    <div className="text-2xl mb-1">🍊</div>
+                    Orange Money
                   </button>
                 </div>
                 <p className="text-xs text-on-surface-variant">
-                  Après validation, vous recevrez une notification pour confirmer le paiement.
+                  Après validation, vous recevrez une notification {paymentMethod === "wave" ? "Wave" : "Orange Money"} pour confirmer le paiement.
                 </p>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-primary-container text-primary-container-foreground py-5 rounded-full font-headline font-extrabold text-lg hover:scale-[0.97] transition-transform disabled:opacity-50"
+                className="w-full bg-primary-container text-primary-container-foreground py-5 rounded-full font-headline font-extrabold text-xl hover:scale-[0.97] transition-transform disabled:opacity-50 shadow-xl"
               >
                 {loading ? "Traitement..." : `Payer ${formatPrice(totalPrice)}`}
               </button>
             </form>
 
+            {/* Summary */}
             <div className="lg:col-span-2">
-              <div className="bg-surface-container-lowest rounded-3xl p-8 sticky top-28">
-                <h2 className="text-lg font-headline font-extrabold mb-6">Récapitulatif</h2>
-                <div className="space-y-4 mb-6">
+              <div className="bg-card rounded-xl p-6 sticky top-28">
+                <h2 className="text-lg font-headline font-extrabold mb-4">Récapitulatif</h2>
+                <div className="space-y-3 mb-6">
                   {items.map(item => (
                     <div key={item.id} className="flex justify-between text-sm">
-                      <span className="text-on-surface-variant">{item.name} × {item.quantity}</span>
+                      <span>{item.name} × {item.quantity}</span>
                       <span className="font-bold">{formatPrice(item.priceNum * item.quantity)}</span>
                     </div>
                   ))}
                 </div>
-                <div className="space-y-3 pt-4">
+                <div className="border-t border-border pt-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-on-surface-variant">Sous-total</span>
                     <span className="font-bold">{formatPrice(totalPrice)}</span>
@@ -129,7 +151,7 @@ const Checkout = () => {
                     <span className="text-on-surface-variant">Livraison</span>
                     <span className="font-bold text-primary">Gratuite</span>
                   </div>
-                  <div className="pt-3 flex justify-between">
+                  <div className="border-t border-border pt-2 flex justify-between">
                     <span className="font-headline font-extrabold text-lg">Total</span>
                     <span className="font-headline font-extrabold text-lg">{formatPrice(totalPrice)}</span>
                   </div>

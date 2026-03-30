@@ -23,6 +23,7 @@ const SellerDashboard = () => {
   const [activeNav, setActiveNav] = useState("overview");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Shop form
   const [shopName, setShopName] = useState("");

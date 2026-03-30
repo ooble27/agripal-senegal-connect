@@ -628,10 +628,61 @@ const SellerDashboard = () => {
 
         {/* Shop section */}
         <div className="bg-surface-container-lowest rounded-3xl p-6 md:p-8">
-          <h3 className="text-lg font-extrabold mb-6 flex items-center gap-2">
-            <span className="material-symbols-outlined text-on-surface-variant">storefront</span>
-            Ma Boutique
-          </h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-extrabold flex items-center gap-2">
+              <span className="material-symbols-outlined text-on-surface-variant">storefront</span>
+              Ma Boutique
+            </h3>
+            {shop && (
+              <a
+                href={`/boutique/${shop.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+              >
+                Voir ma boutique <span className="material-symbols-outlined text-sm">open_in_new</span>
+              </a>
+            )}
+          </div>
+
+          {/* Logo upload */}
+          <div className="flex items-center gap-5 mb-6">
+            <button
+              type="button"
+              onClick={() => {
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = "image/*";
+                input.onchange = async (ev) => {
+                  const file = (ev.target as HTMLInputElement).files?.[0];
+                  if (!file || !shop) return;
+                  const path = `${shop.id}/logo.${file.name.split('.').pop()}`;
+                  const { error: upErr } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
+                  if (upErr) { toast.error("Erreur upload logo"); return; }
+                  const { data: { publicUrl } } = supabase.storage.from("product-images").getPublicUrl(path);
+                  await supabase.from("shops").update({ logo_url: publicUrl }).eq("id", shop.id);
+                  setShop({ ...shop, logo_url: publicUrl });
+                  toast.success("Logo mis à jour !");
+                };
+                input.click();
+              }}
+              className="relative w-20 h-20 rounded-2xl overflow-hidden bg-surface-container-high flex items-center justify-center group shrink-0 border-2 border-dashed border-border"
+            >
+              {shop?.logo_url ? (
+                <img src={shop.logo_url} alt="Logo" className="w-full h-full object-cover" />
+              ) : (
+                <span className="material-symbols-outlined text-on-surface-variant text-3xl">add_photo_alternate</span>
+              )}
+              <div className="absolute inset-0 bg-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="material-symbols-outlined text-surface">photo_camera</span>
+              </div>
+            </button>
+            <div>
+              <div className="font-bold text-sm">{shop?.logo_url ? "Logo de la boutique" : "Ajouter un logo"}</div>
+              <div className="text-xs text-on-surface-variant">Ce logo apparaît sur votre page boutique publique</div>
+            </div>
+          </div>
+
           <div className="space-y-4">
             <div>
               <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Nom de la boutique</label>
@@ -639,16 +690,16 @@ const SellerDashboard = () => {
             </div>
             <div>
               <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Description</label>
-              <textarea value={settingsDesc} onChange={e => setSettingsDesc(e.target.value)} rows={3} className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+              <textarea value={settingsDesc} onChange={e => setSettingsDesc(e.target.value)} rows={3} className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" placeholder="Décrivez votre boutique, vos produits, votre philosophie..." />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Localisation</label>
-                <input value={settingsLocation} onChange={e => setSettingsLocation(e.target.value)} className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+                <input value={settingsLocation} onChange={e => setSettingsLocation(e.target.value)} className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" placeholder="Ex: Sangalkam, Niayes" />
               </div>
               <div>
                 <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Ville</label>
-                <input value={settingsCity} onChange={e => setSettingsCity(e.target.value)} className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+                <input value={settingsCity} onChange={e => setSettingsCity(e.target.value)} className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" placeholder="Ex: Dakar, Thiès" />
               </div>
             </div>
             <div>

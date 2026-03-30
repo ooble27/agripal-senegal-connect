@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import waveLogo from "@/assets/wave-logo.png";
+import orangeMoneyLogo from "@/assets/orange-money-logo.png";
 
 type Product = Tables<"products">;
 type Shop = Tables<"shops">;

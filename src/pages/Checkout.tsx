@@ -93,17 +93,17 @@ const Checkout = () => {
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("wave")}
-                    className={`p-4 rounded-xl border-2 font-bold text-center transition-all text-sm ${paymentMethod === "wave" ? "border-primary bg-primary-container/10" : "border-border"}`}
+                    className={`p-4 rounded-xl border-2 font-bold text-center transition-all text-sm flex flex-col items-center gap-2 ${paymentMethod === "wave" ? "border-primary bg-primary-container/10" : "border-border"}`}
                   >
-                    <div className="text-2xl mb-1">🌊</div>
+                    <img src={waveLogo} alt="Wave" className="w-10 h-10 rounded-full object-cover" />
                     Wave
                   </button>
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("orange_money")}
-                    className={`p-4 rounded-xl border-2 font-bold text-center transition-all text-sm ${paymentMethod === "orange_money" ? "border-primary bg-primary-container/10" : "border-border"}`}
+                    className={`p-4 rounded-xl border-2 font-bold text-center transition-all text-sm flex flex-col items-center gap-2 ${paymentMethod === "orange_money" ? "border-primary bg-primary-container/10" : "border-border"}`}
                   >
-                    <div className="text-2xl mb-1">🍊</div>
+                    <img src={orangeMoneyLogo} alt="Orange Money" className="w-10 h-10 rounded-full object-cover" />
                     Orange Money
                   </button>
                 </div>

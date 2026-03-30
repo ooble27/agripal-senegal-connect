@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
+import waveLogo from "@/assets/wave-logo.png";
+import orangeMoneyLogo from "@/assets/orange-money-logo.png";
 
 type Product = Tables<"products">;
 type Shop = Tables<"shops">;
@@ -551,18 +553,14 @@ const SellerDashboard = () => {
           <div className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em] mb-3">Méthodes de retrait</div>
           <div className="space-y-3 mt-4">
             <div className="flex items-center gap-3 p-3 rounded-2xl bg-surface-container-low">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-blue-600">waves</span>
-              </div>
+              <img src={waveLogo} alt="Wave" className="w-10 h-10 rounded-xl object-cover" />
               <div>
                 <div className="font-bold text-sm">Wave</div>
                 <div className="text-xs text-on-surface-variant">Virement instantané</div>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-2xl bg-surface-container-low">
-              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-orange-600">phone_android</span>
-              </div>
+              <img src={orangeMoneyLogo} alt="Orange Money" className="w-10 h-10 rounded-xl object-cover" />
               <div>
                 <div className="font-bold text-sm">Orange Money</div>
                 <div className="text-xs text-on-surface-variant">Virement mobile</div>

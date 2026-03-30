@@ -8,14 +8,18 @@ import DevenirProducteur from "./pages/DevenirProducteur.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import ProductDetail from "./pages/ProductDetail.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import { CartProvider } from "./contexts/CartContext";
+import CartDrawer from "./components/CartDrawer";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <CartProvider>
       <Toaster />
       <Sonner />
+      <CartDrawer />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
@@ -26,6 +30,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      </CartProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

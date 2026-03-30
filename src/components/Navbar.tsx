@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useCart } from "@/contexts/CartContext";
 
 const Navbar = () => {
+  const { totalItems, setIsOpen } = useCart();
+
   return (
     <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl shadow-[0_12px_40px_rgba(45,47,46,0.06)]">
       <div className="flex justify-between items-center px-8 py-4 max-w-[1440px] mx-auto w-full">
@@ -26,8 +28,16 @@ const Navbar = () => {
           <Link to="/dashboard" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
             Connexion
           </Link>
-          <button className="bg-primary-container text-primary-container-foreground font-headline font-extrabold uppercase tracking-tight text-sm px-6 py-2 rounded-full hover:scale-95 transition-transform duration-200">
+          <button
+            onClick={() => setIsOpen(true)}
+            className="relative bg-primary-container text-primary-container-foreground font-headline font-extrabold uppercase tracking-tight text-sm px-6 py-2 rounded-full hover:scale-95 transition-transform duration-200"
+          >
             Panier
+            {totalItems > 0 && (
+              <span className="absolute -top-2 -right-2 w-5 h-5 bg-tertiary text-tertiary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                {totalItems}
+              </span>
+            )}
           </button>
         </div>
       </div>

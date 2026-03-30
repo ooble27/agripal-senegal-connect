@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useCart } from "@/contexts/CartContext";
 
 const allProducts = [
   {
@@ -149,6 +150,7 @@ const fadeUp = {
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const { addItem } = useCart();
   const product = allProducts.find((p) => p.id === id);
 
   if (!product) {
@@ -247,7 +249,18 @@ const ProductDetail = () => {
 
               {/* Quick actions */}
               <div className="flex flex-wrap gap-4 mb-12">
-                <button className="flex-1 min-w-[200px] bg-primary-container text-primary-container-foreground px-8 py-5 rounded-full font-headline font-extrabold text-lg flex items-center justify-center gap-3 hover:scale-[0.97] transition-transform shadow-xl">
+                <button
+                  onClick={() => addItem({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    priceNum: parseInt(product.price.replace(/[.\s]/g, "").replace("FCFA", "").trim()),
+                    unit: product.unit,
+                    image: product.image,
+                    farmer: product.farmer,
+                  })}
+                  className="flex-1 min-w-[200px] bg-primary-container text-primary-container-foreground px-8 py-5 rounded-full font-headline font-extrabold text-lg flex items-center justify-center gap-3 hover:scale-[0.97] transition-transform shadow-xl"
+                >
                   <span className="material-symbols-outlined">add_shopping_cart</span>
                   Ajouter au Panier
                 </button>

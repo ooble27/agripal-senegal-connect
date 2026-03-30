@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
+import { useCart } from "@/contexts/CartContext";
 
 const products = [
   {
@@ -102,6 +103,22 @@ const fadeUp = {
 };
 
 const Index = () => {
+  const { addItem } = useCart();
+
+  const handleAddToCart = (product: typeof products[0], e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      priceNum: parseInt(product.price.replace(/[.\s]/g, "").replace("FCFA", "").trim()),
+      unit: product.unit,
+      image: product.image,
+      farmer: product.farmer,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -252,7 +269,10 @@ const Index = () => {
                       <div className="text-sm text-on-surface-variant">{product.unit}</div>
                       <div className="text-2xl font-headline font-extrabold">{product.price}</div>
                     </div>
-                    <button className="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center hover:bg-primary-container transition-colors">
+                    <button
+                      onClick={(e) => handleAddToCart(product, e)}
+                      className="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center hover:bg-primary-container transition-colors"
+                    >
                       <span className="material-symbols-outlined text-xl">add_shopping_cart</span>
                     </button>
                   </div>

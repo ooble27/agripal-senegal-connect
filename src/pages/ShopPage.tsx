@@ -93,7 +93,7 @@ const ShopPage = () => {
       <main className="pt-20">
 
         {/* ═══════ HERO BANNER ═══════ */}
-        <section className="relative h-[500px] md:h-[614px] min-h-[400px] w-full overflow-hidden">
+        <section className="relative h-[420px] md:h-[614px] min-h-[350px] w-full overflow-hidden">
           <img
             src={shopHeroDefault}
             alt={`Ferme ${shop.name}`}

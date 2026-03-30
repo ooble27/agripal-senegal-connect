@@ -174,7 +174,6 @@ const SellerDashboard = () => {
     </div>
   );
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background font-body flex">

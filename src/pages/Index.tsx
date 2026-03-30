@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 
 const products = [
   {
+    id: "carottes-niayes",
     name: "Carottes des Niayes",
     farmer: "Par Aminata Sy",
     location: "Thiès, Sénégal",
@@ -15,6 +16,7 @@ const products = [
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAMQsYDwNzgAY59ikYriTHGOo5V-h9q3GToGcwIzcG45k6TKMamctsLNg4mFn6lKq9NIncvPxEdJF3Vkvh9xfPAQ8TmvaqQaeslBPRpSZ6FVi4RwmWk2j8rKDMnfm-9CYhOCNtYksqGSWydm8cf4kMoDeu07cW-PgWtT0_F-fKQ_p5JZTE75c3xvLoUIFJlSiRTj4qqZ4PcESA4HLqqKYPuT6-SZZ3oXiDZtnWSKYHWLf-uvmdc4Lk4K5Fl9rzqOgfJbHjG9f1mAlXu",
   },
   {
+    id: "mangues-kent",
     name: "Mangues Kent Bio",
     farmer: "Verger de Casamance",
     location: "Ziguinchor",
@@ -25,6 +27,7 @@ const products = [
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuANaTR0jqCtz5dPUzGkOhSJY_Rh7jDH4dSUd6T7JW-phJ9aSnOAKsl1cj0aXDnq2NDab68OcCpTEMPYiEoLHbTEJTWoszEFNoVJbjN6o6GVRTwV11TKdGaKRVtgyhX_ff5qF-cstnp6927PylA2-bzBlYZc3YZ_HwjYOqJR31mrn7-5WIUKQ9A8rk7lVDBXfY7ZO4uSbK3QIjOB5GAl1_KfPRYjasEb82x8F4vSEwYh51WhUPcFt7qw2vEvXF2z_Mvg55PmTGZ_BzBm",
   },
   {
+    id: "piment-oiseau",
     name: "Piment Oiseau",
     farmer: "Ferme de Sangalkam",
     location: "Rufisque",
@@ -35,6 +38,7 @@ const products = [
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDqTSQZR-A5PJTKBQFpApVb-syAg0k0RQqLN10XAw13as-NTOK3tupxrSedVzQ8vpJ_kCIqhZthKYAatFG6dhQpKPXYZwN8UqEgorYkHo7QUdWN0KWwYFlf-ZQ4rDtjiLBbMDsWuaZzn21r4-OSMETsijchrfu0s8a2WgHiKvQXMJtbuuMqcU7aWezWK8PBDsxtdSs2GudhEbhVd-e3KqbcmepLjoMpeNjkZc8vX8C5SjavfviJizhUMbtCadfwfvkhf7QSCk6yVM4N",
   },
   {
+    id: "oignons-podor",
     name: "Oignons de Podor",
     farmer: "Coopérative Podor",
     location: "Podor",

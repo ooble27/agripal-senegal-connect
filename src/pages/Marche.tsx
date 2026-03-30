@@ -173,7 +173,10 @@ const Marche = () => {
                     <div className="p-3 md:p-5 flex flex-col flex-grow">
                       <h3 className="text-sm md:text-lg font-headline font-extrabold leading-tight">{product.name}</h3>
                       <div className="text-[10px] md:text-xs text-on-surface-variant mt-1">
-                        <span className="font-bold text-primary">{product.shops?.name}</span>
+                        <span
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/boutique/${product.shop_id}`; }}
+                          className="font-bold text-primary hover:underline cursor-pointer"
+                        >{product.shops?.name}</span>
                         {product.shops?.city && ` • ${product.shops.city}`}
                       </div>
                       <div className="mt-auto pt-3 flex justify-between items-end">

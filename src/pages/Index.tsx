@@ -46,7 +46,7 @@ const Index = () => {
               <span className="inline-block px-4 py-1.5 rounded-full bg-primary-container text-primary-container-foreground font-headline font-extrabold text-[10px] md:text-xs uppercase tracking-widest mb-4 md:mb-6">
                 L'Agronome Digital
               </span>
-              <h1 className="text-3xl md:text-7xl lg:text-8xl font-headline font-extrabold text-primary-foreground tracking-tighter leading-[0.95] mb-4 md:mb-8">
+              <h1 className="text-3xl md:text-7xl lg:text-8xl font-headline font-extrabold text-surface tracking-tighter leading-[0.95] mb-4 md:mb-8">
                 Cultiver l'âme de nos terroirs.
               </h1>
               <p className="text-base md:text-xl text-primary-foreground/70 font-body max-w-xl leading-relaxed mb-6 md:mb-10">

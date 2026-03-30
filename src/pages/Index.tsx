@@ -258,6 +258,7 @@ const Index = () => {
                   </div>
                 </div>
               </motion.div>
+              </Link>
             ))}
           </div>
         </section>

@@ -49,7 +49,7 @@ const Index = () => {
               <h1 className="text-3xl md:text-7xl lg:text-8xl font-headline font-extrabold text-surface tracking-tighter leading-[0.95] mb-4 md:mb-8">
                 Cultiver l'âme de nos terroirs.
               </h1>
-              <p className="text-base md:text-xl text-primary-foreground/70 font-body max-w-xl leading-relaxed mb-6 md:mb-10">
+              <p className="text-base md:text-xl text-surface/80 font-body max-w-xl leading-relaxed mb-6 md:mb-10">
                 Une connexion directe entre les foyers sénégalais et les gardiens de notre terre. Des produits purs, une équité radicale.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">

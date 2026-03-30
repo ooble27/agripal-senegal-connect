@@ -7,29 +7,58 @@ import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
-type Product = Tables<"products"> & { shops: { name: string; location: string | null; seller_id: string } | null };
+type Product = Tables<"products"> & {
+  shops: {
+    name: string;
+    location: string | null;
+    seller_id: string;
+    description: string | null;
+    logo_url: string | null;
+    city: string | null;
+    phone: string | null;
+  } | null;
+};
+
+type SellerProfile = {
+  full_name: string;
+  avatar_url: string | null;
+  city: string | null;
+};
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { addItem } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
+  const [sellerProfile, setSellerProfile] = useState<SellerProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
     supabase
       .from("products")
-      .select("*, shops(name, location, seller_id)")
+      .select("*, shops(name, location, seller_id, description, logo_url, city, phone)")
       .eq("id", id)
       .single()
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         if (data) {
-          setProduct(data as Product);
+          const product = data as Product;
+          setProduct(product);
+
+          // Load seller profile for avatar
+          if (product.shops?.seller_id) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("full_name, avatar_url, city")
+              .eq("user_id", product.shops.seller_id)
+              .single();
+            if (profile) setSellerProfile(profile);
+          }
+
           // Load related products from same shop
           supabase
             .from("products")
-            .select("*, shops(name, location, seller_id)")
+            .select("*, shops(name, location, seller_id, description, logo_url, city, phone)")
             .eq("shop_id", data.shop_id)
             .neq("id", data.id)
             .eq("is_active", true)
@@ -110,16 +139,6 @@ const ProductDetail = () => {
               className="flex flex-col"
             >
               <h1 className="text-4xl md:text-6xl font-headline font-extrabold tracking-tighter mb-4">{product.name}</h1>
-              
-              {product.shops && (
-                <div className="flex items-center gap-2 mb-6">
-                  <span className="material-symbols-outlined text-primary">storefront</span>
-                  <span className="font-headline font-bold text-primary">{product.shops.name}</span>
-                  {product.shops.location && (
-                    <span className="text-on-surface-variant text-sm">• {product.shops.location}</span>
-                  )}
-                </div>
-              )}
 
               {product.description && (
                 <p className="text-lg text-on-surface-variant font-body leading-relaxed mb-8">{product.description}</p>
@@ -154,6 +173,48 @@ const ProductDetail = () => {
                   Ajouter au Panier
                 </button>
               </div>
+
+              {/* Seller Card */}
+              {product.shops && (
+                <div className="bg-surface-container-lowest rounded-2xl p-6 border border-border/30">
+                  <div className="flex items-center gap-4 mb-4">
+                    {sellerProfile?.avatar_url ? (
+                      <img
+                        src={sellerProfile.avatar_url}
+                        alt={sellerProfile.full_name}
+                        className="w-14 h-14 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-14 h-14 rounded-full bg-primary-container flex items-center justify-center">
+                        <span className="material-symbols-outlined text-primary-container-foreground text-xl">person</span>
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="font-headline font-extrabold text-lg">{product.shops.name}</h3>
+                      <div className="flex items-center gap-2 text-sm text-on-surface-variant">
+                        {product.shops.location && (
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-sm">location_on</span>
+                            {product.shops.location}
+                          </span>
+                        )}
+                        {product.shops.city && (
+                          <span>• {product.shops.city}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="ml-auto">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary-container/20 rounded-full text-xs font-bold text-primary">
+                        <span className="material-symbols-outlined text-sm filled">verified</span>
+                        Vérifié
+                      </span>
+                    </div>
+                  </div>
+                  {product.shops.description && (
+                    <p className="text-sm text-on-surface-variant leading-relaxed">{product.shops.description}</p>
+                  )}
+                </div>
+              )}
             </motion.div>
           </div>
         </section>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -21,6 +21,8 @@ const SellerDashboard = () => {
   const [categories, setCategories] = useState<Tables<"categories">[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeNav, setActiveNav] = useState("overview");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Shop form
   const [shopName, setShopName] = useState("");
@@ -49,6 +51,11 @@ const SellerDashboard = () => {
   const loadData = async () => {
     if (!user) return;
     setLoading(true);
+
+    // Load profile avatar
+    const { data: prof } = await supabase.from("profiles").select("avatar_url").eq("user_id", user.id).single();
+    if (prof?.avatar_url) setAvatarUrl(prof.avatar_url);
+
     const [{ data: shopData }, { data: cats }] = await Promise.all([
       supabase.from("shops").select("*").eq("seller_id", user.id).single(),
       supabase.from("categories").select("*"),
@@ -66,6 +73,19 @@ const SellerDashboard = () => {
       setShowCreateShop(true);
     }
     setLoading(false);
+  };
+
+  const handleAvatarUpload = async (file: File) => {
+    if (!user) return;
+    const ext = file.name.split(".").pop();
+    const path = `${user.id}/avatar.${ext}`;
+    const { error: uploadErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    if (uploadErr) { toast.error("Erreur upload photo"); return; }
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+    const publicUrl = urlData.publicUrl;
+    await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("user_id", user.id);
+    setAvatarUrl(publicUrl);
+    toast.success("Photo de profil mise à jour !");
   };
 
   const handleCreateShop = async (e: React.FormEvent) => {
@@ -119,17 +139,23 @@ const SellerDashboard = () => {
 
   const totalRevenue = orders.reduce((s, o) => s + o.unit_price * o.quantity, 0);
 
-  // Generate mock chart data based on real orders (or empty)
-  const chartData = [
-    { name: "Sem 1", value: Math.round(totalRevenue * 0.15) },
-    { name: "Sem 2", value: Math.round(totalRevenue * 0.25) },
-    { name: "Sem 3", value: Math.round(totalRevenue * 0.35) },
-    { name: "Sem 4", value: Math.round(totalRevenue * 0.25) },
-  ];
+  // Chart data based on real orders grouped by week
+  const chartData = orders.length > 0
+    ? (() => {
+        const weeks: Record<string, number> = {};
+        orders.forEach(o => {
+          const d = new Date(o.created_at);
+          const weekNum = Math.ceil(d.getDate() / 7);
+          const key = `Sem ${weekNum}`;
+          weeks[key] = (weeks[key] || 0) + o.unit_price * o.quantity;
+        });
+        return Object.entries(weeks).map(([name, value]) => ({ name, value }));
+      })()
+    : [];
 
   const navItems = [
     { id: "overview", icon: "dashboard", label: "Vue d'ensemble" },
-    { id: "products", icon: "eco", label: "Mes Récoltes" },
+    { id: "products", icon: "eco", label: "Mes Produits" },
     { id: "sales", icon: "trending_up", label: "Ventes" },
     { id: "payments", icon: "account_balance_wallet", label: "Paiements" },
     { id: "settings", icon: "settings", label: "Paramètres" },
@@ -143,19 +169,19 @@ const SellerDashboard = () => {
 
   if (loading) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-on-surface-variant font-headline font-bold">Chargement...</div>
+      <span className="material-symbols-outlined text-4xl text-on-surface-variant animate-spin">progress_activity</span>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-background font-body flex">
       {/* Sidebar */}
-      <aside className="h-screen w-72 fixed left-0 top-0 bg-background font-headline flex flex-col p-8 gap-8 z-50">
+      <aside className="h-screen w-72 fixed left-0 top-0 bg-background font-headline flex flex-col p-8 gap-8 z-50 border-r border-border/30">
         <div className="space-y-1">
           <h2 className="text-xl font-extrabold tracking-tight text-foreground leading-tight">
-            {shop?.name || "Exploitation Agricole"}
+            {shop?.name || "Ma Boutique"}
           </h2>
-          <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em]">Producteur vérifié</span>
+          <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em]">Vendeur vérifié</span>
         </div>
 
         <nav className="flex flex-col gap-1 flex-grow">
@@ -184,13 +210,9 @@ const SellerDashboard = () => {
       {/* Main Content */}
       <main className="ml-72 flex-1 min-h-screen">
         {/* Top Bar */}
-        <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl px-10 py-5 flex items-center justify-between">
+        <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl px-10 py-5 flex items-center justify-between border-b border-border/20">
           <h3 className="text-lg font-headline font-bold text-on-surface-variant">Tableau de Bord</h3>
           <div className="flex items-center gap-6">
-            <div className="hidden md:flex bg-surface-container-low rounded-2xl px-5 py-3 items-center gap-3 min-w-[280px]">
-              <span className="material-symbols-outlined text-on-surface-variant text-xl">search</span>
-              <input placeholder="Rechercher une commande..." className="bg-transparent outline-none text-sm w-full text-foreground placeholder:text-on-surface-variant/60" />
-            </div>
             <div className="text-right hidden md:block">
               <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Solde disponible</div>
               <div className="text-base font-headline font-extrabold text-primary">{formatPrice(totalRevenue)}</div>
@@ -198,9 +220,31 @@ const SellerDashboard = () => {
             <button className="relative p-2">
               <span className="material-symbols-outlined text-on-surface-variant text-2xl">notifications</span>
             </button>
-            <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
-              <span className="material-symbols-outlined text-on-surface-variant">person</span>
-            </div>
+            {/* Avatar with upload */}
+            <button
+              onClick={() => avatarInputRef.current?.click()}
+              className="relative w-10 h-10 rounded-full overflow-hidden bg-surface-container-high flex items-center justify-center group"
+              title="Changer la photo de profil"
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profil" className="w-full h-full object-cover" />
+              ) : (
+                <span className="material-symbols-outlined text-on-surface-variant">person</span>
+              )}
+              <div className="absolute inset-0 bg-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="material-symbols-outlined text-surface text-sm">photo_camera</span>
+              </div>
+            </button>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={e => {
+                const file = e.target.files?.[0];
+                if (file) handleAvatarUpload(file);
+              }}
+            />
           </div>
         </header>
 
@@ -209,18 +253,18 @@ const SellerDashboard = () => {
           {showCreateShop && (
             <div className="fixed inset-0 bg-foreground/50 z-[100] flex items-center justify-center p-6">
               <div className="bg-card rounded-3xl p-10 max-w-lg w-full shadow-2xl">
-                <h2 className="text-2xl font-headline font-extrabold mb-2">Créer votre exploitation</h2>
-                <p className="text-on-surface-variant text-sm mb-8">Remplissez les informations de votre exploitation agricole pour commencer à vendre.</p>
+                <h2 className="text-2xl font-headline font-extrabold mb-2">Créer votre boutique</h2>
+                <p className="text-on-surface-variant text-sm mb-8">Remplissez les informations de votre boutique pour commencer à vendre.</p>
                 <form onSubmit={handleCreateShop} className="space-y-4">
-                  <input value={shopName} onChange={e => setShopName(e.target.value)} required placeholder="Nom de l'exploitation (ex: Ferme Keur Moussa)" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
-                  <textarea value={shopDesc} onChange={e => setShopDesc(e.target.value)} placeholder="Description de votre exploitation" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" rows={3} />
+                  <input value={shopName} onChange={e => setShopName(e.target.value)} required placeholder="Nom de la boutique (ex: Ferme Keur Moussa)" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
+                  <textarea value={shopDesc} onChange={e => setShopDesc(e.target.value)} placeholder="Description de votre boutique" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" rows={3} />
                   <div className="grid grid-cols-2 gap-4">
                     <input value={shopLocation} onChange={e => setShopLocation(e.target.value)} placeholder="Localisation (ex: Sangalkam)" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
                     <input value={shopCity} onChange={e => setShopCity(e.target.value)} placeholder="Ville (ex: Thiès)" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
                   </div>
                   <input value={shopPhone} onChange={e => setShopPhone(e.target.value)} placeholder="Téléphone (77 000 00 00)" type="tel" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
                   <button type="submit" className="w-full bg-primary-container text-primary-container-foreground py-4 rounded-full font-headline font-extrabold text-base hover:scale-[0.97] transition-transform mt-4">
-                    Créer mon exploitation
+                    Créer ma boutique
                   </button>
                 </form>
               </div>
@@ -233,7 +277,7 @@ const SellerDashboard = () => {
               <div className="bg-card rounded-3xl p-10 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-6">
                   <div>
-                    <h2 className="text-2xl font-headline font-extrabold">Nouvelle Récolte</h2>
+                    <h2 className="text-2xl font-headline font-extrabold">Nouveau Produit</h2>
                     <p className="text-on-surface-variant text-sm">Publiez un nouveau produit sur le marché.</p>
                   </div>
                   <button onClick={() => setShowAddProduct(false)} className="text-on-surface-variant hover:text-foreground p-2 rounded-full hover:bg-surface-container-low">
@@ -262,7 +306,7 @@ const SellerDashboard = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Stock (kg)</label>
+                      <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Stock</label>
                       <input value={prodStock} onChange={e => setProdStock(e.target.value)} type="number" min="0" placeholder="500" className="w-full bg-surface-container-low rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary-container text-sm" />
                     </div>
                     <div>
@@ -278,7 +322,7 @@ const SellerDashboard = () => {
                     <input type="file" accept="image/*" onChange={e => setProdImage(e.target.files?.[0] || null)} className="w-full bg-surface-container-low rounded-2xl p-4 text-sm" />
                   </div>
                   <button type="submit" className="w-full bg-primary-container text-primary-container-foreground py-4 rounded-full font-headline font-extrabold text-base hover:scale-[0.97] transition-transform mt-4">
-                    Publier la récolte
+                    Publier le produit
                   </button>
                 </form>
               </div>
@@ -288,11 +332,11 @@ const SellerDashboard = () => {
           {shop && (
             <>
               {/* Welcome */}
-              <div className="mb-10">
-                <h1 className="text-4xl font-extrabold tracking-tight">Bonjour, {profile?.full_name || "Producteur"}</h1>
+              <div className="mb-10 mt-8">
+                <h1 className="text-4xl font-extrabold tracking-tight">Bonjour, {profile?.full_name || "Vendeur"}</h1>
                 <p className="text-on-surface-variant mt-1 flex items-center gap-2">
                   <span className="material-symbols-outlined text-lg">storefront</span>
-                  {shop.name} — Prêt pour les récoltes du jour ?
+                  {shop.name}
                 </p>
               </div>
 
@@ -308,7 +352,7 @@ const SellerDashboard = () => {
                 <div className="bg-surface-container-lowest p-7 rounded-3xl">
                   <div className="flex items-center gap-3 mb-4">
                     <span className="material-symbols-outlined text-on-surface-variant text-2xl">trending_up</span>
-                    <span className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Ventes du mois</span>
+                    <span className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Ventes totales</span>
                   </div>
                   <div className="text-3xl font-black text-foreground">{formatPrice(totalRevenue)}</div>
                 </div>
@@ -318,15 +362,13 @@ const SellerDashboard = () => {
                     <span className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Commandes</span>
                   </div>
                   <div className="text-3xl font-black text-foreground">{orders.length}</div>
-                  <div className="text-xs text-on-surface-variant mt-1">En cours de livraison</div>
                 </div>
-                <div className="bg-primary-container/20 p-7 rounded-3xl">
+                <div className="bg-surface-container-lowest p-7 rounded-3xl">
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="material-symbols-outlined text-primary text-2xl">star</span>
-                    <span className="text-[10px] font-extrabold text-primary uppercase tracking-[0.15em]">Note producteur</span>
+                    <span className="material-symbols-outlined text-on-surface-variant text-2xl">inventory_2</span>
+                    <span className="text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Produits actifs</span>
                   </div>
-                  <div className="text-3xl font-black text-foreground">4.9/5</div>
-                  <div className="text-xs text-on-surface-variant mt-1">Excellent profil</div>
+                  <div className="text-3xl font-black text-foreground">{products.filter(p => p.is_active).length}</div>
                 </div>
               </div>
 
@@ -334,17 +376,25 @@ const SellerDashboard = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
                 <div className="lg:col-span-2 bg-surface-container-lowest p-8 rounded-3xl">
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-extrabold">Aperçu des revenus (30 jours)</h3>
-                    <div className="bg-surface-container-low px-4 py-2 rounded-2xl text-xs font-bold text-on-surface-variant">30 derniers jours</div>
+                    <h3 className="text-xl font-extrabold">Aperçu des ventes</h3>
                   </div>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={chartData}>
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "hsl(var(--on-surface-variant))" }} />
-                      <YAxis hide />
-                      <Tooltip formatter={(value: number) => formatPrice(value)} />
-                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {chartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart data={chartData}>
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "hsl(var(--on-surface-variant))" }} />
+                        <YAxis hide />
+                        <Tooltip formatter={(value: number) => formatPrice(value)} />
+                        <Bar dataKey="value" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-[200px] flex items-center justify-center text-on-surface-variant">
+                      <div className="text-center">
+                        <span className="material-symbols-outlined text-4xl text-on-surface-variant/30 mb-2">bar_chart</span>
+                        <p className="text-sm">Les données de ventes apparaîtront ici</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -358,7 +408,7 @@ const SellerDashboard = () => {
                     </div>
                     <div className="text-left">
                       <div className="font-bold text-sm">Ajouter un produit</div>
-                      <div className="text-xs text-on-surface-variant">Publier une nouvelle récolte</div>
+                      <div className="text-xs text-on-surface-variant">Publier un nouveau produit</div>
                     </div>
                   </button>
                   <button className="w-full flex items-center gap-4 bg-surface-container-lowest p-5 rounded-3xl hover:bg-surface-container-low transition-colors">
@@ -370,13 +420,16 @@ const SellerDashboard = () => {
                       <div className="text-xs text-on-surface-variant">Wave / Orange Money</div>
                     </div>
                   </button>
-                  <button className="w-full flex items-center gap-4 bg-surface-container-lowest p-5 rounded-3xl hover:bg-surface-container-low transition-colors">
+                  <button
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="w-full flex items-center gap-4 bg-surface-container-lowest p-5 rounded-3xl hover:bg-surface-container-low transition-colors"
+                  >
                     <div className="w-12 h-12 rounded-2xl bg-surface-container-high flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-on-surface-variant">support_agent</span>
+                      <span className="material-symbols-outlined text-on-surface-variant">photo_camera</span>
                     </div>
                     <div className="text-left">
-                      <div className="font-bold text-sm">Contacter le support</div>
-                      <div className="text-xs text-on-surface-variant">Aide et assistance technique</div>
+                      <div className="font-bold text-sm">Photo de profil</div>
+                      <div className="text-xs text-on-surface-variant">Visible par les acheteurs</div>
                     </div>
                   </button>
                 </div>
@@ -387,16 +440,14 @@ const SellerDashboard = () => {
                 {/* Products Table */}
                 <div className="lg:col-span-3">
                   <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                      <button
-                        onClick={() => setShowAddProduct(true)}
-                        className="bg-primary-container text-primary-container-foreground px-6 py-3 rounded-full font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-transform"
-                      >
-                        <span className="material-symbols-outlined text-lg">add</span>
-                        Nouvelle Récolte
-                      </button>
-                    </div>
-                    <h3 className="text-xl font-extrabold">Gestion des Récoltes</h3>
+                    <h3 className="text-xl font-extrabold">Gestion des Produits</h3>
+                    <button
+                      onClick={() => setShowAddProduct(true)}
+                      className="bg-primary-container text-primary-container-foreground px-6 py-3 rounded-full font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-transform"
+                    >
+                      <span className="material-symbols-outlined text-lg">add</span>
+                      Nouveau Produit
+                    </button>
                   </div>
 
                   {products.length === 0 ? (
@@ -412,6 +463,7 @@ const SellerDashboard = () => {
                           <tr>
                             <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Produit</th>
                             <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Quantité</th>
+                            <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Prix</th>
                             <th className="px-6 py-4 text-[10px] font-extrabold text-on-surface-variant uppercase tracking-[0.15em]">Statut</th>
                           </tr>
                         </thead>
@@ -433,6 +485,7 @@ const SellerDashboard = () => {
                                   </div>
                                 </td>
                                 <td className="px-6 py-4 text-sm text-on-surface-variant">{p.stock} {p.unit}</td>
+                                <td className="px-6 py-4 text-sm font-bold">{formatPrice(p.price)}</td>
                                 <td className="px-6 py-4">
                                   <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${status.cls}`}>{status.label}</span>
                                 </td>
@@ -449,13 +502,13 @@ const SellerDashboard = () => {
                 <div className="lg:col-span-2">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-xl font-extrabold">Dernières Ventes</h3>
-                    <button className="text-xs font-bold text-on-surface-variant hover:text-foreground uppercase tracking-wider">Voir tout</button>
                   </div>
 
                   {orders.length === 0 ? (
                     <div className="bg-surface-container-lowest rounded-3xl p-12 text-center">
                       <span className="material-symbols-outlined text-5xl text-on-surface-variant/40 mb-4">receipt_long</span>
                       <p className="font-headline font-bold text-lg">Aucune vente</p>
+                      <p className="text-on-surface-variant text-sm mt-1">Vos ventes apparaîtront ici.</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -466,8 +519,8 @@ const SellerDashboard = () => {
                               {(o.products?.name || "?").slice(0, 2).toUpperCase()}
                             </div>
                             <div>
-                              <div className="font-bold text-sm">Commande</div>
-                              <div className="text-xs text-on-surface-variant">{o.products?.name} ({o.quantity}x)</div>
+                              <div className="font-bold text-sm">{o.products?.name || "Produit"}</div>
+                              <div className="text-xs text-on-surface-variant">{o.quantity}x · {formatPrice(o.unit_price)}</div>
                             </div>
                           </div>
                           <div className="text-right">

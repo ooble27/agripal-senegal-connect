@@ -17,8 +17,8 @@ const Navbar = () => {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-8">
-          <Link to="/" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground hover:scale-95 transition-transform duration-200">
-            Market
+          <Link to="/marche" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground hover:scale-95 transition-transform duration-200">
+            Marché
           </Link>
           <Link to="/devenir-producteur" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground hover:scale-95 transition-transform duration-200">
             Artisans
@@ -81,11 +81,11 @@ const Navbar = () => {
         <div className="md:hidden border-t border-border/30 bg-background/95 backdrop-blur-xl animate-in slide-in-from-top-2 duration-200">
           <div className="flex flex-col px-6 py-4 gap-1">
             <Link
-              to="/"
+              to="/marche"
               onClick={() => setMobileOpen(false)}
               className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 border-b border-border/20"
             >
-              Market
+              Marché
             </Link>
             <Link
               to="/devenir-producteur"

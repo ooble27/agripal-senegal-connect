@@ -10,6 +10,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Auth from "./pages/Auth";
 import Checkout from "./pages/Checkout";
 import MyOrders from "./pages/MyOrders";
+import Marche from "./pages/Marche";
 import NotFound from "./pages/NotFound";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -28,6 +29,7 @@ const App = () => (
             <CartDrawer />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/marche" element={<Marche />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/devenir-producteur" element={<DevenirProducteur />} />
               <Route path="/dashboard" element={<SellerDashboard />} />

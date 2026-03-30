@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
+import heroBg from "@/assets/hero-bg.jpg";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -32,17 +33,8 @@ const Index = () => {
           <div className="relative rounded-2xl md:rounded-3xl overflow-hidden bg-primary min-h-[520px] md:min-h-[700px] flex items-end md:items-center">
             {/* Abstract background pattern */}
             <div className="absolute inset-0 z-0 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary via-hsl(78,100%,14%) to-primary" />
-              {/* Decorative circles */}
-              <div className="absolute -right-20 -top-20 w-[500px] h-[500px] rounded-full border border-primary-foreground/10" />
-              <div className="absolute -right-10 -top-10 w-[400px] h-[400px] rounded-full border border-primary-foreground/8" />
-              <div className="absolute right-20 top-20 w-[300px] h-[300px] rounded-full bg-primary-foreground/5" />
-              <div className="absolute -left-32 bottom-0 w-[350px] h-[350px] rounded-full bg-primary-container/15" />
-              {/* Subtle leaf/organic shapes */}
-              <svg className="absolute right-0 top-0 w-2/3 h-full opacity-[0.07]" viewBox="0 0 600 700" fill="none">
-                <path d="M300 0C450 150 600 300 500 500C400 700 200 650 100 500C0 350 150 -150 300 0Z" fill="currentColor" className="text-primary-foreground"/>
-                <path d="M400 100C500 200 550 400 450 550C350 700 250 600 200 450C150 300 300 0 400 100Z" fill="currentColor" className="text-primary-container"/>
-              </svg>
+              <img src={heroBg} alt="Terres agricoles du Sénégal" className="w-full h-full object-cover" width={1920} height={1080} />
+              <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-foreground/85 via-foreground/60 to-foreground/20" />
             </div>
 
             <motion.div
@@ -54,10 +46,10 @@ const Index = () => {
               <span className="inline-block px-4 py-1.5 rounded-full bg-primary-container text-primary-container-foreground font-headline font-extrabold text-[10px] md:text-xs uppercase tracking-widest mb-4 md:mb-6">
                 L'Agronome Digital
               </span>
-              <h1 className="text-3xl md:text-7xl lg:text-8xl font-headline font-extrabold text-primary-foreground tracking-tighter leading-[0.95] mb-4 md:mb-8">
+              <h1 className="text-3xl md:text-7xl lg:text-8xl font-headline font-extrabold text-surface tracking-tighter leading-[0.95] mb-4 md:mb-8">
                 Cultiver l'âme de nos terroirs.
               </h1>
-              <p className="text-base md:text-xl text-primary-foreground/70 font-body max-w-xl leading-relaxed mb-6 md:mb-10">
+              <p className="text-base md:text-xl text-surface/80 font-body max-w-xl leading-relaxed mb-6 md:mb-10">
                 Une connexion directe entre les foyers sénégalais et les gardiens de notre terre. Des produits purs, une équité radicale.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -65,7 +57,7 @@ const Index = () => {
                   Découvrir le Marché
                   <span className="material-symbols-outlined">arrow_forward</span>
                 </Link>
-                <Link to="/devenir-producteur" className="bg-primary-foreground/10 backdrop-blur-md text-primary-foreground border border-primary-foreground/20 px-8 py-4 md:px-10 md:py-5 rounded-full font-headline font-extrabold text-base md:text-lg hover:bg-primary-foreground hover:text-primary transition-all text-center">
+                <Link to="/devenir-producteur" className="bg-surface/10 backdrop-blur-md text-surface border border-surface/20 px-8 py-4 md:px-10 md:py-5 rounded-full font-headline font-extrabold text-base md:text-lg hover:bg-surface hover:text-foreground transition-all text-center">
                   Devenir Vendeur
                 </Link>
               </div>

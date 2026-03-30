@@ -23,6 +23,7 @@ const SellerDashboard = () => {
   const [activeNav, setActiveNav] = useState("overview");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Shop form
   const [shopName, setShopName] = useState("");
@@ -173,22 +174,33 @@ const SellerDashboard = () => {
     </div>
   );
 
+
   return (
     <div className="min-h-screen bg-background font-body flex">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-foreground/40 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* Sidebar */}
-      <aside className="h-screen w-72 fixed left-0 top-0 bg-background font-headline flex flex-col p-8 gap-8 z-50 border-r border-border/30">
-        <div className="space-y-1">
-          <h2 className="text-xl font-extrabold tracking-tight text-foreground leading-tight">
-            {shop?.name || "Ma Boutique"}
-          </h2>
-          <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em]">Vendeur vérifié</span>
+      <aside className={`h-screen w-72 fixed left-0 top-0 bg-background font-headline flex flex-col p-8 gap-8 z-50 border-r border-border/30 transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h2 className="text-xl font-extrabold tracking-tight text-foreground leading-tight">
+              {shop?.name || "Ma Boutique"}
+            </h2>
+            <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em]">Vendeur vérifié</span>
+          </div>
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-2 rounded-full hover:bg-surface-container">
+            <span className="material-symbols-outlined">close</span>
+          </button>
         </div>
 
         <nav className="flex flex-col gap-1 flex-grow">
           {navItems.map(item => (
             <button
               key={item.id}
-              onClick={() => setActiveNav(item.id)}
+              onClick={() => { setActiveNav(item.id); setSidebarOpen(false); }}
               className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl font-bold text-sm transition-all duration-200 ${
                 activeNav === item.id
                   ? "bg-primary-container text-primary-container-foreground shadow-sm"
@@ -208,11 +220,16 @@ const SellerDashboard = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="ml-72 flex-1 min-h-screen">
+      <main className="lg:ml-72 flex-1 min-h-screen">
         {/* Top Bar */}
-        <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl px-10 py-5 flex items-center justify-between border-b border-border/20">
-          <h3 className="text-lg font-headline font-bold text-on-surface-variant">Tableau de Bord</h3>
-          <div className="flex items-center gap-6">
+        <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl px-5 md:px-10 py-4 md:py-5 flex items-center justify-between border-b border-border/20">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-full hover:bg-surface-container">
+              <span className="material-symbols-outlined text-2xl">menu</span>
+            </button>
+            <h3 className="text-lg font-headline font-bold text-on-surface-variant">Tableau de Bord</h3>
+          </div>
+          <div className="flex items-center gap-4 md:gap-6">
             <div className="text-right hidden md:block">
               <div className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Solde disponible</div>
               <div className="text-base font-headline font-extrabold text-primary">{formatPrice(totalRevenue)}</div>
@@ -220,7 +237,6 @@ const SellerDashboard = () => {
             <button className="relative p-2">
               <span className="material-symbols-outlined text-on-surface-variant text-2xl">notifications</span>
             </button>
-            {/* Avatar with upload */}
             <button
               onClick={() => avatarInputRef.current?.click()}
               className="relative w-10 h-10 rounded-full overflow-hidden bg-surface-container-high flex items-center justify-center group"
@@ -248,7 +264,7 @@ const SellerDashboard = () => {
           </div>
         </header>
 
-        <div className="px-10 pb-12">
+        <div className="px-5 md:px-10 pb-12">
           {/* Create Shop Modal */}
           {showCreateShop && (
             <div className="fixed inset-0 bg-foreground/50 z-[100] flex items-center justify-center p-6">

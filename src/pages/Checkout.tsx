@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import waveLogo from "@/assets/wave-logo.png";
+import orangeMoneyLogo from "@/assets/orange-money-logo.png";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";

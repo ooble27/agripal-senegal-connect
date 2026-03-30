@@ -1,12 +1,24 @@
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const CartDrawer = () => {
   const { items, isOpen, setIsOpen, updateQuantity, removeItem, totalPrice, totalItems, clearCart } = useCart();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const formatPrice = (n: number) => n.toLocaleString("fr-FR") + " FCFA";
+
+  const handleCheckout = () => {
+    setIsOpen(false);
+    if (!user) {
+      navigate("/auth");
+    } else {
+      navigate("/checkout");
+    }
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -83,7 +95,6 @@ const CartDrawer = () => {
               </AnimatePresence>
             </div>
 
-            {/* Order Summary */}
             <div className="border-t border-border px-6 py-6 space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
@@ -101,7 +112,10 @@ const CartDrawer = () => {
                 </div>
               </div>
 
-              <button className="w-full bg-primary-container text-primary-container-foreground py-4 rounded-full font-headline font-extrabold text-lg flex items-center justify-center gap-3 hover:scale-[0.97] transition-transform shadow-xl">
+              <button
+                onClick={handleCheckout}
+                className="w-full bg-primary-container text-primary-container-foreground py-4 rounded-full font-headline font-extrabold text-lg flex items-center justify-center gap-3 hover:scale-[0.97] transition-transform shadow-xl"
+              >
                 <span className="material-symbols-outlined">shopping_cart_checkout</span>
                 Commander
               </button>

@@ -150,6 +150,7 @@ const fadeUp = {
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const { addItem } = useCart();
   const product = allProducts.find((p) => p.id === id);
 
   if (!product) {

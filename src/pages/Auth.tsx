@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -21,9 +22,13 @@ const Auth = () => {
     setLoading(true);
     try {
       if (isLogin) {
-        await signIn(email, password);
-        toast.success("Connexion réussie !");
-        navigate("/");
+        const { data } = await supabase.auth.signInWithPassword({ email, password });
+        if (data.user) {
+          const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id);
+          const userRole = roles?.[0]?.role;
+          toast.success("Connexion réussie !");
+          navigate(userRole === "seller" ? "/dashboard" : "/");
+        }
       } else {
         await signUp(email, password, fullName, role);
         toast.success("Compte créé ! Vérifiez votre email pour confirmer.");

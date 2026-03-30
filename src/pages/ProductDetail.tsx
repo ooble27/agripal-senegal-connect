@@ -284,58 +284,65 @@ const ProductDetail = () => {
         {/* Producer Section */}
         {product.shops && (
           <section className="px-6 md:px-12 max-w-[1440px] mx-auto mb-24">
-            <div className="bg-inverse-surface rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center gap-10">
-              {/* Avatar */}
-              <div className="shrink-0">
-                <div className="w-48 h-48 md:w-56 md:h-56 rounded-full border-4 border-primary overflow-hidden bg-inverse-surface">
-                  {sellerProfile?.avatar_url ? (
-                    <img src={sellerProfile.avatar_url} alt={sellerProfile.full_name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="material-symbols-outlined text-6xl text-inverse-on-surface/40">person</span>
-                    </div>
+            <Link to={`/boutique/${product.shop_id}`} className="block group">
+              <div className="bg-inverse-surface rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center gap-10 hover:ring-2 hover:ring-primary transition-all">
+                {/* Avatar */}
+                <div className="shrink-0">
+                  <div className="w-48 h-48 md:w-56 md:h-56 rounded-full border-4 border-primary overflow-hidden bg-inverse-surface">
+                    {sellerProfile?.avatar_url ? (
+                      <img src={sellerProfile.avatar_url} alt={sellerProfile.full_name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="material-symbols-outlined text-6xl text-inverse-on-surface/40">person</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 text-center md:text-left">
+                  <span className="text-xs font-headline font-bold uppercase tracking-widest text-primary mb-2 inline-block">Votre Producteur</span>
+                  <h3 className="text-4xl md:text-5xl font-headline font-extrabold text-surface mb-3">
+                    {sellerProfile?.full_name || product.shops.name}
+                  </h3>
+                  <div className="flex items-center justify-center md:justify-start gap-4 text-inverse-on-surface text-sm mb-6">
+                    <span className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-sm">storefront</span>
+                      {product.shops.name}
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-sm">location_on</span>
+                      {product.shops.city || product.shops.location || "Sénégal"}
+                    </span>
+                  </div>
+                  {product.shops.description && (
+                    <p className="text-inverse-on-surface leading-relaxed mb-8">{product.shops.description}</p>
                   )}
-                </div>
-              </div>
 
-              {/* Info */}
-              <div className="flex-1 text-center md:text-left">
-                <span className="text-xs font-headline font-bold uppercase tracking-widest text-primary mb-2 inline-block">Votre Producteur</span>
-                <h3 className="text-4xl md:text-5xl font-headline font-extrabold text-surface mb-3">
-                  {sellerProfile?.full_name || product.shops.name}
-                </h3>
-                <div className="flex items-center justify-center md:justify-start gap-4 text-inverse-on-surface text-sm mb-6">
-                  <span className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-sm">storefront</span>
-                    {product.shops.name}
-                  </span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-sm">location_on</span>
-                    {product.shops.city || product.shops.location || "Sénégal"}
-                  </span>
-                </div>
-                {product.shops.description && (
-                  <p className="text-inverse-on-surface leading-relaxed mb-8">{product.shops.description}</p>
-                )}
+                  {/* Stats */}
+                  <div className="grid grid-cols-3 gap-8">
+                    <div>
+                      <div className="text-3xl font-headline font-extrabold text-primary">100%</div>
+                      <div className="text-xs text-inverse-on-surface mt-1">Prix Équitable</div>
+                    </div>
+                    <div>
+                      <div className="text-3xl font-headline font-extrabold text-primary">24h</div>
+                      <div className="text-xs text-inverse-on-surface mt-1">Champ → Table</div>
+                    </div>
+                    <div>
+                      <div className="text-3xl font-headline font-extrabold text-primary">0</div>
+                      <div className="text-xs text-inverse-on-surface mt-1">Intermédiaires</div>
+                    </div>
+                  </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-8">
-                  <div>
-                    <div className="text-3xl font-headline font-extrabold text-primary">100%</div>
-                    <div className="text-xs text-inverse-on-surface mt-1">Prix Équitable</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-headline font-extrabold text-primary">24h</div>
-                    <div className="text-xs text-inverse-on-surface mt-1">Champ → Table</div>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-headline font-extrabold text-primary">0</div>
-                    <div className="text-xs text-inverse-on-surface mt-1">Intermédiaires</div>
+                  <div className="mt-6 inline-flex items-center gap-2 text-primary text-sm font-bold group-hover:underline">
+                    Voir la boutique
+                    <span className="material-symbols-outlined text-base group-hover:translate-x-1 transition-transform">arrow_forward</span>
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           </section>
         )}
 

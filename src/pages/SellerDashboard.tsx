@@ -158,31 +158,63 @@ const SellerDashboard = () => {
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!shop) return;
+    
+    // Upload main image (first of the new images, or keep existing)
     let imageUrl: string | null = editingProduct?.image_url || null;
-    if (prodImage) {
-      const ext = prodImage.name.split(".").pop();
-      const path = `${shop.id}/${Date.now()}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from("product-images").upload(path, prodImage);
-      if (uploadErr) { toast.error("Erreur upload image"); return; }
-      const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
-      imageUrl = urlData.publicUrl;
+    const additionalImageUrls: string[] = [];
+    
+    if (prodImages.length > 0) {
+      for (let i = 0; i < prodImages.length; i++) {
+        const file = prodImages[i];
+        const ext = file.name.split(".").pop();
+        const path = `${shop.id}/${Date.now()}_${i}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from("product-images").upload(path, file);
+        if (uploadErr) { toast.error("Erreur upload image"); return; }
+        const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
+        if (i === 0 && !editingProduct?.image_url) {
+          imageUrl = urlData.publicUrl;
+        } else {
+          additionalImageUrls.push(urlData.publicUrl);
+        }
+      }
     }
 
+    let productId: string;
+    
     if (editingProduct) {
       const { error } = await supabase.from("products").update({
         name: prodName, description: prodDesc, price: parseInt(prodPrice),
-        unit: prodUnit, stock: parseInt(prodStock) || 0, category_id: prodCategory || null, image_url: imageUrl,
+        unit: prodUnit, stock: parseInt(prodStock) || 0, category_id: prodCategory || null,
+        image_url: prodImages.length > 0 && !editingProduct.image_url ? imageUrl : (prodImages.length > 0 ? imageUrl : editingProduct.image_url),
       }).eq("id", editingProduct.id);
       if (error) { toast.error(error.message); return; }
+      productId = editingProduct.id;
       toast.success("Produit mis à jour !");
     } else {
-      const { error } = await supabase.from("products").insert({
+      const { data: newProd, error } = await supabase.from("products").insert({
         shop_id: shop.id, name: prodName, description: prodDesc, price: parseInt(prodPrice),
         unit: prodUnit, stock: parseInt(prodStock) || 0, category_id: prodCategory || null, image_url: imageUrl,
-      });
-      if (error) { toast.error(error.message); return; }
+      }).select().single();
+      if (error || !newProd) { toast.error(error?.message || "Erreur"); return; }
+      productId = newProd.id;
       toast.success("Produit ajouté !");
     }
+    
+    // Save additional images to product_images table
+    if (additionalImageUrls.length > 0 || (prodImages.length > 0 && editingProduct?.image_url)) {
+      const imagesToInsert = (prodImages.length > 0 && editingProduct?.image_url
+        ? [imageUrl, ...additionalImageUrls].filter(Boolean)
+        : additionalImageUrls
+      ).map((url, idx) => ({
+        product_id: productId,
+        image_url: url!,
+        display_order: existingImages.length + idx + 1,
+      }));
+      if (imagesToInsert.length > 0) {
+        await supabase.from("product_images").insert(imagesToInsert);
+      }
+    }
+    
     setShowAddProduct(false);
     resetProductForm();
     loadData();

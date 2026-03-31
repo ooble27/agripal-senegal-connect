@@ -130,7 +130,7 @@ const Marche = () => {
         {/* ═══════ PROMO BANNER (mobile) ═══════ */}
         <section className="md:hidden px-5 mt-4">
           <div className="relative bg-primary rounded-2xl p-5 flex items-center">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-primary-container/20 rounded-full -translate-y-1/3 translate-x-1/3" />
+            
             <div className="flex-1 relative z-10">
               <span className="inline-block bg-primary-container text-primary-container-foreground text-[10px] font-bold uppercase px-2.5 py-1 rounded-full mb-2">
                 Nouveau 🌿

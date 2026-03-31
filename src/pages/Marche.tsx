@@ -31,7 +31,7 @@ const Marche = () => {
       const [prodRes, catRes] = await Promise.all([
         supabase
           .from("products")
-          .select("*, shops(name, location, seller_id, city), categories(name, icon)")
+          .select("*, shops(name, seller_id), categories(name, icon)")
           .eq("is_active", true)
           .order("created_at", { ascending: false }),
         supabase.from("categories").select("*").order("name"),

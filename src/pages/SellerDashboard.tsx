@@ -42,7 +42,8 @@ const SellerDashboard = () => {
   const [prodUnit, setProdUnit] = useState("le kg");
   const [prodStock, setProdStock] = useState("");
   const [prodCategory, setProdCategory] = useState("");
-  const [prodImage, setProdImage] = useState<File | null>(null);
+  const [prodImages, setProdImages] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<{ id: string; image_url: string }[]>([]);
 
   // Settings form
   const [settingsName, setSettingsName] = useState("");

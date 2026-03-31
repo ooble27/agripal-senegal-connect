@@ -1,6 +1,6 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
@@ -8,21 +8,24 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products"> & {
-  shops: {
-    name: string;
-    location: string | null;
-    seller_id: string;
-    description: string | null;
-    logo_url: string | null;
-    city: string | null;
-    phone: string | null;
-  } | null;
+  categories: { name: string; icon: string | null } | null;
 };
+
+type ProductImage = Tables<"product_images">;
 
 type SellerProfile = {
   full_name: string;
   avatar_url: string | null;
   city: string | null;
+  phone: string | null;
+};
+
+type ShopInfo = {
+  name: string;
+  seller_id: string;
+  city: string | null;
+  phone: string | null;
+  location: string | null;
 };
 
 const ProductDetail = () => {
@@ -30,45 +33,88 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
+  const [shop, setShop] = useState<ShopInfo | null>(null);
+  const [images, setImages] = useState<string[]>([]);
   const [related, setRelated] = useState<Product[]>([]);
   const [sellerProfile, setSellerProfile] = useState<SellerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [currentImage, setCurrentImage] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
 
   useEffect(() => {
     if (!id) return;
     setQuantity(1);
-    supabase
-      .from("products")
-      .select("*, shops(name, location, seller_id, description, logo_url, city, phone)")
-      .eq("id", id)
-      .single()
-      .then(async ({ data }) => {
-        if (data) {
-          const product = data as Product;
-          setProduct(product);
-          if (product.shops?.seller_id) {
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("full_name, avatar_url, city")
-              .eq("user_id", product.shops.seller_id)
-              .single();
-            if (profile) setSellerProfile(profile);
-          }
-          supabase
-            .from("products")
-            .select("*, shops(name, location, seller_id, description, logo_url, city, phone)")
-            .eq("shop_id", data.shop_id)
-            .neq("id", data.id)
-            .eq("is_active", true)
-            .limit(3)
-            .then(({ data: rel }) => {
-              if (rel) setRelated(rel as Product[]);
-            });
-        }
-        setLoading(false);
-      });
+    setCurrentImage(0);
+
+    const load = async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("*, categories(name, icon)")
+        .eq("id", id)
+        .single();
+
+      if (!data) { setLoading(false); return; }
+      const product = data as Product;
+      setProduct(product);
+
+      // Fetch shop info
+      const { data: shopData } = await supabase
+        .from("shops")
+        .select("name, seller_id, city, phone, location")
+        .eq("id", product.shop_id)
+        .single();
+      if (shopData) {
+        setShop(shopData);
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("full_name, avatar_url, city, phone")
+          .eq("user_id", shopData.seller_id)
+          .single();
+        if (prof) setSellerProfile(prof);
+      }
+
+      // Fetch product images
+      const { data: prodImages } = await supabase
+        .from("product_images")
+        .select("*")
+        .eq("product_id", id)
+        .order("display_order");
+
+      const imgList: string[] = [];
+      if (prodImages && prodImages.length > 0) {
+        imgList.push(...prodImages.map((img: ProductImage) => img.image_url));
+      }
+      if (imgList.length === 0 && product.image_url) {
+        imgList.push(product.image_url);
+      }
+      setImages(imgList);
+
+      // Related products
+      const { data: rel } = await supabase
+        .from("products")
+        .select("*, categories(name, icon)")
+        .eq("shop_id", product.shop_id)
+        .neq("id", id)
+        .eq("is_active", true)
+        .limit(4);
+      if (rel) setRelated(rel as Product[]);
+
+      setLoading(false);
+    };
+    load();
   }, [id]);
+
+  const handleTouchStart = (e: React.TouchEvent) => setTouchStart(e.touches[0].clientX);
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const diff = touchStart - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0 && currentImage < images.length - 1) setCurrentImage(c => c + 1);
+      if (diff < 0 && currentImage > 0) setCurrentImage(c => c - 1);
+    }
+    setTouchStart(null);
+  };
 
   const formatPrice = (n: number) => n.toLocaleString("fr-FR") + " FCFA";
 
@@ -108,68 +154,96 @@ const ProductDetail = () => {
         price: formatPrice(product.price),
         priceNum: product.price,
         unit: product.unit,
-        image: product.image_url || "/placeholder.svg",
-        farmer: product.shops?.name || "Vendeur",
+        image: images[0] || "/placeholder.svg",
+        farmer: sellerProfile?.full_name || shop?.name || "Vendeur",
         shopId: product.shop_id,
       });
     }
   };
 
+  const sellerName = sellerProfile?.full_name || shop?.name || "Producteur";
+  const sellerCity = sellerProfile?.city || shop?.city || "Sénégal";
+
   return (
     <div className="min-h-screen bg-background pb-24 md:pb-0">
-      {/* Desktop Navbar */}
-      <div className="hidden md:block">
-        <Navbar />
-      </div>
+      <div className="hidden md:block"><Navbar /></div>
 
       <main className="pt-0 md:pt-24">
-
-        {/* ═══════ MOBILE PRODUCT VIEW ═══════ */}
+        {/* ═══════ MOBILE VIEW ═══════ */}
         <div className="md:hidden">
-          {/* Mobile Header with back button */}
+          {/* Header */}
           <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-xl">
             <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
               <span className="material-symbols-outlined text-on-surface">arrow_back</span>
             </button>
             <h2 className="font-headline font-extrabold text-base">Détails</h2>
             <button className="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
-              <span className="material-symbols-outlined text-on-surface-variant">more_vert</span>
+              <span className="material-symbols-outlined text-on-surface-variant">share</span>
             </button>
           </div>
 
-          {/* Product Image */}
-          <div className="relative w-full aspect-square bg-surface-container mt-14">
-            {product.image_url ? (
-              <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <span className="material-symbols-outlined text-8xl text-on-surface-variant/20">eco</span>
-              </div>
-            )}
+          {/* Image Carousel */}
+          <div
+            className="relative w-full aspect-square bg-surface-container mt-14 overflow-hidden"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentImage}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="absolute inset-0"
+              >
+                {images[currentImage] ? (
+                  <img src={images[currentImage]} alt={product.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="material-symbols-outlined text-8xl text-on-surface-variant/20">eco</span>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+
             <button className="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface-container-lowest/80 backdrop-blur-sm flex items-center justify-center shadow-sm">
               <span className="material-symbols-outlined text-destructive">favorite</span>
             </button>
+
+            {/* Dots */}
+            {images.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                {images.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentImage(i)}
+                    className={`rounded-full transition-all ${i === currentImage ? "w-6 h-2 bg-primary" : "w-2 h-2 bg-surface-container-lowest/60"}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
           <div className="px-5 pt-5 pb-4">
-            <div className="flex items-start justify-between mb-2">
+            <div className="flex items-start justify-between mb-1">
               <h1 className="text-2xl font-headline font-extrabold tracking-tight flex-1">{product.name}</h1>
-              <span className="text-2xl font-headline font-extrabold text-primary ml-3">{formatPrice(product.price)}</span>
             </div>
-            <p className="text-xs text-on-surface-variant mb-4">{product.unit}</p>
+            <p className="text-xs text-on-surface-variant mb-1">{product.unit}</p>
+            <span className="text-2xl font-headline font-extrabold text-primary">{formatPrice(product.price)}</span>
 
             {/* Info chips */}
-            <div className="flex items-center gap-3 mb-5 overflow-x-auto pb-1">
-              <div className="flex items-center gap-1.5 text-xs text-on-surface-variant shrink-0">
+            <div className="flex items-center gap-3 mt-4 mb-5 overflow-x-auto pb-1">
+              <div className="flex items-center gap-1.5 text-xs text-on-surface-variant shrink-0 bg-surface-container-lowest px-3 py-1.5 rounded-full">
                 <span className="material-symbols-outlined text-primary text-sm">local_shipping</span>
                 Livraison 24h
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-on-surface-variant shrink-0">
-                <span className="material-symbols-outlined text-primary text-sm">schedule</span>
-                Frais du jour
+              <div className="flex items-center gap-1.5 text-xs text-on-surface-variant shrink-0 bg-surface-container-lowest px-3 py-1.5 rounded-full">
+                <span className="material-symbols-outlined text-primary text-sm">eco</span>
+                Bio
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-on-surface-variant shrink-0">
+              <div className="flex items-center gap-1.5 text-xs text-on-surface-variant shrink-0 bg-surface-container-lowest px-3 py-1.5 rounded-full">
                 <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                 4.5
               </div>
@@ -184,17 +258,11 @@ const ProductDetail = () => {
             {/* Quantity + Add to cart */}
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-0 bg-surface-container-lowest border border-border/30 rounded-full">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors"
-                >
+                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
                   <span className="material-symbols-outlined text-base">remove</span>
                 </button>
                 <span className="w-8 text-center font-headline font-extrabold text-base">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors"
-                >
+                <button onClick={() => setQuantity(quantity + 1)} className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
                   <span className="material-symbols-outlined text-base">add</span>
                 </button>
               </div>
@@ -208,30 +276,32 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          {/* Producer card */}
-          {product.shops && (
-            <Link to={`/boutique/${product.shop_id}`} className="block mx-5 mb-4">
-              <div className="bg-surface-container-lowest rounded-2xl p-4 border border-border/20 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center overflow-hidden shrink-0">
-                  {product.shops.logo_url ? (
-                    <img src={product.shops.logo_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="material-symbols-outlined text-primary">storefront</span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-headline font-extrabold text-sm truncate">{product.shops.name}</p>
-                  <p className="text-[10px] text-on-surface-variant">{product.shops.city || "Sénégal"}</p>
-                </div>
-                <span className="material-symbols-outlined text-on-surface-variant text-lg">chevron_right</span>
+          {/* Seller card */}
+          <div className="mx-5 mb-4">
+            <div className="bg-surface-container-lowest rounded-2xl p-4 border border-border/20 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center overflow-hidden shrink-0">
+                {sellerProfile?.avatar_url ? (
+                  <img src={sellerProfile.avatar_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="material-symbols-outlined text-primary">person</span>
+                )}
               </div>
-            </Link>
-          )}
+              <div className="flex-1 min-w-0">
+                <p className="font-headline font-extrabold text-sm truncate">{sellerName}</p>
+                <p className="text-[10px] text-on-surface-variant">{sellerCity}</p>
+              </div>
+              {(shop?.phone || sellerProfile?.phone) && (
+                <a href={`tel:${shop?.phone || sellerProfile?.phone}`} className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-on-primary-container text-sm">call</span>
+                </a>
+              )}
+            </div>
+          </div>
 
           {/* Related */}
           {related.length > 0 && (
             <div className="px-5 pb-6">
-              <h3 className="font-headline font-extrabold text-base mb-3">Vous aimerez aussi</h3>
+              <h3 className="font-headline font-extrabold text-base mb-3">Du même producteur</h3>
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {related.map(p => (
                   <Link to={`/produit/${p.id}`} key={p.id} className="shrink-0 w-36 bg-surface-container-lowest rounded-2xl overflow-hidden border border-border/20">
@@ -255,7 +325,7 @@ const ProductDetail = () => {
           )}
         </div>
 
-        {/* ═══════ DESKTOP PRODUCT VIEW ═══════ */}
+        {/* ═══════ DESKTOP VIEW ═══════ */}
         <div className="hidden md:block">
           {/* Breadcrumb */}
           <div className="px-6 md:px-12 max-w-[1440px] mx-auto py-6">
@@ -269,31 +339,43 @@ const ProductDetail = () => {
           {/* Product Hero */}
           <section className="px-6 md:px-12 max-w-[1440px] mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6 }}
-                className="relative rounded-2xl overflow-hidden aspect-square bg-inverse-surface"
-              >
-                {product.image_url ? (
-                  <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-inverse-surface">
-                    <span className="material-symbols-outlined text-8xl text-inverse-on-surface/30">eco</span>
+              {/* Image gallery */}
+              <div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6 }}
+                  className="relative rounded-2xl overflow-hidden aspect-square bg-inverse-surface mb-4"
+                >
+                  {images[currentImage] ? (
+                    <img src={images[currentImage]} alt={product.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-inverse-surface">
+                      <span className="material-symbols-outlined text-8xl text-inverse-on-surface/30">eco</span>
+                    </div>
+                  )}
+                  <div className="absolute top-5 left-5">
+                    <span className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-xs font-headline font-bold uppercase tracking-wider">
+                      Frais du matin
+                    </span>
+                  </div>
+                </motion.div>
+
+                {/* Thumbnails */}
+                {images.length > 1 && (
+                  <div className="flex gap-3">
+                    {images.map((img, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentImage(i)}
+                        className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${i === currentImage ? "border-primary ring-2 ring-primary/20" : "border-border/20 opacity-60 hover:opacity-100"}`}
+                      >
+                        <img src={img} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
                   </div>
                 )}
-                <div className="absolute top-5 left-5">
-                  <span className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-xs font-headline font-bold uppercase tracking-wider">
-                    Frais du matin
-                  </span>
-                </div>
-                <div className="absolute bottom-5 left-5">
-                  <span className="inline-flex items-center gap-2 bg-foreground/80 backdrop-blur-sm text-background px-4 py-2 rounded-full text-sm font-medium">
-                    <span className="material-symbols-outlined text-primary text-lg">eco</span>
-                    Agriculture biologique
-                  </span>
-                </div>
-              </motion.div>
+              </div>
 
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -302,9 +384,9 @@ const ProductDetail = () => {
                 className="flex flex-col"
               >
                 <div className="flex items-center gap-3 mb-4">
-                  {product.shops?.city && (
+                  {product.categories?.name && (
                     <span className="px-4 py-1.5 rounded-full border border-border text-xs font-headline font-bold uppercase tracking-wider text-on-surface-variant">
-                      {product.shops.city}
+                      {product.categories.name}
                     </span>
                   )}
                   <span className="px-4 py-1.5 rounded-full border border-primary/30 bg-primary/5 text-xs font-headline font-bold uppercase tracking-wider text-primary">
@@ -346,25 +428,21 @@ const ProductDetail = () => {
                   </button>
                 </div>
 
+                {/* Nutritional info */}
                 <div className="bg-surface-container-lowest rounded-2xl p-4 md:p-6 border border-border/30">
                   <h3 className="text-xs font-headline font-bold uppercase tracking-widest text-on-surface-variant mb-5">Valeurs Nutritionnelles</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                    <div>
-                      <div className="text-lg font-headline font-extrabold">41 kcal</div>
-                      <div className="text-xs text-on-surface-variant mt-1">Calories</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-headline font-extrabold">2.8g</div>
-                      <div className="text-xs text-on-surface-variant mt-1">Fibres</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-headline font-extrabold">835 µg</div>
-                      <div className="text-xs text-on-surface-variant mt-1">Vitamine A</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-headline font-extrabold">320 mg</div>
-                      <div className="text-xs text-on-surface-variant mt-1">Potassium</div>
-                    </div>
+                    {[
+                      { val: "41 kcal", label: "Calories" },
+                      { val: "2.8g", label: "Fibres" },
+                      { val: "835 µg", label: "Vitamine A" },
+                      { val: "320 mg", label: "Potassium" },
+                    ].map((n, i) => (
+                      <div key={i}>
+                        <div className="text-lg font-headline font-extrabold">{n.val}</div>
+                        <div className="text-xs text-on-surface-variant mt-1">{n.label}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </motion.div>
@@ -385,7 +463,7 @@ const ProductDetail = () => {
                   <span className="material-symbols-outlined text-on-surface-variant">location_on</span>
                   <div>
                     <div className="text-xs font-headline font-bold uppercase tracking-widest text-on-surface-variant">Parcelle</div>
-                    <div className="font-headline font-bold">{product.shops?.location || "Non renseigné"}</div>
+                    <div className="font-headline font-bold">{shop?.location || "Non renseigné"}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -419,70 +497,61 @@ const ProductDetail = () => {
           </section>
 
           {/* Producer Section */}
-          {product.shops && (
-            <section className="px-6 md:px-12 max-w-[1440px] mx-auto mb-24">
-              <Link to={`/boutique/${product.shop_id}`} className="block group">
-                <div className="bg-inverse-surface rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center gap-10 hover:ring-2 hover:ring-primary transition-all">
-                  <div className="shrink-0">
-                    <div className="w-48 h-48 md:w-56 md:h-56 rounded-full border-4 border-primary overflow-hidden bg-inverse-surface">
-                      {sellerProfile?.avatar_url ? (
-                        <img src={sellerProfile.avatar_url} alt={sellerProfile.full_name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <span className="material-symbols-outlined text-6xl text-inverse-on-surface/40">person</span>
-                        </div>
-                      )}
+          <section className="px-6 md:px-12 max-w-[1440px] mx-auto mb-24">
+            <div className="bg-inverse-surface rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center gap-10">
+              <div className="shrink-0">
+                <div className="w-48 h-48 md:w-56 md:h-56 rounded-full border-4 border-primary overflow-hidden bg-inverse-surface">
+                  {sellerProfile?.avatar_url ? (
+                    <img src={sellerProfile.avatar_url} alt={sellerName} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="material-symbols-outlined text-6xl text-inverse-on-surface/40">person</span>
                     </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <span className="text-xs font-headline font-bold uppercase tracking-widest text-primary mb-2 inline-block">Votre Producteur</span>
+                <h3 className="text-4xl md:text-5xl font-headline font-extrabold text-surface mb-3">{sellerName}</h3>
+                <div className="flex items-center justify-center md:justify-start gap-4 text-inverse-on-surface text-sm mb-6">
+                  <span className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-sm">location_on</span>
+                    {sellerCity}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-8">
+                  <div>
+                    <div className="text-3xl font-headline font-extrabold text-primary">100%</div>
+                    <div className="text-xs text-inverse-on-surface mt-1">Prix Équitable</div>
                   </div>
-                  <div className="flex-1 text-center md:text-left">
-                    <span className="text-xs font-headline font-bold uppercase tracking-widest text-primary mb-2 inline-block">Votre Producteur</span>
-                    <h3 className="text-4xl md:text-5xl font-headline font-extrabold text-surface mb-3">
-                      {sellerProfile?.full_name || product.shops.name}
-                    </h3>
-                    <div className="flex items-center justify-center md:justify-start gap-4 text-inverse-on-surface text-sm mb-6">
-                      <span className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-sm">storefront</span>
-                        {product.shops.name}
-                      </span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-sm">location_on</span>
-                        {product.shops.city || product.shops.location || "Sénégal"}
-                      </span>
-                    </div>
-                    {product.shops.description && (
-                      <p className="text-inverse-on-surface leading-relaxed mb-8">{product.shops.description}</p>
-                    )}
-                    <div className="grid grid-cols-3 gap-8">
-                      <div>
-                        <div className="text-3xl font-headline font-extrabold text-primary">100%</div>
-                        <div className="text-xs text-inverse-on-surface mt-1">Prix Équitable</div>
-                      </div>
-                      <div>
-                        <div className="text-3xl font-headline font-extrabold text-primary">24h</div>
-                        <div className="text-xs text-inverse-on-surface mt-1">Champ → Table</div>
-                      </div>
-                      <div>
-                        <div className="text-3xl font-headline font-extrabold text-primary">0</div>
-                        <div className="text-xs text-inverse-on-surface mt-1">Intermédiaires</div>
-                      </div>
-                    </div>
-                    <div className="mt-6 inline-flex items-center gap-2 text-primary text-sm font-bold group-hover:underline">
-                      Voir la boutique
-                      <span className="material-symbols-outlined text-base group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                    </div>
+                  <div>
+                    <div className="text-3xl font-headline font-extrabold text-primary">24h</div>
+                    <div className="text-xs text-inverse-on-surface mt-1">Champ → Table</div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-headline font-extrabold text-primary">0</div>
+                    <div className="text-xs text-inverse-on-surface mt-1">Intermédiaires</div>
                   </div>
                 </div>
-              </Link>
-            </section>
-          )}
+                {(shop?.phone || sellerProfile?.phone) && (
+                  <a
+                    href={`tel:${shop?.phone || sellerProfile?.phone}`}
+                    className="mt-6 inline-flex items-center gap-2 bg-primary-container text-on-primary-container px-6 py-3 rounded-full font-headline font-bold text-sm hover:scale-95 transition-transform"
+                  >
+                    <span className="material-symbols-outlined text-base">call</span>
+                    Contacter le producteur
+                  </a>
+                )}
+              </div>
+            </div>
+          </section>
 
           {/* Related Products */}
           {related.length > 0 && (
             <section className="py-24 px-6 md:px-12 max-w-[1440px] mx-auto">
-              <h2 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tighter mb-2">Vous Aimerez Aussi</h2>
+              <h2 className="text-4xl md:text-5xl font-headline font-extrabold tracking-tighter mb-2">Du Même Producteur</h2>
               <div className="w-16 h-1 bg-primary rounded-full mb-12" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 {related.map(p => (
                   <Link to={`/produit/${p.id}`} key={p.id} className="group bg-surface-container-lowest rounded-2xl overflow-hidden border border-border/30 hover:shadow-xl transition-all">
                     <div className="h-64 bg-surface-container overflow-hidden">
@@ -496,10 +565,6 @@ const ProductDetail = () => {
                     </div>
                     <div className="p-6">
                       <h3 className="font-headline font-extrabold text-lg mb-1">{p.name}</h3>
-                      <div className="text-sm mb-3">
-                        <span className="text-primary font-bold">{p.shops?.name}</span>
-                        {p.shops?.city && <span className="text-on-surface-variant"> • {p.shops.city}</span>}
-                      </div>
                       <div className="text-xs text-on-surface-variant mb-1">{p.unit}</div>
                       <div className="flex items-center justify-between">
                         <span className="text-xl font-headline font-extrabold">{formatPrice(p.price)}</span>
@@ -513,9 +578,7 @@ const ProductDetail = () => {
           )}
         </div>
       </main>
-      <div className="hidden md:block">
-        <Footer />
-      </div>
+      <div className="hidden md:block"><Footer /></div>
     </div>
   );
 };

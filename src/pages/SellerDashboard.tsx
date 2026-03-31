@@ -622,7 +622,7 @@ const SellerDashboard = () => {
     <>
       <div className="mb-8 mt-8">
         <h1 className="text-3xl font-extrabold tracking-tight">Paramètres</h1>
-        <p className="text-on-surface-variant text-sm mt-1">Gérez votre profil et votre boutique</p>
+        <p className="text-on-surface-variant text-sm mt-1">Gérez votre profil et vos informations</p>
       </div>
 
       <form onSubmit={handleSaveSettings} className="space-y-8 max-w-2xl">

@@ -1,6 +1,6 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
@@ -25,6 +25,12 @@ type SellerProfile = {
   city: string | null;
 };
 
+type ProductImage = {
+  id: string;
+  image_url: string;
+  display_order: number;
+};
+
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -34,43 +40,82 @@ const ProductDetail = () => {
   const [sellerProfile, setSellerProfile] = useState<SellerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [productImages, setProductImages] = useState<string[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     if (!id) return;
     setQuantity(1);
-    supabase
-      .from("products")
-      .select("*, shops(name, location, seller_id, description, logo_url, city, phone)")
-      .eq("id", id)
-      .single()
-      .then(async ({ data }) => {
-        if (data) {
-          const product = data as Product;
-          setProduct(product);
-          if (product.shops?.seller_id) {
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("full_name, avatar_url, city")
-              .eq("user_id", product.shops.seller_id)
-              .single();
-            if (profile) setSellerProfile(profile);
-          }
-          supabase
-            .from("products")
-            .select("*, shops(name, location, seller_id, description, logo_url, city, phone)")
-            .eq("shop_id", data.shop_id)
-            .neq("id", data.id)
-            .eq("is_active", true)
-            .limit(3)
-            .then(({ data: rel }) => {
-              if (rel) setRelated(rel as Product[]);
-            });
+    setCurrentImageIndex(0);
+
+    const loadProduct = async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("*, shops(name, location, seller_id, description, logo_url, city, phone)")
+        .eq("id", id)
+        .single();
+
+      if (data) {
+        const product = data as Product;
+        setProduct(product);
+
+        // Load additional images
+        const { data: images } = await supabase
+          .from("product_images")
+          .select("id, image_url, display_order")
+          .eq("product_id", id)
+          .order("display_order");
+
+        const allImages: string[] = [];
+        if (product.image_url) allImages.push(product.image_url);
+        if (images) {
+          images.forEach((img: ProductImage) => {
+            if (!allImages.includes(img.image_url)) allImages.push(img.image_url);
+          });
         }
-        setLoading(false);
-      });
+        setProductImages(allImages.length > 0 ? allImages : ["/placeholder.svg"]);
+
+        if (product.shops?.seller_id) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name, avatar_url, city")
+            .eq("user_id", product.shops.seller_id)
+            .single();
+          if (profile) setSellerProfile(profile);
+        }
+
+        const { data: rel } = await supabase
+          .from("products")
+          .select("*, shops(name, location, seller_id, description, logo_url, city, phone)")
+          .eq("shop_id", data.shop_id)
+          .neq("id", data.id)
+          .eq("is_active", true)
+          .limit(3);
+        if (rel) setRelated(rel as Product[]);
+      }
+      setLoading(false);
+    };
+
+    loadProduct();
   }, [id]);
 
   const formatPrice = (n: number) => n.toLocaleString("fr-FR") + " FCFA";
+
+  // Touch swipe for image carousel
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => setTouchStart(e.touches[0].clientX);
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const diff = touchStart - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0 && currentImageIndex < productImages.length - 1) {
+        setCurrentImageIndex(currentImageIndex + 1);
+      } else if (diff < 0 && currentImageIndex > 0) {
+        setCurrentImageIndex(currentImageIndex - 1);
+      }
+    }
+    setTouchStart(null);
+  };
 
   if (loading) {
     return (
@@ -126,52 +171,78 @@ const ProductDetail = () => {
 
         {/* ═══════ MOBILE PRODUCT VIEW ═══════ */}
         <div className="md:hidden">
-          {/* Mobile Header with back button */}
+          {/* Mobile Header */}
           <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-xl">
             <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
               <span className="material-symbols-outlined text-on-surface">arrow_back</span>
             </button>
             <h2 className="font-headline font-extrabold text-base">Détails</h2>
             <button className="w-10 h-10 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
-              <span className="material-symbols-outlined text-on-surface-variant">more_vert</span>
+              <span className="material-symbols-outlined text-on-surface-variant">shopping_bag</span>
             </button>
           </div>
 
-          {/* Product Image */}
-          <div className="relative w-full aspect-square bg-surface-container mt-14">
-            {product.image_url ? (
-              <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <span className="material-symbols-outlined text-8xl text-on-surface-variant/20">eco</span>
-              </div>
-            )}
+          {/* Image Carousel */}
+          <div
+            className="relative w-full aspect-square bg-surface-container-low mt-14 overflow-hidden"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={currentImageIndex}
+                src={productImages[currentImageIndex]}
+                alt={product.name}
+                className="w-full h-full object-cover"
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+                transition={{ duration: 0.25 }}
+              />
+            </AnimatePresence>
             <button className="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface-container-lowest/80 backdrop-blur-sm flex items-center justify-center shadow-sm">
               <span className="material-symbols-outlined text-destructive">favorite</span>
             </button>
+
+            {/* Carousel dots */}
+            {productImages.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
+                {productImages.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImageIndex(idx)}
+                    className={`rounded-full transition-all duration-300 ${
+                      idx === currentImageIndex
+                        ? "w-6 h-2.5 bg-primary"
+                        : "w-2.5 h-2.5 bg-on-surface-variant/30"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
           <div className="px-5 pt-5 pb-4">
-            <div className="flex items-start justify-between mb-2">
-              <h1 className="text-2xl font-headline font-extrabold tracking-tight flex-1">{product.name}</h1>
-              <span className="text-2xl font-headline font-extrabold text-primary ml-3">{formatPrice(product.price)}</span>
+            <div className="flex items-start justify-between mb-1">
+              <h1 className="text-xl font-headline font-extrabold tracking-tight flex-1">{product.name}</h1>
+              <span className="text-xl font-headline font-extrabold text-foreground ml-3">{formatPrice(product.price)}</span>
             </div>
-            <p className="text-xs text-on-surface-variant mb-4">{product.unit}</p>
 
-            {/* Info chips */}
-            <div className="flex items-center gap-3 mb-5 overflow-x-auto pb-1">
-              <div className="flex items-center gap-1.5 text-xs text-on-surface-variant shrink-0">
-                <span className="material-symbols-outlined text-primary text-sm">local_shipping</span>
-                Livraison 24h
+            {/* Rating + Info chips */}
+            <div className="flex items-center gap-4 mt-2 mb-5">
+              <div className="flex items-center gap-1 text-xs text-on-surface-variant">
+                <span className="material-symbols-outlined text-tertiary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                <span className="font-bold">4.5</span>
+                <span>Rating</span>
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-on-surface-variant shrink-0">
-                <span className="material-symbols-outlined text-primary text-sm">schedule</span>
+              <div className="flex items-center gap-1 text-xs text-on-surface-variant">
+                <span className="material-symbols-outlined text-on-surface-variant text-sm">schedule</span>
                 Frais du jour
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-on-surface-variant shrink-0">
-                <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                4.5
+              <div className="flex items-center gap-1 text-xs text-on-surface-variant">
+                <span className="material-symbols-outlined text-on-surface-variant text-sm">local_fire_department</span>
+                {product.unit}
               </div>
             </div>
 
@@ -181,7 +252,7 @@ const ProductDetail = () => {
               {product.description || "Produit frais cultivé avec soin par nos agriculteurs locaux. Sans pesticides, récolté à maturité pour vous garantir la meilleure qualité."}
             </p>
 
-            {/* Quantity + Add to cart */}
+            {/* Quantity + Buy Now */}
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-0 bg-surface-container-lowest border border-border/30 rounded-full">
                 <button
@@ -190,10 +261,12 @@ const ProductDetail = () => {
                 >
                   <span className="material-symbols-outlined text-base">remove</span>
                 </button>
-                <span className="w-8 text-center font-headline font-extrabold text-base">{quantity}</span>
+                <span className="w-10 text-center font-headline font-extrabold text-base">
+                  {String(quantity).padStart(2, "0")}
+                </span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
-                  className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors"
+                  className="w-11 h-11 flex items-center justify-center rounded-full bg-primary text-primary-foreground"
                 >
                   <span className="material-symbols-outlined text-base">add</span>
                 </button>
@@ -201,9 +274,9 @@ const ProductDetail = () => {
               <button
                 onClick={handleAddToCart}
                 disabled={product.stock <= 0}
-                className="flex-1 bg-primary-container text-primary-container-foreground py-3.5 rounded-full font-headline font-extrabold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
+                className="flex-1 bg-primary text-primary-foreground py-3.5 rounded-full font-headline font-extrabold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
               >
-                Ajouter au panier
+                Acheter
               </button>
             </div>
           </div>
@@ -269,31 +342,49 @@ const ProductDetail = () => {
           {/* Product Hero */}
           <section className="px-6 md:px-12 max-w-[1440px] mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6 }}
-                className="relative rounded-2xl overflow-hidden aspect-square bg-inverse-surface"
-              >
-                {product.image_url ? (
-                  <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-inverse-surface">
-                    <span className="material-symbols-outlined text-8xl text-inverse-on-surface/30">eco</span>
+              {/* Image gallery */}
+              <div className="space-y-4">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6 }}
+                  className="relative rounded-2xl overflow-hidden aspect-square bg-surface-container-low"
+                >
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={currentImageIndex}
+                      src={productImages[currentImageIndex]}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </AnimatePresence>
+                  <div className="absolute top-5 left-5">
+                    <span className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-xs font-headline font-bold uppercase tracking-wider">
+                      Frais du matin
+                    </span>
+                  </div>
+                </motion.div>
+                {/* Thumbnail strip */}
+                {productImages.length > 1 && (
+                  <div className="flex gap-3">
+                    {productImages.map((img, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentImageIndex(idx)}
+                        className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${
+                          idx === currentImageIndex ? "border-primary ring-2 ring-primary/20" : "border-transparent opacity-60 hover:opacity-100"
+                        }`}
+                      >
+                        <img src={img} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
                   </div>
                 )}
-                <div className="absolute top-5 left-5">
-                  <span className="bg-primary text-primary-foreground px-4 py-1.5 rounded-full text-xs font-headline font-bold uppercase tracking-wider">
-                    Frais du matin
-                  </span>
-                </div>
-                <div className="absolute bottom-5 left-5">
-                  <span className="inline-flex items-center gap-2 bg-foreground/80 backdrop-blur-sm text-background px-4 py-2 rounded-full text-sm font-medium">
-                    <span className="material-symbols-outlined text-primary text-lg">eco</span>
-                    Agriculture biologique
-                  </span>
-                </div>
-              </motion.div>
+              </div>
 
               <motion.div
                 initial={{ opacity: 0, y: 30 }}

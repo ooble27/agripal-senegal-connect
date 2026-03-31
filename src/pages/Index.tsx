@@ -230,8 +230,8 @@ const Index = () => {
               <div className="aspect-square rounded-2xl bg-surface/5 flex items-center justify-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary-container/10 to-transparent" />
                 <div className="text-center relative z-10">
-                  <span className="material-symbols-outlined text-primary-container text-8xl mb-4 block">storefront</span>
-                  <div className="text-lg font-headline font-extrabold text-surface">Votre boutique en ligne</div>
+                  <span className="material-symbols-outlined text-primary-container text-8xl mb-4 block">eco</span>
+                  <div className="text-lg font-headline font-extrabold text-surface">Vendez vos produits</div>
                   <div className="text-sm text-inverse-on-surface mt-1">en 5 minutes</div>
                 </div>
               </div>

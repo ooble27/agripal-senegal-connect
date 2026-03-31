@@ -8,6 +8,17 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import fruitsPromo from "@/assets/fruits-promo.png";
+import catFruits from "@/assets/cat-fruits.png";
+import catLegumes from "@/assets/cat-legumes.png";
+import catCereales from "@/assets/cat-cereales.png";
+import catEpices from "@/assets/cat-epices.png";
+
+const categoryImages: Record<string, string> = {
+  fruits: catFruits,
+  légumes: catLegumes,
+  céréales: catCereales,
+  épices: catEpices,
+};
 
 type Product = Tables<"products"> & {
   shops: { name: string; location: string | null; seller_id: string; city: string | null } | null;

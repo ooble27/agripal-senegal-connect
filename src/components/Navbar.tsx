@@ -104,7 +104,7 @@ const Navbar = () => {
                     onClick={() => setMobileOpen(false)}
                     className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 border-b border-border/20"
                   >
-                    Ma Boutique
+                    Mes Produits
                   </Link>
                 ) : (
                   <Link

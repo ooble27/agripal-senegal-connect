@@ -59,7 +59,7 @@ const Marche = () => {
       priceNum: product.price,
       unit: product.unit,
       image: product.image_url || "/placeholder.svg",
-      farmer: product.shops?.name || "Vendeur",
+      farmer: product.shops?.name || "Producteur",
       shopId: product.shop_id,
     });
   };

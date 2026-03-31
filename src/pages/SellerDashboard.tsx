@@ -916,14 +916,72 @@ const SellerDashboard = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Photo du produit</label>
-                    {editingProduct?.image_url && !prodImage && (
-                      <div className="mb-2 flex items-center gap-2">
-                        <img src={editingProduct.image_url} alt="" className="w-12 h-12 rounded-xl object-cover" />
-                        <span className="text-xs text-on-surface-variant">Photo actuelle</span>
+                    <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">
+                      Photos du produit (jusqu'à 4)
+                    </label>
+                    {/* Existing images */}
+                    {existingImages.length > 0 && (
+                      <div className="flex gap-2 mb-2 flex-wrap">
+                        {editingProduct?.image_url && (
+                          <div className="relative">
+                            <img src={editingProduct.image_url} alt="" className="w-16 h-16 rounded-xl object-cover border-2 border-primary" />
+                            <span className="absolute -top-1 -left-1 bg-primary text-primary-foreground text-[8px] font-bold px-1.5 py-0.5 rounded-full">1</span>
+                          </div>
+                        )}
+                        {existingImages.map((img, idx) => (
+                          <div key={img.id} className="relative">
+                            <img src={img.image_url} alt="" className="w-16 h-16 rounded-xl object-cover" />
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                await supabase.from("product_images").delete().eq("id", img.id);
+                                setExistingImages(existingImages.filter(i => i.id !== img.id));
+                              }}
+                              className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
+                            >
+                              <span className="material-symbols-outlined text-xs">close</span>
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
-                    <input type="file" accept="image/*" onChange={e => setProdImage(e.target.files?.[0] || null)} className="w-full bg-surface-container-low rounded-2xl p-4 text-sm" />
+                    {/* New image previews */}
+                    {prodImages.length > 0 && (
+                      <div className="flex gap-2 mb-2 flex-wrap">
+                        {prodImages.map((file, idx) => (
+                          <div key={idx} className="relative">
+                            <img src={URL.createObjectURL(file)} alt="" className="w-16 h-16 rounded-xl object-cover border border-primary/30" />
+                            <button
+                              type="button"
+                              onClick={() => setProdImages(prodImages.filter((_, i) => i !== idx))}
+                              className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
+                            >
+                              <span className="material-symbols-outlined text-xs">close</span>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={e => {
+                        const files = Array.from(e.target.files || []);
+                        const totalExisting = (editingProduct?.image_url ? 1 : 0) + existingImages.length;
+                        const maxNew = 4 - totalExisting - prodImages.length;
+                        if (files.length > maxNew) {
+                          toast.error(`Vous pouvez ajouter ${maxNew} photo(s) de plus (max 4)`);
+                        }
+                        setProdImages([...prodImages, ...files.slice(0, Math.max(0, maxNew))]);
+                        e.target.value = "";
+                      }}
+                      className="w-full bg-surface-container-low rounded-2xl p-4 text-sm"
+                      disabled={(editingProduct?.image_url ? 1 : 0) + existingImages.length + prodImages.length >= 4}
+                    />
+                    <p className="text-[10px] text-on-surface-variant mt-1">
+                      {(editingProduct?.image_url ? 1 : 0) + existingImages.length + prodImages.length}/4 photos
+                    </p>
                   </div>
                   <button type="submit" className="w-full bg-primary-container text-primary-container-foreground py-4 rounded-full font-headline font-extrabold text-base hover:scale-[0.97] transition-transform mt-4">
                     {editingProduct ? "Enregistrer" : "Publier le produit"}

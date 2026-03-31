@@ -10,8 +10,9 @@ import type { Tables } from "@/integrations/supabase/types";
 import fruitsPromo from "@/assets/fruits-promo.png";
 
 type Product = Tables<"products"> & {
-  shops: { name: string; location: string | null; seller_id: string; city: string | null } | null;
+  shops: { name: string; seller_id: string } | null;
   categories: { name: string; icon: string | null } | null;
+  seller_profile?: { full_name: string } | null;
 };
 
 type Category = Tables<"categories">;

@@ -52,10 +52,10 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Cart button - always visible */}
+          {/* Cart button - desktop only (mobile uses BottomNav) */}
           <button
             onClick={() => setIsOpen(true)}
-            className="relative bg-primary-container text-primary-container-foreground font-headline font-extrabold uppercase tracking-tight text-sm px-5 md:px-6 py-2 rounded-full hover:scale-95 transition-transform duration-200"
+            className="hidden md:flex relative bg-primary-container text-primary-container-foreground font-headline font-extrabold uppercase tracking-tight text-sm px-5 md:px-6 py-2 rounded-full hover:scale-95 transition-transform duration-200"
           >
             Panier
             {totalItems > 0 && (

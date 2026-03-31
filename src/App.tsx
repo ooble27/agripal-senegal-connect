@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import CartDrawer from "./components/CartDrawer";
+import BottomNav from "./components/BottomNav";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <CartDrawer />
+            <BottomNav />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/marche" element={<Marche />} />

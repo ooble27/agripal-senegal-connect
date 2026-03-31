@@ -131,7 +131,7 @@ const SellerDashboard = () => {
     toast.success("Boutique créée !");
   };
 
-  const openEditProduct = (p: Product) => {
+  const openEditProduct = async (p: Product) => {
     setEditingProduct(p);
     setProdName(p.name);
     setProdDesc(p.description || "");
@@ -139,13 +139,20 @@ const SellerDashboard = () => {
     setProdUnit(p.unit);
     setProdStock(String(p.stock));
     setProdCategory(p.category_id || "");
-    setProdImage(null);
+    setProdImages([]);
+    // Load existing images
+    const { data: imgs } = await supabase
+      .from("product_images")
+      .select("id, image_url, display_order")
+      .eq("product_id", p.id)
+      .order("display_order");
+    setExistingImages(imgs || []);
     setShowAddProduct(true);
   };
 
   const resetProductForm = () => {
     setProdName(""); setProdDesc(""); setProdPrice(""); setProdStock(""); setProdCategory("");
-    setProdImage(null); setEditingProduct(null);
+    setProdImages([]); setExistingImages([]); setEditingProduct(null);
   };
 
   const handleAddProduct = async (e: React.FormEvent) => {

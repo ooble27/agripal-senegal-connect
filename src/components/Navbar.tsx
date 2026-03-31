@@ -32,7 +32,7 @@ const Navbar = () => {
               <>
                 {role === "seller" ? (
                   <Link to="/dashboard" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
-                    Ma Boutique
+                    Mes Produits
                   </Link>
                 ) : (
                   <>

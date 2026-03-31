@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import fruitsPromo from "@/assets/fruits-promo.png";
 
 type Product = Tables<"products"> & {
   shops: { name: string; location: string | null; seller_id: string; city: string | null } | null;
@@ -128,21 +129,23 @@ const Marche = () => {
 
         {/* ═══════ PROMO BANNER (mobile) ═══════ */}
         <section className="md:hidden px-5 mt-4">
-          <div className="relative bg-primary rounded-2xl p-5 overflow-hidden">
+          <div className="relative bg-primary rounded-2xl p-5 overflow-hidden flex items-center">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary-container/20 rounded-full -translate-y-1/3 translate-x-1/3" />
-            <div className="absolute bottom-0 right-8 w-16 h-16 bg-primary-container/10 rounded-full translate-y-1/3" />
-            <span className="inline-block bg-primary-container text-primary-container-foreground text-[10px] font-bold uppercase px-2.5 py-1 rounded-full mb-2">
-              Nouveau 🌿
-            </span>
-            <h3 className="text-surface font-headline font-extrabold text-lg leading-tight mb-1">
-              Produits Frais<br />Chaque Jour
-            </h3>
-            <Link
-              to="/marche"
-              className="inline-block bg-surface-container-lowest text-primary text-xs font-bold px-4 py-2 rounded-full mt-2"
-            >
-              Voir tout
-            </Link>
+            <div className="flex-1 relative z-10">
+              <span className="inline-block bg-primary-container text-primary-container-foreground text-[10px] font-bold uppercase px-2.5 py-1 rounded-full mb-2">
+                Nouveau 🌿
+              </span>
+              <h3 className="text-surface font-headline font-extrabold text-lg leading-tight mb-1">
+                Produits Frais<br />Chaque Jour
+              </h3>
+              <Link
+                to="/marche"
+                className="inline-block bg-surface-container-lowest text-primary text-xs font-bold px-4 py-2 rounded-full mt-2"
+              >
+                Voir tout
+              </Link>
+            </div>
+            <img src={fruitsPromo} alt="Fruits frais" className="w-32 h-32 object-contain -mr-2 relative z-10" />
           </div>
         </section>
 

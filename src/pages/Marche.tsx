@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import fruitsPromo from "@/assets/fruits-promo.png";
 
 type Product = Tables<"products"> & {
   shops: { name: string; location: string | null; seller_id: string; city: string | null } | null;

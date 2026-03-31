@@ -16,16 +16,6 @@ type Product = Tables<"products"> & {
 
 type Category = Tables<"categories">;
 
-// Pastel background colors for product cards
-const cardBgColors = [
-  "bg-[hsl(40_60%_93%)]",   // warm cream
-  "bg-[hsl(340_50%_93%)]",  // soft pink
-  "bg-[hsl(100_40%_92%)]",  // light green
-  "bg-[hsl(270_40%_93%)]",  // soft purple
-  "bg-[hsl(60_50%_92%)]",   // light yellow
-  "bg-[hsl(200_40%_93%)]",  // light blue
-];
-
 const Marche = () => {
   const { addItem } = useCart();
   const { user, profile } = useAuth();
@@ -220,38 +210,47 @@ const Marche = () => {
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.03, duration: 0.3 }}
-                    className="group bg-surface-container-lowest rounded-2xl overflow-hidden flex flex-col hover:shadow-xl transition-all h-full border border-border/10"
+                    className="group bg-surface-container-lowest rounded-2xl overflow-hidden flex flex-col hover:shadow-xl transition-all h-full border border-border/20"
                   >
-                    {/* Image with pastel background */}
-                    <div className={`relative aspect-square overflow-hidden rounded-2xl m-2 ${cardBgColors[i % cardBgColors.length]}`}>
+                    <div className="relative aspect-square overflow-hidden">
                       {product.image_url ? (
                         <img
                           alt={product.name}
-                          className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           src={product.image_url}
                           loading="lazy"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
+                        <div className="w-full h-full flex items-center justify-center bg-surface-container">
                           <span className="material-symbols-outlined text-4xl text-on-surface-variant/20">eco</span>
                         </div>
                       )}
+                      {/* Heart / favorite button */}
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        className="absolute top-2 right-2 w-7 h-7 md:w-8 md:h-8 rounded-full bg-surface-container-lowest/80 backdrop-blur-sm flex items-center justify-center shadow-sm"
+                      >
+                        <span className="material-symbols-outlined text-destructive text-sm md:text-base">favorite</span>
+                      </button>
                       {product.stock <= 0 && (
-                        <div className="absolute inset-0 bg-foreground/50 flex items-center justify-center rounded-2xl">
+                        <div className="absolute inset-0 bg-foreground/50 flex items-center justify-center">
                           <span className="bg-destructive text-destructive-foreground px-3 py-1 rounded-full text-[10px] font-bold">Rupture</span>
                         </div>
                       )}
                     </div>
-                    <div className="px-3 pb-3 pt-1 flex flex-col flex-grow">
-                      <h3 className="text-sm md:text-base font-headline font-extrabold leading-tight truncate">{product.name}</h3>
+                    <div className="p-3 md:p-5 flex flex-col flex-grow">
+                      <h3 className="text-xs md:text-lg font-headline font-extrabold leading-tight truncate">{product.name}</h3>
+                      <div className="text-[10px] md:text-xs text-on-surface-variant mt-0.5">
+                        {product.unit}
+                      </div>
                       <div className="mt-auto pt-2 flex justify-between items-center">
-                        <span className="text-sm md:text-lg font-headline font-extrabold text-foreground">{formatPrice(product.price)}</span>
+                        <span className="text-sm md:text-lg font-headline font-extrabold text-primary">{formatPrice(product.price)}</span>
                         <button
                           onClick={(e) => handleAddToCart(product, e)}
                           disabled={product.stock <= 0}
-                          className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-surface-container-lowest border border-border/30 flex items-center justify-center hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors disabled:opacity-40 shadow-sm"
+                          className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary-container flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-40"
                         >
-                          <span className="material-symbols-outlined text-sm md:text-base">shopping_bag</span>
+                          <span className="material-symbols-outlined text-sm md:text-base">add</span>
                         </button>
                       </div>
                     </div>

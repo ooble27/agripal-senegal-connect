@@ -8,6 +8,17 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import fruitsPromo from "@/assets/fruits-promo.png";
+import catFruits from "@/assets/cat-fruits.png";
+import catLegumes from "@/assets/cat-legumes.png";
+import catCereales from "@/assets/cat-cereales.png";
+import catEpices from "@/assets/cat-epices.png";
+
+const categoryImages: Record<string, string> = {
+  fruits: catFruits,
+  légumes: catLegumes,
+  céréales: catCereales,
+  épices: catEpices,
+};
 
 type Product = Tables<"products"> & {
   shops: { name: string; location: string | null; seller_id: string; city: string | null } | null;
@@ -171,20 +182,29 @@ const Marche = () => {
             >
               Tout
             </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
-                className={`shrink-0 px-4 py-2 rounded-full text-xs font-headline font-extrabold transition-colors flex items-center gap-1.5 ${
-                  selectedCategory === cat.id
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-surface-container-lowest text-on-surface-variant border border-border/30"
-                }`}
-              >
-                {cat.icon && <span className="material-symbols-outlined text-sm">{cat.icon}</span>}
-                {cat.name}
-              </button>
-            ))}
+            {categories
+              .filter((cat) => cat.name.toLowerCase() !== "tubercules")
+              .map((cat) => {
+                const img = categoryImages[cat.name.toLowerCase()];
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
+                    className={`shrink-0 px-4 py-2 rounded-full text-xs font-headline font-extrabold transition-colors flex items-center gap-2 ${
+                      selectedCategory === cat.id
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-surface-container-lowest text-on-surface-variant border border-border/30"
+                    }`}
+                  >
+                    {img ? (
+                      <img src={img} alt={cat.name} className="w-6 h-6 rounded-full object-cover" />
+                    ) : cat.icon ? (
+                      <span className="material-symbols-outlined text-sm">{cat.icon}</span>
+                    ) : null}
+                    {cat.name}
+                  </button>
+                );
+              })}
           </div>
         </section>
 

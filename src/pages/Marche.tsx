@@ -145,7 +145,7 @@ const Marche = () => {
                 Voir tout
               </Link>
             </div>
-            <img src={fruitsPromo} alt="Fruits frais" className="w-32 h-32 object-contain -mr-2 relative z-10" />
+            <img src={fruitsPromo} alt="Fruits frais" className="w-40 h-40 object-contain -mr-4 -mb-6 -mt-4 relative z-10" />
           </div>
         </section>
 

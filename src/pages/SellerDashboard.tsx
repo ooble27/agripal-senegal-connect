@@ -914,14 +914,59 @@ const SellerDashboard = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Photo du produit</label>
-                    {editingProduct?.image_url && !prodImage && (
-                      <div className="mb-2 flex items-center gap-2">
-                        <img src={editingProduct.image_url} alt="" className="w-12 h-12 rounded-xl object-cover" />
-                        <span className="text-xs text-on-surface-variant">Photo actuelle</span>
+                    <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Photos du produit (jusqu'à 4)</label>
+                    {/* Existing images */}
+                    {existingImages.length > 0 && (
+                      <div className="flex gap-2 mb-3 flex-wrap">
+                        {existingImages.map((img) => (
+                          <div key={img.id} className="relative group">
+                            <img src={img.image_url} alt="" className="w-16 h-16 rounded-xl object-cover" />
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                await supabase.from("product_images").delete().eq("id", img.id);
+                                setExistingImages(prev => prev.filter(i => i.id !== img.id));
+                              }}
+                              className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
-                    <input type="file" accept="image/*" onChange={e => setProdImage(e.target.files?.[0] || null)} className="w-full bg-surface-container-low rounded-2xl p-4 text-sm" />
+                    {/* New images preview */}
+                    {prodImages.length > 0 && (
+                      <div className="flex gap-2 mb-3 flex-wrap">
+                        {prodImages.map((file, i) => (
+                          <div key={i} className="relative group">
+                            <img src={URL.createObjectURL(file)} alt="" className="w-16 h-16 rounded-xl object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setProdImages(prev => prev.filter((_, j) => j !== i))}
+                              className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={e => {
+                        const files = Array.from(e.target.files || []);
+                        const maxNew = 4 - existingImages.length - prodImages.length;
+                        setProdImages(prev => [...prev, ...files.slice(0, Math.max(0, maxNew))]);
+                        e.target.value = "";
+                      }}
+                      className="w-full bg-surface-container-low rounded-2xl p-4 text-sm"
+                    />
+                    <p className="text-[10px] text-on-surface-variant mt-1">
+                      {existingImages.length + prodImages.length}/4 photos
+                    </p>
                   </div>
                   <button type="submit" className="w-full bg-primary-container text-primary-container-foreground py-4 rounded-full font-headline font-extrabold text-base hover:scale-[0.97] transition-transform mt-4">
                     {editingProduct ? "Enregistrer" : "Publier le produit"}

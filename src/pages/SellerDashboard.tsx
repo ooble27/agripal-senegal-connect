@@ -42,7 +42,8 @@ const SellerDashboard = () => {
   const [prodUnit, setProdUnit] = useState("le kg");
   const [prodStock, setProdStock] = useState("");
   const [prodCategory, setProdCategory] = useState("");
-  const [prodImage, setProdImage] = useState<File | null>(null);
+  const [prodImages, setProdImages] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<{ id: string; image_url: string }[]>([]);
 
   // Settings form
   const [settingsName, setSettingsName] = useState("");
@@ -130,7 +131,7 @@ const SellerDashboard = () => {
     toast.success("Boutique créée !");
   };
 
-  const openEditProduct = (p: Product) => {
+  const openEditProduct = async (p: Product) => {
     setEditingProduct(p);
     setProdName(p.name);
     setProdDesc(p.description || "");
@@ -138,41 +139,78 @@ const SellerDashboard = () => {
     setProdUnit(p.unit);
     setProdStock(String(p.stock));
     setProdCategory(p.category_id || "");
-    setProdImage(null);
+    setProdImages([]);
+    // Load existing images
+    const { data: imgs } = await supabase
+      .from("product_images")
+      .select("id, image_url")
+      .eq("product_id", p.id)
+      .order("display_order");
+    setExistingImages(imgs || []);
     setShowAddProduct(true);
   };
 
   const resetProductForm = () => {
     setProdName(""); setProdDesc(""); setProdPrice(""); setProdStock(""); setProdCategory("");
-    setProdImage(null); setEditingProduct(null);
+    setProdImages([]); setEditingProduct(null); setExistingImages([]);
   };
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!shop) return;
-    let imageUrl: string | null = editingProduct?.image_url || null;
-    if (prodImage) {
-      const ext = prodImage.name.split(".").pop();
-      const path = `${shop.id}/${Date.now()}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from("product-images").upload(path, prodImage);
+
+    // Upload new images
+    const uploadedUrls: string[] = [];
+    for (const file of prodImages) {
+      const ext = file.name.split(".").pop();
+      const path = `${shop.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("product-images").upload(path, file);
       if (uploadErr) { toast.error("Erreur upload image"); return; }
       const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
-      imageUrl = urlData.publicUrl;
+      uploadedUrls.push(urlData.publicUrl);
     }
+
+    // Main image_url = first existing or first uploaded
+    const mainImage = existingImages.length > 0
+      ? existingImages[0].image_url
+      : uploadedUrls.length > 0
+        ? uploadedUrls[0]
+        : editingProduct?.image_url || null;
 
     if (editingProduct) {
       const { error } = await supabase.from("products").update({
         name: prodName, description: prodDesc, price: parseInt(prodPrice),
-        unit: prodUnit, stock: parseInt(prodStock) || 0, category_id: prodCategory || null, image_url: imageUrl,
+        unit: prodUnit, stock: parseInt(prodStock) || 0, category_id: prodCategory || null, image_url: mainImage,
       }).eq("id", editingProduct.id);
       if (error) { toast.error(error.message); return; }
+
+      // Insert new images to product_images
+      if (uploadedUrls.length > 0) {
+        const startOrder = existingImages.length;
+        const newImgRows = uploadedUrls.map((url, i) => ({
+          product_id: editingProduct.id,
+          image_url: url,
+          display_order: startOrder + i,
+        }));
+        await supabase.from("product_images").insert(newImgRows);
+      }
       toast.success("Produit mis à jour !");
     } else {
-      const { error } = await supabase.from("products").insert({
+      const { data: newProd, error } = await supabase.from("products").insert({
         shop_id: shop.id, name: prodName, description: prodDesc, price: parseInt(prodPrice),
-        unit: prodUnit, stock: parseInt(prodStock) || 0, category_id: prodCategory || null, image_url: imageUrl,
-      });
+        unit: prodUnit, stock: parseInt(prodStock) || 0, category_id: prodCategory || null, image_url: mainImage,
+      }).select().single();
       if (error) { toast.error(error.message); return; }
+
+      // Insert all images to product_images
+      if (uploadedUrls.length > 0 && newProd) {
+        const imgRows = uploadedUrls.map((url, i) => ({
+          product_id: newProd.id,
+          image_url: url,
+          display_order: i,
+        }));
+        await supabase.from("product_images").insert(imgRows);
+      }
       toast.success("Produit ajouté !");
     }
     setShowAddProduct(false);
@@ -584,7 +622,7 @@ const SellerDashboard = () => {
     <>
       <div className="mb-8 mt-8">
         <h1 className="text-3xl font-extrabold tracking-tight">Paramètres</h1>
-        <p className="text-on-surface-variant text-sm mt-1">Gérez votre profil et votre boutique</p>
+        <p className="text-on-surface-variant text-sm mt-1">Gérez votre profil et vos informations</p>
       </div>
 
       <form onSubmit={handleSaveSettings} className="space-y-8 max-w-2xl">
@@ -876,14 +914,59 @@ const SellerDashboard = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Photo du produit</label>
-                    {editingProduct?.image_url && !prodImage && (
-                      <div className="mb-2 flex items-center gap-2">
-                        <img src={editingProduct.image_url} alt="" className="w-12 h-12 rounded-xl object-cover" />
-                        <span className="text-xs text-on-surface-variant">Photo actuelle</span>
+                    <label className="text-xs font-bold text-on-surface-variant mb-1.5 block uppercase tracking-wider">Photos du produit (jusqu'à 4)</label>
+                    {/* Existing images */}
+                    {existingImages.length > 0 && (
+                      <div className="flex gap-2 mb-3 flex-wrap">
+                        {existingImages.map((img) => (
+                          <div key={img.id} className="relative group">
+                            <img src={img.image_url} alt="" className="w-16 h-16 rounded-xl object-cover" />
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                await supabase.from("product_images").delete().eq("id", img.id);
+                                setExistingImages(prev => prev.filter(i => i.id !== img.id));
+                              }}
+                              className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
-                    <input type="file" accept="image/*" onChange={e => setProdImage(e.target.files?.[0] || null)} className="w-full bg-surface-container-low rounded-2xl p-4 text-sm" />
+                    {/* New images preview */}
+                    {prodImages.length > 0 && (
+                      <div className="flex gap-2 mb-3 flex-wrap">
+                        {prodImages.map((file, i) => (
+                          <div key={i} className="relative group">
+                            <img src={URL.createObjectURL(file)} alt="" className="w-16 h-16 rounded-xl object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setProdImages(prev => prev.filter((_, j) => j !== i))}
+                              className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={e => {
+                        const files = Array.from(e.target.files || []);
+                        const maxNew = 4 - existingImages.length - prodImages.length;
+                        setProdImages(prev => [...prev, ...files.slice(0, Math.max(0, maxNew))]);
+                        e.target.value = "";
+                      }}
+                      className="w-full bg-surface-container-low rounded-2xl p-4 text-sm"
+                    />
+                    <p className="text-[10px] text-on-surface-variant mt-1">
+                      {existingImages.length + prodImages.length}/4 photos
+                    </p>
                   </div>
                   <button type="submit" className="w-full bg-primary-container text-primary-container-foreground py-4 rounded-full font-headline font-extrabold text-base hover:scale-[0.97] transition-transform mt-4">
                     {editingProduct ? "Enregistrer" : "Publier le produit"}

@@ -10,8 +10,9 @@ import type { Tables } from "@/integrations/supabase/types";
 import fruitsPromo from "@/assets/fruits-promo.png";
 
 type Product = Tables<"products"> & {
-  shops: { name: string; location: string | null; seller_id: string; city: string | null } | null;
+  shops: { name: string; seller_id: string } | null;
   categories: { name: string; icon: string | null } | null;
+  seller_profile?: { full_name: string } | null;
 };
 
 type Category = Tables<"categories">;
@@ -30,7 +31,7 @@ const Marche = () => {
       const [prodRes, catRes] = await Promise.all([
         supabase
           .from("products")
-          .select("*, shops(name, location, seller_id, city), categories(name, icon)")
+          .select("*, shops(name, seller_id), categories(name, icon)")
           .eq("is_active", true)
           .order("created_at", { ascending: false }),
         supabase.from("categories").select("*").order("name"),
@@ -58,7 +59,7 @@ const Marche = () => {
       priceNum: product.price,
       unit: product.unit,
       image: product.image_url || "/placeholder.svg",
-      farmer: product.shops?.name || "Vendeur",
+      farmer: product.shops?.name || "Producteur",
       shopId: product.shop_id,
     });
   };

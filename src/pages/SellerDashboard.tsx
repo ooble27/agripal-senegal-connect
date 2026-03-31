@@ -152,7 +152,7 @@ const SellerDashboard = () => {
 
   const resetProductForm = () => {
     setProdName(""); setProdDesc(""); setProdPrice(""); setProdStock(""); setProdCategory("");
-    setProdImage(null); setEditingProduct(null);
+    setProdImages([]); setEditingProduct(null); setExistingImages([]);
   };
 
   const handleAddProduct = async (e: React.FormEvent) => {

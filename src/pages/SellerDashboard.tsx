@@ -158,29 +158,59 @@ const SellerDashboard = () => {
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!shop) return;
-    let imageUrl: string | null = editingProduct?.image_url || null;
-    if (prodImage) {
-      const ext = prodImage.name.split(".").pop();
-      const path = `${shop.id}/${Date.now()}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from("product-images").upload(path, prodImage);
+
+    // Upload new images
+    const uploadedUrls: string[] = [];
+    for (const file of prodImages) {
+      const ext = file.name.split(".").pop();
+      const path = `${shop.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("product-images").upload(path, file);
       if (uploadErr) { toast.error("Erreur upload image"); return; }
       const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
-      imageUrl = urlData.publicUrl;
+      uploadedUrls.push(urlData.publicUrl);
     }
+
+    // Main image_url = first existing or first uploaded
+    const mainImage = existingImages.length > 0
+      ? existingImages[0].image_url
+      : uploadedUrls.length > 0
+        ? uploadedUrls[0]
+        : editingProduct?.image_url || null;
 
     if (editingProduct) {
       const { error } = await supabase.from("products").update({
         name: prodName, description: prodDesc, price: parseInt(prodPrice),
-        unit: prodUnit, stock: parseInt(prodStock) || 0, category_id: prodCategory || null, image_url: imageUrl,
+        unit: prodUnit, stock: parseInt(prodStock) || 0, category_id: prodCategory || null, image_url: mainImage,
       }).eq("id", editingProduct.id);
       if (error) { toast.error(error.message); return; }
+
+      // Insert new images to product_images
+      if (uploadedUrls.length > 0) {
+        const startOrder = existingImages.length;
+        const newImgRows = uploadedUrls.map((url, i) => ({
+          product_id: editingProduct.id,
+          image_url: url,
+          display_order: startOrder + i,
+        }));
+        await supabase.from("product_images").insert(newImgRows);
+      }
       toast.success("Produit mis à jour !");
     } else {
-      const { error } = await supabase.from("products").insert({
+      const { data: newProd, error } = await supabase.from("products").insert({
         shop_id: shop.id, name: prodName, description: prodDesc, price: parseInt(prodPrice),
-        unit: prodUnit, stock: parseInt(prodStock) || 0, category_id: prodCategory || null, image_url: imageUrl,
-      });
+        unit: prodUnit, stock: parseInt(prodStock) || 0, category_id: prodCategory || null, image_url: mainImage,
+      }).select().single();
       if (error) { toast.error(error.message); return; }
+
+      // Insert all images to product_images
+      if (uploadedUrls.length > 0 && newProd) {
+        const imgRows = uploadedUrls.map((url, i) => ({
+          product_id: newProd.id,
+          image_url: url,
+          display_order: i,
+        }));
+        await supabase.from("product_images").insert(imgRows);
+      }
       toast.success("Produit ajouté !");
     }
     setShowAddProduct(false);

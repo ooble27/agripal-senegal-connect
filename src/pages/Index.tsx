@@ -27,12 +27,65 @@ const steps = [
 const Index = () => {
   const { user, role, loading } = useAuth();
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
   if (!loading && user && role === "buyer") {
     return <Navigate to="/marche" replace />;
   }
 
   return (
-    <div className="min-h-screen bg-background pb-16 md:pb-0">
+    <div className="min-h-screen bg-background pb-16 md:pb-0 relative">
+      {/* Floating hamburger menu */}
+      <div className="fixed top-4 right-4 z-[60]">
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="w-11 h-11 flex items-center justify-center rounded-full bg-background/80 backdrop-blur-xl shadow-lg border border-border/30"
+          aria-label="Menu"
+        >
+          <span className="material-symbols-outlined text-2xl text-foreground">
+            {menuOpen ? "close" : "menu"}
+          </span>
+        </button>
+      </div>
+
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="fixed top-16 right-4 z-[60] bg-background/95 backdrop-blur-xl rounded-2xl shadow-xl border border-border/30 min-w-[200px] overflow-hidden"
+          >
+            <div className="flex flex-col p-3 gap-1">
+              <Link to="/marche" onClick={() => setMenuOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 px-4 rounded-xl hover:bg-surface-container transition-colors">
+                Marché
+              </Link>
+              <Link to="/devenir-producteur" onClick={() => setMenuOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 px-4 rounded-xl hover:bg-surface-container transition-colors">
+                Artisans
+              </Link>
+              {user ? (
+                <>
+                  {role === "seller" ? (
+                    <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 px-4 rounded-xl hover:bg-surface-container transition-colors">
+                      Mes Produits
+                    </Link>
+                  ) : (
+                    <Link to="/mon-compte" onClick={() => setMenuOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 px-4 rounded-xl hover:bg-surface-container transition-colors">
+                      Mon Compte
+                    </Link>
+                  )}
+                </>
+              ) : (
+                <Link to="/auth" onClick={() => setMenuOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-primary py-3 px-4 rounded-xl hover:bg-surface-container transition-colors">
+                  Connexion
+                </Link>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <main className="pt-4">
         {/* ═══════ HERO ═══════ */}
         <section className="px-4 md:px-12 py-6 md:py-12 max-w-[1440px] mx-auto">

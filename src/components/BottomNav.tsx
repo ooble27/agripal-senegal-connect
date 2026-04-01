@@ -9,8 +9,8 @@ const BottomNav = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  // Hide on dashboard/seller pages
-  if (location.pathname.startsWith("/dashboard")) return null;
+  // Hide on landing page and dashboard/seller pages
+  if (location.pathname === "/" || location.pathname.startsWith("/dashboard")) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background border-t border-border/30 safe-area-bottom">

@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
+import { useAuth } from "@/contexts/AuthContext";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -24,10 +24,15 @@ const steps = [
 ];
 
 const Index = () => {
+  const { user, role, loading } = useAuth();
+
+  if (!loading && user && role === "buyer") {
+    return <Navigate to="/marche" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-background pb-16 md:pb-0">
-      <Navbar />
-      <main className="pt-20">
+      <main className="pt-4">
         {/* ═══════ HERO ═══════ */}
         <section className="px-4 md:px-12 py-6 md:py-12 max-w-[1440px] mx-auto">
           <div className="relative rounded-2xl md:rounded-3xl overflow-hidden bg-primary min-h-[520px] md:min-h-[700px] flex items-end md:items-center">

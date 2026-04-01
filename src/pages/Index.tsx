@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Footer from "@/components/Footer";
 import { Link, Navigate } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";

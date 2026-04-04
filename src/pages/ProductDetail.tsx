@@ -315,30 +315,9 @@ const ProductDetail = () => {
               <h3 className="font-headline font-extrabold text-base mb-3">Produits similaires</h3>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {related.map(p => (
-                  <Link to={`/produit/${p.id}`} key={p.id} className="shrink-0 w-[150px]">
-                    <div className="bg-surface-container-lowest rounded-2xl overflow-hidden border border-border/10">
-                      <div className="relative aspect-square overflow-hidden bg-surface-container">
-                        {p.image_url ? (
-                          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <span className="material-symbols-outlined text-3xl text-on-surface-variant/20">eco</span>
-                          </div>
-                        )}
-                        <button
-                          onClick={(e) => handleAddRelated(p, e)}
-                          className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-surface-container-lowest shadow-md flex items-center justify-center active:scale-90 transition-transform"
-                        >
-                          <span className="material-symbols-outlined text-base">add</span>
-                        </button>
-                      </div>
-                      <div className="p-2.5">
-                        <p className="text-sm font-headline font-extrabold text-primary">{formatPrice(p.price)}</p>
-                        <p className="text-xs font-headline font-bold truncate mt-0.5">{p.name}</p>
-                        <p className="text-[10px] text-on-surface-variant">{p.unit}</p>
-                      </div>
-                    </div>
-                  </Link>
+                  <div key={p.id} className="shrink-0 w-[150px]">
+                    <ProductCard product={p} onAddToCart={handleAddRelated} formatPrice={(n) => n.toLocaleString("fr-FR")} />
+                  </div>
                 ))}
               </div>
             </div>

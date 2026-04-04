@@ -82,14 +82,9 @@ const Navbar = () => {
             {user ? (
               <>
                 {role === "seller" ? (
-                  <>
-                    <Link to="/marche" onClick={() => setMobileOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 border-b border-border/20">
-                      Marché
-                    </Link>
-                    <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 border-b border-border/20">
-                      Mes Produits
-                    </Link>
-                  </>
+                  <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 border-b border-border/20">
+                    Mes Produits
+                  </Link>
                 ) : (
                   <Link to="/mon-compte" onClick={() => setMobileOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 border-b border-border/20">
                     Mon Compte

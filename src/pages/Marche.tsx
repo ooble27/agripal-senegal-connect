@@ -344,10 +344,4 @@ const ProductCard = ({
   </Link>
 );
 
-type Product = Tables<"products"> & {
-  shops: { name: string; seller_id: string } | null;
-  categories: { name: string; icon: string | null } | null;
-  seller_profile?: { full_name: string } | null;
-};
-
 export default Marche;

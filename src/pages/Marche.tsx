@@ -242,56 +242,12 @@ const Marche = () => {
                 {searchQuery ? "Essayez avec d'autres termes." : "Aucun produit dans cette catégorie."}
               </p>
             </div>
-          ) : selectedCategory || searchQuery ? (
-            /* Filtered: full grid */
-            <div className="px-5 md:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+          ) : (
+            /* All products grid - always show flat grid */
+            <div className="px-5 md:px-12 grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
               {filtered.map((product) => (
                 <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
               ))}
-            </div>
-          ) : (
-            /* Default: category rows then full grid */
-            <div className="space-y-6">
-              {productsByCategory.map((group) => (
-                <div key={group.category.id}>
-                  <div className="flex items-center justify-between px-5 md:px-12 mb-2">
-                    <h3 className="font-headline font-extrabold text-sm md:text-base flex items-center gap-2">
-                      {group.category.icon && (
-                        <span className="material-symbols-outlined text-primary text-base">{group.category.icon}</span>
-                      )}
-                      {group.category.name}
-                    </h3>
-                    <button
-                      onClick={() => setSelectedCategory(group.category.id)}
-                      className="text-[11px] font-headline font-bold text-primary flex items-center gap-0.5"
-                    >
-                      Voir tout
-                      <span className="material-symbols-outlined text-sm">chevron_right</span>
-                    </button>
-                  </div>
-
-                  {/* Horizontal scroll row */}
-                  <div className="flex gap-3 overflow-x-auto px-5 md:px-12 pb-2 scrollbar-hide">
-                    {group.items.slice(0, 10).map((product) => (
-                      <div key={product.id} className="shrink-0 w-[160px] md:w-[200px]">
-                        <ProductCard product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-
-              {/* All products grid */}
-              <div>
-                <div className="px-5 md:px-12 mb-3">
-                  <h3 className="font-headline font-extrabold text-sm md:text-base">Tous les produits</h3>
-                </div>
-                <div className="px-5 md:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-                  {filtered.map((product) => (
-                    <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
-                  ))}
-                </div>
-              </div>
             </div>
           )}
         </section>

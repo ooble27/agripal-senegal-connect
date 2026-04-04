@@ -323,7 +323,7 @@ const ProductCard = ({
         {/* Stock badge */}
         {product.stock > 0 && product.stock <= 5 && (
           <div className="absolute top-2 left-2">
-            <span className="bg-amber-100 text-amber-800 text-[9px] font-bold px-2 py-0.5 rounded-full">
+            <span className="bg-accent text-accent-foreground text-[9px] font-bold px-2 py-0.5 rounded-full">
               Plus que {product.stock}
             </span>
           </div>

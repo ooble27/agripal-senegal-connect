@@ -138,33 +138,26 @@ const Marche = () => {
       <Navbar />
       <main className="pt-20">
 
-        {/* ═══════ MOBILE HEADER ═══════ */}
-        <section className="md:hidden px-5 pt-3 pb-1">
-          <div className="flex items-center justify-between">
+        {/* ═══════ HEADER — all screens ═══════ */}
+        <section className="px-5 md:px-12 pt-3 md:pt-6 max-w-[1440px] mx-auto">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-lg font-headline font-extrabold tracking-tight">
+              <p className="text-lg md:text-2xl font-headline font-extrabold tracking-tight">
                 Salut{user ? `, ${firstName}` : ""} 👋
               </p>
-              <p className="text-xs text-on-surface-variant">Qu'est-ce qu'on cuisine aujourd'hui ?</p>
+              <p className="text-xs md:text-sm text-on-surface-variant">Qu'est-ce qu'on cuisine aujourd'hui ?</p>
             </div>
-            <button className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center">
-              <span className="material-symbols-outlined text-on-surface-variant text-lg">notifications</span>
-            </button>
-          </div>
-        </section>
-
-        {/* ═══════ SEARCH ═══════ */}
-        <section className="px-5 md:px-12 pt-3 md:pt-8 max-w-[1440px] mx-auto">
-          <div className="hidden md:flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-            <div>
-              <span className="text-primary font-headline font-extrabold text-xs uppercase tracking-widest">Catalogue</span>
-              <h1 className="text-3xl md:text-4xl font-headline font-extrabold tracking-tighter mt-1">Le Marché</h1>
-            </div>
-            <div className="text-sm text-on-surface-variant font-headline font-bold">
-              {filtered.length} produit{filtered.length !== 1 ? "s" : ""}
+            <div className="flex items-center gap-3">
+              <span className="hidden md:inline text-sm text-on-surface-variant font-headline font-bold">
+                {filtered.length} produit{filtered.length !== 1 ? "s" : ""}
+              </span>
+              <button className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center">
+                <span className="material-symbols-outlined text-on-surface-variant text-lg">notifications</span>
+              </button>
             </div>
           </div>
 
+          {/* Search */}
           <div className="relative">
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/60 text-lg">search</span>
             <input
@@ -177,29 +170,29 @@ const Marche = () => {
           </div>
         </section>
 
-        {/* ═══════ PROMO BANNER (mobile) ═══════ */}
-        <section className="md:hidden px-5 mt-4">
-          <div className="relative bg-primary rounded-2xl p-5 flex items-center overflow-hidden">
+        {/* ═══════ PROMO BANNER — all screens ═══════ */}
+        <section className="px-5 md:px-12 mt-4 max-w-[1440px] mx-auto">
+          <div className="relative bg-primary rounded-2xl p-5 md:p-8 flex items-center overflow-hidden">
             <div className="flex-1 relative z-10">
-              <span className="inline-block bg-primary-container text-primary-container-foreground text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg mb-2">
+              <span className="inline-block bg-primary-container text-primary-container-foreground text-[10px] md:text-xs font-bold uppercase px-2.5 py-1 rounded-lg mb-2">
                 Nouveau 🌿
               </span>
-              <h3 className="text-surface-container-lowest font-headline font-extrabold text-lg leading-tight mb-1">
+              <h3 className="text-surface-container-lowest font-headline font-extrabold text-lg md:text-2xl leading-tight mb-1">
                 Produits Frais<br />Chaque Jour
               </h3>
               <Link
                 to="/marche"
-                className="inline-block bg-surface-container-lowest text-primary text-xs font-bold px-4 py-2 rounded-lg mt-2"
+                className="inline-block bg-surface-container-lowest text-primary text-xs md:text-sm font-bold px-4 py-2 rounded-lg mt-2"
               >
                 Voir tout
               </Link>
             </div>
-            <img src={fruitsPromo} alt="Fruits frais" className="w-36 h-36 object-contain -mr-4 -mb-6 -mt-4 relative z-10" />
+            <img src={fruitsPromo} alt="Fruits frais" className="w-36 md:w-48 h-36 md:h-48 object-contain -mr-4 -mb-6 -mt-4 relative z-10" />
           </div>
         </section>
 
         {/* ═══════ CATEGORIES ═══════ */}
-        <section className="px-5 md:px-12 mt-4 md:mt-0 md:mb-6 max-w-[1440px] mx-auto">
+        <section className="px-5 md:px-12 mt-4 md:mb-6 max-w-[1440px] mx-auto">
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <button
               onClick={() => setSelectedCategory(null)}

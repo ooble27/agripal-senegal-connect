@@ -1,27 +1,72 @@
-import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import fruitsPromo from "@/assets/fruits-promo.png";
+import ProductCard from "@/components/ProductCard";
 
 type Product = Tables<"products"> & {
   shops: { name: string; seller_id: string } | null;
   categories: { name: string; icon: string | null } | null;
-  seller_profile?: { full_name: string } | null;
 };
 
 type Category = Tables<"categories">;
 
+/* ═══════ MOCK DATA for preview ═══════ */
+const MOCK_CATEGORIES: Category[] = [
+  { id: "cat-fruits", name: "Fruits", icon: "nutrition", created_at: "" },
+  { id: "cat-legumes", name: "Légumes", icon: "eco", created_at: "" },
+  { id: "cat-cereales", name: "Céréales", icon: "grain", created_at: "" },
+  { id: "cat-tubercules", name: "Tubercules", icon: "spa", created_at: "" },
+  { id: "cat-epices", name: "Épices", icon: "local_fire_department", created_at: "" },
+];
+
+const mockProduct = (id: string, name: string, price: number, unit: string, catId: string, img: string): Product => ({
+  id, name, price, unit, category_id: catId, shop_id: "mock-shop",
+  image_url: img, description: "", stock: 50, is_active: true,
+  created_at: "", updated_at: "",
+  shops: { name: "Ferme Bio Dakar", seller_id: "mock-seller" },
+  categories: MOCK_CATEGORIES.find(c => c.id === catId) ? { name: MOCK_CATEGORIES.find(c => c.id === catId)!.name, icon: MOCK_CATEGORIES.find(c => c.id === catId)!.icon } : null,
+});
+
+const MOCK_PRODUCTS: Product[] = [
+  mockProduct("m1", "Banane Plantain", 500, "le kg", "cat-fruits", "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop"),
+  mockProduct("m2", "Oranges", 700, "le kg", "cat-fruits", "https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=400&fit=crop"),
+  mockProduct("m3", "Mangues Kent", 1500, "le kg", "cat-fruits", "https://images.unsplash.com/photo-1553279768-865429fa0078?w=400&h=400&fit=crop"),
+  mockProduct("m4", "Papaye", 800, "la pièce", "cat-fruits", "https://images.unsplash.com/photo-1517282009859-f000ec3b26fe?w=400&h=400&fit=crop"),
+  mockProduct("m5", "Pastèque", 2000, "la pièce", "cat-fruits", "https://images.unsplash.com/photo-1589984662646-e7b2e4962f18?w=400&h=400&fit=crop"),
+  mockProduct("m6", "Pomme Verte", 1000, "le kg", "cat-fruits", "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=400&fit=crop"),
+  mockProduct("m7", "Ananas", 1200, "la pièce", "cat-fruits", "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&h=400&fit=crop"),
+  mockProduct("m8", "Citron Vert", 300, "le kg", "cat-fruits", "https://images.unsplash.com/photo-1590502593747-42a996133562?w=400&h=400&fit=crop"),
+  mockProduct("m10", "Tomates", 400, "le kg", "cat-legumes", "https://images.unsplash.com/photo-1546470427-0d4db154ceb8?w=400&h=400&fit=crop"),
+  mockProduct("m11", "Oignons", 350, "le kg", "cat-legumes", "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400&h=400&fit=crop"),
+  mockProduct("m12", "Piment Rouge", 600, "le kg", "cat-legumes", "https://images.unsplash.com/photo-1583119022894-919a68a3d0e3?w=400&h=400&fit=crop"),
+  mockProduct("m13", "Aubergine", 450, "le kg", "cat-legumes", "https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=400&h=400&fit=crop"),
+  mockProduct("m14", "Gombo", 500, "le kg", "cat-legumes", "https://images.unsplash.com/photo-1425543103986-22abb7d7e8d2?w=400&h=400&fit=crop"),
+  mockProduct("m15", "Poivron Vert", 550, "le kg", "cat-legumes", "https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400&h=400&fit=crop"),
+  mockProduct("m16", "Concombre", 300, "le kg", "cat-legumes", "https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=400&h=400&fit=crop"),
+  mockProduct("m17", "Carotte", 400, "le kg", "cat-legumes", "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400&h=400&fit=crop"),
+  mockProduct("m20", "Riz Brisé", 500, "le kg", "cat-cereales", "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=400&fit=crop"),
+  mockProduct("m21", "Mil", 400, "le kg", "cat-cereales", "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=400&fit=crop"),
+  mockProduct("m22", "Maïs", 350, "le kg", "cat-cereales", "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=400&h=400&fit=crop"),
+  mockProduct("m23", "Fonio", 800, "le kg", "cat-cereales", "https://images.unsplash.com/photo-1536304993881-460e32f50e42?w=400&h=400&fit=crop"),
+  mockProduct("m30", "Manioc", 300, "le kg", "cat-tubercules", "https://images.unsplash.com/photo-1598511726623-d2e9996e2d45?w=400&h=400&fit=crop"),
+  mockProduct("m31", "Igname", 600, "le kg", "cat-tubercules", "https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=400&h=400&fit=crop"),
+  mockProduct("m32", "Patate Douce", 450, "le kg", "cat-tubercules", "https://images.unsplash.com/photo-1596097635121-14b63a7ab715?w=400&h=400&fit=crop"),
+  mockProduct("m40", "Poivre Noir", 2500, "le kg", "cat-epices", "https://images.unsplash.com/photo-1599909533601-bbfbc5625067?w=400&h=400&fit=crop"),
+  mockProduct("m41", "Curcuma", 3000, "le kg", "cat-epices", "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400&h=400&fit=crop"),
+  mockProduct("m42", "Gingembre", 1500, "le kg", "cat-epices", "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&h=400&fit=crop"),
+];
+
 const Marche = () => {
   const { addItem } = useCart();
   const { user, profile } = useAuth();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [dbProducts, setDbProducts] = useState<Product[]>([]);
+  const [dbCategories, setDbCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,12 +81,30 @@ const Marche = () => {
           .order("created_at", { ascending: false }),
         supabase.from("categories").select("*").order("name"),
       ]);
-      if (prodRes.data) setProducts(prodRes.data as Product[]);
-      if (catRes.data) setCategories(catRes.data);
+      if (prodRes.data) setDbProducts(prodRes.data as Product[]);
+      if (catRes.data) setDbCategories(catRes.data);
       setLoading(false);
     };
     fetchData();
   }, []);
+
+  // Merge DB products with mock products (mock IDs start with "m")
+  const products = useMemo(() => {
+    const dbIds = new Set(dbProducts.map(p => p.id));
+    // Only add mock products that don't conflict
+    const mocks = MOCK_PRODUCTS.filter(m => !dbIds.has(m.id));
+    return [...dbProducts, ...mocks];
+  }, [dbProducts]);
+
+  const categories = useMemo(() => {
+    if (dbCategories.length > 0) {
+      // Merge mock categories not already in DB
+      const dbNames = new Set(dbCategories.map(c => c.name.toLowerCase()));
+      const extra = MOCK_CATEGORIES.filter(mc => !dbNames.has(mc.name.toLowerCase()));
+      return [...dbCategories, ...extra];
+    }
+    return MOCK_CATEGORIES;
+  }, [dbCategories]);
 
   const filtered = products.filter((p) => {
     const matchCat = !selectedCategory || p.category_id === selectedCategory;
@@ -52,6 +115,7 @@ const Marche = () => {
   const handleAddToCart = (product: Product, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (product.id.startsWith("m")) return; // mock product, don't add
     addItem({
       id: product.id,
       name: product.name,
@@ -65,7 +129,6 @@ const Marche = () => {
   };
 
   const formatPrice = (n: number) => n.toLocaleString("fr-FR");
-
   const firstName = profile?.full_name?.split(" ")[0] || "there";
 
   const productsByCategory = categories
@@ -89,20 +152,18 @@ const Marche = () => {
               </p>
               <p className="text-xs text-on-surface-variant">Qu'est-ce qu'on cuisine aujourd'hui ?</p>
             </div>
-            <div className="flex items-center gap-2">
-              <button className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center">
-                <span className="material-symbols-outlined text-on-surface-variant text-lg">notifications</span>
-              </button>
-            </div>
+            <button className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center">
+              <span className="material-symbols-outlined text-on-surface-variant text-lg">notifications</span>
+            </button>
           </div>
         </section>
 
         {/* ═══════ SEARCH ═══════ */}
         <section className="px-5 md:px-12 pt-3 md:pt-8 max-w-[1440px] mx-auto">
-          <div className="hidden md:flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+          <div className="hidden md:flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
             <div>
               <span className="text-primary font-headline font-extrabold text-xs uppercase tracking-widest">Catalogue</span>
-              <h1 className="text-3xl md:text-5xl font-headline font-extrabold tracking-tighter mt-1">Le Marché</h1>
+              <h1 className="text-3xl md:text-4xl font-headline font-extrabold tracking-tighter mt-1">Le Marché</h1>
             </div>
             <div className="text-sm text-on-surface-variant font-headline font-bold">
               {filtered.length} produit{filtered.length !== 1 ? "s" : ""}
@@ -123,12 +184,12 @@ const Marche = () => {
 
         {/* ═══════ PROMO BANNER (mobile) ═══════ */}
         <section className="md:hidden px-5 mt-4">
-          <div className="relative bg-primary rounded-2xl p-5 flex items-center">
+          <div className="relative bg-primary rounded-2xl p-5 flex items-center overflow-hidden">
             <div className="flex-1 relative z-10">
               <span className="inline-block bg-primary-container text-primary-container-foreground text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg mb-2">
                 Nouveau 🌿
               </span>
-              <h3 className="text-surface font-headline font-extrabold text-lg leading-tight mb-1">
+              <h3 className="text-surface-container-lowest font-headline font-extrabold text-lg leading-tight mb-1">
                 Produits Frais<br />Chaque Jour
               </h3>
               <Link
@@ -142,8 +203,8 @@ const Marche = () => {
           </div>
         </section>
 
-        {/* ═══════ CATEGORIES (horizontal tabs) ═══════ */}
-        <section className="px-5 md:px-12 mt-4 md:mt-0 md:mb-8 max-w-[1440px] mx-auto">
+        {/* ═══════ CATEGORIES ═══════ */}
+        <section className="px-5 md:px-12 mt-4 md:mt-0 md:mb-6 max-w-[1440px] mx-auto">
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <button
               onClick={() => setSelectedCategory(null)}
@@ -187,28 +248,19 @@ const Marche = () => {
               </p>
             </div>
           ) : selectedCategory || searchQuery ? (
-            /* Filtered: mixed layout */
-            <div className="px-5 md:px-12">
-              {/* First 2 as featured horizontal cards */}
-              {filtered.slice(0, 2).map((product) => (
-                <HorizontalCard key={product.id} product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
+            /* Filtered: full grid */
+            <div className="px-5 md:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+              {filtered.map((product) => (
+                <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
               ))}
-              {/* Rest as compact grid */}
-              {filtered.length > 2 && (
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mt-2">
-                  {filtered.slice(2).map((product) => (
-                    <CompactCard key={product.id} product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
-                  ))}
-                </div>
-              )}
             </div>
           ) : (
-            /* Default: category sections with mixed layouts */
+            /* Default: category rows then full grid */
             <div className="space-y-6">
-              {productsByCategory.map((group, groupIndex) => (
+              {productsByCategory.map((group) => (
                 <div key={group.category.id}>
                   <div className="flex items-center justify-between px-5 md:px-12 mb-2">
-                    <h3 className="font-headline font-extrabold text-sm md:text-lg flex items-center gap-2">
+                    <h3 className="font-headline font-extrabold text-sm md:text-base flex items-center gap-2">
                       {group.category.icon && (
                         <span className="material-symbols-outlined text-primary text-base">{group.category.icon}</span>
                       )}
@@ -216,41 +268,32 @@ const Marche = () => {
                     </h3>
                     <button
                       onClick={() => setSelectedCategory(group.category.id)}
-                      className="text-[11px] font-headline font-bold text-primary"
+                      className="text-[11px] font-headline font-bold text-primary flex items-center gap-0.5"
                     >
-                      Voir tout →
+                      Voir tout
+                      <span className="material-symbols-outlined text-sm">chevron_right</span>
                     </button>
                   </div>
 
-                  {/* Alternate between horizontal scroll and horizontal cards */}
-                  {groupIndex % 2 === 0 ? (
-                    /* Horizontal scroll row */
-                    <div className="flex gap-2.5 overflow-x-auto px-5 md:px-12 pb-1 scrollbar-hide">
-                      {group.items.slice(0, 8).map((product) => (
-                        <div key={product.id} className="shrink-0 w-[130px] md:w-[180px]">
-                          <CompactCard product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    /* Horizontal list cards */
-                    <div className="px-5 md:px-12 space-y-2">
-                      {group.items.slice(0, 4).map((product) => (
-                        <HorizontalCard key={product.id} product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
-                      ))}
-                    </div>
-                  )}
+                  {/* Horizontal scroll row */}
+                  <div className="flex gap-3 overflow-x-auto px-5 md:px-12 pb-2 scrollbar-hide">
+                    {group.items.slice(0, 10).map((product) => (
+                      <div key={product.id} className="shrink-0 w-[160px] md:w-[200px]">
+                        <ProductCard product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
 
-              {/* All products as tight grid */}
+              {/* All products grid */}
               <div>
-                <div className="px-5 md:px-12 mb-2">
-                  <h3 className="font-headline font-extrabold text-sm md:text-lg">Tous les produits</h3>
+                <div className="px-5 md:px-12 mb-3">
+                  <h3 className="font-headline font-extrabold text-sm md:text-base">Tous les produits</h3>
                 </div>
-                <div className="px-5 md:px-12 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+                <div className="px-5 md:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
                   {filtered.map((product) => (
-                    <CompactCard key={product.id} product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
+                    <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
                   ))}
                 </div>
               </div>
@@ -265,108 +308,5 @@ const Marche = () => {
     </div>
   );
 };
-
-/* ═══════ COMPACT CARD (grid/scroll) ═══════ */
-const CompactCard = ({
-  product,
-  onAddToCart,
-  formatPrice,
-}: {
-  product: Product;
-  onAddToCart: (product: Product, e: React.MouseEvent) => void;
-  formatPrice: (n: number) => string;
-}) => (
-  <Link to={`/produit/${product.id}`} className="block">
-    <div className="relative">
-      <div className="aspect-square rounded-xl overflow-hidden bg-surface-container mb-1.5">
-        {product.image_url ? (
-          <img
-            alt={product.name}
-            className="w-full h-full object-cover"
-            src={product.image_url}
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="material-symbols-outlined text-2xl text-on-surface-variant/20">eco</span>
-          </div>
-        )}
-
-        {product.stock <= 0 && (
-          <div className="absolute inset-0 bg-foreground/40 rounded-xl flex items-center justify-center">
-            <span className="bg-destructive text-destructive-foreground px-2 py-0.5 rounded-lg text-[9px] font-bold">Rupture</span>
-          </div>
-        )}
-      </div>
-
-      {/* Quick add floating */}
-      <button
-        onClick={(e) => onAddToCart(product, e)}
-        disabled={product.stock <= 0}
-        className="absolute top-1.5 right-1.5 w-7 h-7 rounded-lg bg-surface-container-lowest/90 backdrop-blur-sm flex items-center justify-center active:scale-90 transition-transform disabled:opacity-30"
-      >
-        <span className="material-symbols-outlined text-foreground text-sm">add</span>
-      </button>
-    </div>
-
-    <p className="text-[11px] md:text-xs font-headline font-bold leading-tight line-clamp-2 text-foreground">
-      {product.name}
-    </p>
-    <p className="text-[11px] md:text-sm font-headline font-extrabold text-primary mt-0.5">
-      {formatPrice(product.price)} <span className="text-on-surface-variant font-normal text-[9px]">FCFA/{product.unit}</span>
-    </p>
-  </Link>
-);
-
-/* ═══════ HORIZONTAL CARD (list style) ═══════ */
-const HorizontalCard = ({
-  product,
-  onAddToCart,
-  formatPrice,
-}: {
-  product: Product;
-  onAddToCart: (product: Product, e: React.MouseEvent) => void;
-  formatPrice: (n: number) => string;
-}) => (
-  <Link to={`/produit/${product.id}`} className="block">
-    <div className="flex items-center gap-3 py-3 border-b border-border/10">
-      {/* Image */}
-      <div className="w-20 h-20 md:w-24 md:h-24 shrink-0 rounded-xl overflow-hidden bg-surface-container">
-        {product.image_url ? (
-          <img alt={product.name} className="w-full h-full object-cover" src={product.image_url} loading="lazy" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="material-symbols-outlined text-2xl text-on-surface-variant/20">eco</span>
-          </div>
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-headline font-bold leading-tight line-clamp-2 text-foreground">
-          {product.name}
-        </p>
-        <p className="text-[11px] text-on-surface-variant mt-0.5">
-          {product.categories?.name} · {product.unit}
-        </p>
-        <div className="flex items-center gap-1 mt-1.5">
-          <span className="text-base font-headline font-extrabold text-primary">
-            {formatPrice(product.price)}
-          </span>
-          <span className="text-[10px] text-on-surface-variant">FCFA</span>
-        </div>
-      </div>
-
-      {/* Add button */}
-      <button
-        onClick={(e) => onAddToCart(product, e)}
-        disabled={product.stock <= 0}
-        className="w-10 h-10 shrink-0 rounded-xl bg-primary-container text-primary-container-foreground flex items-center justify-center active:scale-90 transition-transform disabled:opacity-30"
-      >
-        <span className="material-symbols-outlined text-lg">add</span>
-      </button>
-    </div>
-  </Link>
-);
 
 export default Marche;

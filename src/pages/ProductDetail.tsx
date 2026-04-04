@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import ProductCard from "@/components/ProductCard";
 
 type Product = Tables<"products"> & {
   categories: { name: string; icon: string | null } | null;
@@ -314,30 +315,9 @@ const ProductDetail = () => {
               <h3 className="font-headline font-extrabold text-base mb-3">Produits similaires</h3>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {related.map(p => (
-                  <Link to={`/produit/${p.id}`} key={p.id} className="shrink-0 w-[150px]">
-                    <div className="bg-surface-container-lowest rounded-2xl overflow-hidden border border-border/10">
-                      <div className="relative aspect-square overflow-hidden bg-surface-container">
-                        {p.image_url ? (
-                          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <span className="material-symbols-outlined text-3xl text-on-surface-variant/20">eco</span>
-                          </div>
-                        )}
-                        <button
-                          onClick={(e) => handleAddRelated(p, e)}
-                          className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-surface-container-lowest shadow-md flex items-center justify-center active:scale-90 transition-transform"
-                        >
-                          <span className="material-symbols-outlined text-base">add</span>
-                        </button>
-                      </div>
-                      <div className="p-2.5">
-                        <p className="text-sm font-headline font-extrabold text-primary">{formatPrice(p.price)}</p>
-                        <p className="text-xs font-headline font-bold truncate mt-0.5">{p.name}</p>
-                        <p className="text-[10px] text-on-surface-variant">{p.unit}</p>
-                      </div>
-                    </div>
-                  </Link>
+                  <div key={p.id} className="shrink-0 w-[150px]">
+                    <ProductCard product={p} onAddToCart={handleAddRelated} formatPrice={(n) => n.toLocaleString("fr-FR")} />
+                  </div>
                 ))}
               </div>
             </div>
@@ -480,30 +460,9 @@ const ProductDetail = () => {
           {related.length > 0 && (
             <section className="py-16 px-6 md:px-12 max-w-[1440px] mx-auto">
               <h2 className="text-3xl font-headline font-extrabold tracking-tighter mb-8">Produits similaires</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                 {related.map(p => (
-                  <Link to={`/produit/${p.id}`} key={p.id} className="group bg-surface-container-lowest rounded-2xl overflow-hidden border border-border/10 hover:shadow-lg transition-all">
-                    <div className="relative aspect-square bg-surface-container overflow-hidden">
-                      {p.image_url ? (
-                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <span className="material-symbols-outlined text-5xl text-on-surface-variant/20">eco</span>
-                        </div>
-                      )}
-                      <button
-                        onClick={(e) => handleAddRelated(p, e)}
-                        className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-surface-container-lowest shadow-md flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all"
-                      >
-                        <span className="material-symbols-outlined">add</span>
-                      </button>
-                    </div>
-                    <div className="p-4">
-                      <span className="text-lg font-headline font-extrabold text-primary">{formatPrice(p.price)}</span>
-                      <h3 className="font-headline font-bold mt-1">{p.name}</h3>
-                      <div className="text-xs text-on-surface-variant mt-0.5">{p.unit}</div>
-                    </div>
-                  </Link>
+                  <ProductCard key={p.id} product={p} onAddToCart={handleAddRelated} formatPrice={(n) => n.toLocaleString("fr-FR")} />
                 ))}
               </div>
             </section>

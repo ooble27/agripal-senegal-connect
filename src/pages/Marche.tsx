@@ -192,7 +192,7 @@ const Marche = () => {
         </section>
 
         {/* ═══════ CATEGORIES ═══════ */}
-        <section className="px-5 md:px-12 mt-4 md:mt-0 md:mb-6 max-w-[1440px] mx-auto">
+        <section className="px-5 md:px-12 mt-4 md:mb-6 max-w-[1440px] mx-auto">
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <button
               onClick={() => setSelectedCategory(null)}

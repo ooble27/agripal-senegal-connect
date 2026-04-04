@@ -10,13 +10,6 @@ const fadeUp = {
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.6, ease: "easeOut" as const } }),
 };
 
-const stats = [
-  { value: "500+", label: "Producteurs Partenaires" },
-  { value: "12K", label: "Commandes Livrées" },
-  { value: "98%", label: "Clients Satisfaits" },
-  { value: "24h", label: "Délai de Livraison" },
-];
-
 const steps = [
   { icon: "search", num: "01", title: "Explorez le Marché", description: "Parcourez les produits frais de nos artisans locaux, filtrés par catégorie et localisation." },
   { icon: "add_shopping_cart", num: "02", title: "Composez votre Panier", description: "Sélectionnez vos produits préférés et ajoutez-les à votre panier en un clic." },
@@ -26,7 +19,6 @@ const steps = [
 
 const Index = () => {
   const { user, role, loading } = useAuth();
-
   const [menuOpen, setMenuOpen] = useState(false);
 
   if (!loading && user && role === "buyer") {
@@ -61,9 +53,6 @@ const Index = () => {
               <Link to="/marche" onClick={() => setMenuOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 px-4 rounded-xl hover:bg-surface-container transition-colors">
                 Marché
               </Link>
-              <Link to="/devenir-producteur" onClick={() => setMenuOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 px-4 rounded-xl hover:bg-surface-container transition-colors">
-                Artisans
-              </Link>
               {user ? (
                 <>
                   {role === "seller" ? (
@@ -88,89 +77,77 @@ const Index = () => {
 
       <main className="pt-4">
         {/* ═══════ HERO ═══════ */}
-        <section className="px-4 md:px-12 py-6 md:py-12 max-w-[1440px] mx-auto">
-          <div className="relative rounded-2xl md:rounded-3xl overflow-hidden bg-primary min-h-[520px] md:min-h-[700px] flex items-end md:items-center">
-            {/* Abstract background pattern */}
-            <div className="absolute inset-0 z-0 overflow-hidden">
+        <section className="px-4 md:px-12 py-4 md:py-8 max-w-[1440px] mx-auto">
+          <div className="relative rounded-[2rem] md:rounded-[2.5rem] overflow-hidden min-h-[85vh] md:min-h-[700px] flex items-end md:items-center">
+            {/* Background image */}
+            <div className="absolute inset-0 z-0">
               <img src={heroBg} alt="Terres agricoles du Sénégal" className="w-full h-full object-cover" width={1920} height={1080} />
-              <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-foreground/85 via-foreground/60 to-foreground/20" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10 md:bg-gradient-to-r md:from-black/80 md:via-black/50 md:to-transparent" />
             </div>
 
+            {/* Hero content */}
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="relative z-10 px-6 md:px-16 pb-10 md:pb-0 w-full md:w-2/3"
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="relative z-10 px-6 md:px-16 pb-12 md:pb-0 w-full md:w-2/3"
             >
-              <span className="inline-block px-4 py-1.5 rounded-full bg-primary-container text-primary-container-foreground font-headline font-extrabold text-[10px] md:text-xs uppercase tracking-widest mb-4 md:mb-6">
+              <motion.span
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white font-headline font-bold text-[11px] md:text-xs uppercase tracking-widest mb-5 md:mb-8"
+              >
+                <span className="w-2 h-2 rounded-full bg-primary-container animate-pulse" />
                 L'Agronome Digital
-              </span>
-              <h1 className="text-3xl md:text-7xl lg:text-8xl font-headline font-extrabold text-surface tracking-tighter leading-[0.95] mb-4 md:mb-8">
-                Cultiver l'âme de nos terroirs.
+              </motion.span>
+
+              <h1 className="text-[2.5rem] md:text-7xl lg:text-8xl font-headline font-extrabold text-white tracking-tighter leading-[0.92] mb-5 md:mb-8">
+                Cultiver l'âme<br />
+                <span className="text-primary-container">de nos terroirs.</span>
               </h1>
-              <p className="text-base md:text-xl text-surface/80 font-body max-w-xl leading-relaxed mb-6 md:mb-10">
+
+              <p className="text-base md:text-xl text-white/75 font-body max-w-xl leading-relaxed mb-8 md:mb-10">
                 Une connexion directe entre les foyers sénégalais et les gardiens de notre terre. Des produits purs, une équité radicale.
               </p>
+
               <div className="flex flex-col sm:flex-row gap-3">
-                <Link to="/marche" className="bg-primary-container text-primary-container-foreground px-8 py-4 md:px-10 md:py-5 rounded-full font-headline font-extrabold text-base md:text-lg flex items-center justify-center gap-3 hover:scale-95 transition-transform shadow-xl">
+                <Link
+                  to="/marche"
+                  className="bg-primary-container text-primary-container-foreground px-8 py-4 md:px-10 md:py-5 rounded-full font-headline font-extrabold text-base md:text-lg flex items-center justify-center gap-3 hover:scale-[0.97] active:scale-95 transition-transform shadow-[0_8px_32px_rgba(154,205,50,0.3)]"
+                >
                   Découvrir le Marché
                   <span className="material-symbols-outlined">arrow_forward</span>
                 </Link>
-                <Link to="/devenir-producteur" className="bg-surface/10 backdrop-blur-md text-surface border border-surface/20 px-8 py-4 md:px-10 md:py-5 rounded-full font-headline font-extrabold text-base md:text-lg hover:bg-surface hover:text-foreground transition-all text-center">
+                <Link
+                  to="/auth?role=seller"
+                  className="bg-white/10 backdrop-blur-md text-white border border-white/20 px-8 py-4 md:px-10 md:py-5 rounded-full font-headline font-extrabold text-base md:text-lg hover:bg-white hover:text-foreground transition-all text-center"
+                >
                   Devenir Vendeur
                 </Link>
               </div>
+
+              {/* Trust indicators */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1, duration: 0.6 }}
+                className="flex items-center gap-6 mt-8 md:mt-12"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary-container text-lg">verified</span>
+                  <span className="text-white/60 text-xs font-headline font-bold">100% Local</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary-container text-lg">eco</span>
+                  <span className="text-white/60 text-xs font-headline font-bold">Sans Pesticides</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary-container text-lg">schedule</span>
+                  <span className="text-white/60 text-xs font-headline font-bold">Livré en 24h</span>
+                </div>
+              </motion.div>
             </motion.div>
-
-            {/* Floating Cards */}
-            <div className="absolute right-8 bottom-8 hidden lg:flex flex-col gap-4 w-72 z-10">
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5, duration: 0.6 }}
-                className="bg-surface-container-lowest/90 backdrop-blur-xl p-5 rounded-xl shadow-2xl"
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-full bg-primary-container/30 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-primary text-sm">eco</span>
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-on-surface-variant uppercase font-bold tracking-widest">Origine Certifiée</div>
-                    <div className="text-sm font-headline font-extrabold">Niayes, Sénégal</div>
-                  </div>
-                </div>
-                <div className="h-1 w-full bg-surface-container rounded-full overflow-hidden">
-                  <div className="h-full bg-primary w-3/4" />
-                </div>
-                <div className="mt-1.5 text-[10px] text-on-surface-variant">Récolté il y a 6 heures</div>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7, duration: 0.6 }}
-                className="bg-primary-container text-primary-container-foreground p-5 rounded-xl shadow-2xl"
-              >
-                <div className="flex justify-between items-start mb-1">
-                  <span className="material-symbols-outlined text-3xl">payments</span>
-                  <span className="text-xs font-headline font-bold uppercase">+12% Revenu</span>
-                </div>
-                <div className="text-sm font-body opacity-80">Impact direct sur la communauté rurale.</div>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════ STATS BAR ═══════ */}
-        <section className="px-4 md:px-12 max-w-[1440px] mx-auto -mt-2 md:-mt-4 relative z-20">
-          <div className="bg-surface-container-lowest rounded-2xl shadow-lg border border-border/20 p-6 md:p-10">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-              {stats.map((s, i) => (
-                <motion.div key={s.label} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-center">
-                  <div className="text-3xl md:text-5xl font-headline font-extrabold text-primary tracking-tight">{s.value}</div>
-                  <div className="text-xs md:text-sm text-on-surface-variant font-headline font-bold uppercase tracking-wider mt-1">{s.label}</div>
-                </motion.div>
-              ))}
-            </div>
           </div>
         </section>
 
@@ -234,7 +211,6 @@ const Index = () => {
                         <div className="text-sm text-on-surface-variant font-body mt-2">Sénégal • Niayes • Casamance</div>
                       </div>
                     </div>
-                    {/* Decorative dots */}
                     <div className="absolute top-8 right-8 grid grid-cols-3 gap-2">
                       {[...Array(9)].map((_, j) => (
                         <div key={j} className="w-2 h-2 rounded-full bg-primary-container/40" />
@@ -281,7 +257,7 @@ const Index = () => {
                   </div>
                 </div>
               </div>
-              <Link to="/devenir-producteur" className="inline-block bg-primary-container text-primary-container-foreground px-8 py-4 rounded-full font-headline font-extrabold text-base md:text-lg hover:scale-95 transition-transform">
+              <Link to="/auth?role=seller" className="inline-block bg-primary-container text-primary-container-foreground px-8 py-4 rounded-full font-headline font-extrabold text-base md:text-lg hover:scale-95 transition-transform">
                 Devenir Partenaire
               </Link>
             </div>

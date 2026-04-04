@@ -28,9 +28,14 @@ const Navbar = () => {
             {user ? (
               <>
                 {role === "seller" ? (
-                  <Link to="/dashboard" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
-                    Mes Produits
-                  </Link>
+                  <>
+                    <Link to="/marche" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
+                      Marché
+                    </Link>
+                    <Link to="/dashboard" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
+                      Mes Produits
+                    </Link>
+                  </>
                 ) : (
                   <Link to="/mon-compte" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
                     Mon Compte

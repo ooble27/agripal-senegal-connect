@@ -9,7 +9,7 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl shadow-[0_12px_40px_rgba(45,47,46,0.06)]">
+    <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl shadow-[0_12px_40px_rgba(45,47,46,0.06)] safe-area-top">
       <div className="flex justify-between items-center px-5 md:px-8 py-4 max-w-[1440px] mx-auto w-full">
         <Link to="/" className="text-2xl font-black tracking-tighter text-foreground font-headline">
           Agrumen

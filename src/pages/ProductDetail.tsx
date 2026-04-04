@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { useCart } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import ProductCard from "@/components/ProductCard";
 
 type Product = Tables<"products"> & {
   categories: { name: string; icon: string | null } | null;

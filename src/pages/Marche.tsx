@@ -68,6 +68,14 @@ const Marche = () => {
 
   const firstName = profile?.full_name?.split(" ")[0] || "there";
 
+  // Group products by category for horizontal scroll sections
+  const productsByCategory = categories
+    .map((cat) => ({
+      category: cat,
+      items: products.filter((p) => p.category_id === cat.id && p.is_active),
+    }))
+    .filter((group) => group.items.length > 0);
+
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Navbar />
@@ -131,7 +139,6 @@ const Marche = () => {
         {/* ═══════ PROMO BANNER (mobile) ═══════ */}
         <section className="md:hidden px-5 mt-4">
           <div className="relative bg-primary rounded-2xl p-5 flex items-center">
-            
             <div className="flex-1 relative z-10">
               <span className="inline-block bg-primary-container text-primary-container-foreground text-[10px] font-bold uppercase px-2.5 py-1 rounded-full mb-2">
                 Nouveau 🌿
@@ -189,86 +196,152 @@ const Marche = () => {
           </div>
         </section>
 
-        {/* ═══════ PRODUCT GRID ═══════ */}
-        <section className="px-4 md:px-12 mt-4 md:mt-0 max-w-[1440px] mx-auto">
+        {/* ═══════ PRODUCT SECTIONS ═══════ */}
+        <section className="mt-4 md:mt-0 max-w-[1440px] mx-auto">
           {loading ? (
             <div className="text-center py-20">
               <span className="material-symbols-outlined text-4xl text-on-surface-variant animate-spin">progress_activity</span>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16 bg-surface-container-low rounded-2xl">
+            <div className="text-center py-16 mx-4 bg-surface-container-low rounded-2xl">
               <span className="material-symbols-outlined text-5xl text-on-surface-variant/40 mb-4">search_off</span>
               <p className="font-headline font-bold text-lg mb-2">Aucun produit trouvé</p>
               <p className="text-on-surface-variant text-sm">
                 {searchQuery ? "Essayez avec d'autres termes." : "Aucun produit dans cette catégorie."}
               </p>
             </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+          ) : selectedCategory || searchQuery ? (
+            /* Grid view when filtering/searching */
+            <div className="px-4 md:px-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
               {filtered.map((product, i) => (
-                <Link to={`/produit/${product.id}`} key={product.id}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03, duration: 0.3 }}
-                    className="group bg-surface-container-lowest rounded-2xl overflow-hidden flex flex-col hover:shadow-xl transition-all h-full border border-border/20"
-                  >
-                    <div className="relative aspect-square overflow-hidden">
-                      {product.image_url ? (
-                        <img
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          src={product.image_url}
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-surface-container">
-                          <span className="material-symbols-outlined text-4xl text-on-surface-variant/20">eco</span>
-                        </div>
-                      )}
-                      {/* Heart / favorite button */}
-                      <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                        className="absolute top-2 right-2 w-7 h-7 md:w-8 md:h-8 rounded-full bg-surface-container-lowest/80 backdrop-blur-sm flex items-center justify-center shadow-sm"
-                      >
-                        <span className="material-symbols-outlined text-destructive text-sm md:text-base">favorite</span>
-                      </button>
-                      {product.stock <= 0 && (
-                        <div className="absolute inset-0 bg-foreground/50 flex items-center justify-center">
-                          <span className="bg-destructive text-destructive-foreground px-3 py-1 rounded-full text-[10px] font-bold">Rupture</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-3 md:p-5 flex flex-col flex-grow">
-                      <h3 className="text-xs md:text-lg font-headline font-extrabold leading-tight truncate">{product.name}</h3>
-                      <div className="text-[10px] md:text-xs text-on-surface-variant mt-0.5">
-                        {product.unit}
-                      </div>
-                      <div className="mt-auto pt-2 flex justify-between items-center">
-                        <span className="text-sm md:text-lg font-headline font-extrabold text-primary">{formatPrice(product.price)}</span>
-                        <button
-                          onClick={(e) => handleAddToCart(product, e)}
-                          disabled={product.stock <= 0}
-                          className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary-container flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-40"
-                        >
-                          <span className="material-symbols-outlined text-sm md:text-base">add</span>
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                </Link>
+                <ProductCard key={product.id} product={product} index={i} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
               ))}
+            </div>
+          ) : (
+            /* Horizontal scroll sections by category (Uber Eats style) */
+            <div className="space-y-6 md:space-y-10">
+              {productsByCategory.map((group) => (
+                <div key={group.category.id}>
+                  <div className="flex items-center justify-between px-5 md:px-12 mb-3">
+                    <div className="flex items-center gap-2">
+                      {group.category.icon && (
+                        <span className="material-symbols-outlined text-primary text-lg">{group.category.icon}</span>
+                      )}
+                      <h3 className="font-headline font-extrabold text-base md:text-xl">{group.category.name}</h3>
+                    </div>
+                    <button
+                      onClick={() => setSelectedCategory(group.category.id)}
+                      className="flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-xl">arrow_forward</span>
+                    </button>
+                  </div>
+                  <div className="flex gap-3 overflow-x-auto px-5 md:px-12 pb-2 scrollbar-hide">
+                    {group.items.slice(0, 8).map((product, i) => (
+                      <div key={product.id} className="shrink-0 w-[160px] md:w-[200px]">
+                        <ProductCard product={product} index={i} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {/* All products section */}
+              <div>
+                <div className="flex items-center justify-between px-5 md:px-12 mb-3">
+                  <h3 className="font-headline font-extrabold text-base md:text-xl">Tous les produits</h3>
+                </div>
+                <div className="px-4 md:px-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+                  {filtered.map((product, i) => (
+                    <ProductCard key={product.id} product={product} index={i} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </section>
 
         {/* Desktop Footer only */}
-        <div className="hidden md:block">
+        <div className="hidden md:block mt-12">
           <Footer />
         </div>
       </main>
     </div>
   );
 };
+
+/* ═══════ PRODUCT CARD COMPONENT (Uber Eats / Costco style) ═══════ */
+const ProductCard = ({
+  product,
+  index,
+  onAddToCart,
+  formatPrice,
+}: {
+  product: Product;
+  index: number;
+  onAddToCart: (product: Product, e: React.MouseEvent) => void;
+  formatPrice: (n: number) => string;
+}) => (
+  <Link to={`/produit/${product.id}`}>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.03, duration: 0.25 }}
+      className="group bg-surface-container-lowest rounded-2xl overflow-hidden flex flex-col h-full border border-border/10 hover:shadow-lg transition-all"
+    >
+      {/* Image with + button overlay */}
+      <div className="relative aspect-square overflow-hidden bg-surface-container">
+        {product.image_url ? (
+          <img
+            alt={product.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            src={product.image_url}
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="material-symbols-outlined text-4xl text-on-surface-variant/20">eco</span>
+          </div>
+        )}
+
+        {/* + Add button (bottom-right of image) */}
+        <button
+          onClick={(e) => onAddToCart(product, e)}
+          disabled={product.stock <= 0}
+          className="absolute bottom-2 right-2 w-9 h-9 md:w-10 md:h-10 rounded-full bg-surface-container-lowest shadow-md flex items-center justify-center hover:bg-primary hover:text-primary-foreground active:scale-90 transition-all disabled:opacity-40"
+        >
+          <span className="material-symbols-outlined text-lg">add</span>
+        </button>
+
+        {/* Out of stock overlay */}
+        {product.stock <= 0 && (
+          <div className="absolute inset-0 bg-foreground/40 flex items-center justify-center">
+            <span className="bg-destructive text-destructive-foreground px-3 py-1 rounded-full text-[10px] font-bold">Rupture</span>
+          </div>
+        )}
+
+        {/* Stock badge */}
+        {product.stock > 0 && product.stock <= 5 && (
+          <div className="absolute top-2 left-2">
+            <span className="bg-accent text-accent-foreground text-[9px] font-bold px-2 py-0.5 rounded-full">
+              Plus que {product.stock}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Info below image */}
+      <div className="p-2.5 md:p-4 flex flex-col flex-grow">
+        <span className="text-sm md:text-lg font-headline font-extrabold text-primary leading-tight">
+          {formatPrice(product.price)}
+        </span>
+        <h3 className="text-xs md:text-sm font-headline font-bold leading-tight mt-1 line-clamp-2 text-foreground">
+          {product.name}
+        </h3>
+        <p className="text-[10px] md:text-xs text-on-surface-variant mt-0.5">{product.unit}</p>
+      </div>
+    </motion.div>
+  </Link>
+);
 
 export default Marche;

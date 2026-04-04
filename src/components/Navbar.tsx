@@ -20,31 +20,25 @@ const Navbar = () => {
           <Link to="/marche" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground hover:scale-95 transition-transform duration-200">
             Marché
           </Link>
+          {user && role === "seller" && (
+            <Link to="/dashboard" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground hover:scale-95 transition-transform duration-200">
+              Mes Produits
+            </Link>
+          )}
+          {user && role === "buyer" && (
+            <Link to="/mon-compte" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground hover:scale-95 transition-transform duration-200">
+              Mon Compte
+            </Link>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
           {/* Desktop auth links */}
           <div className="hidden md:flex items-center gap-2">
             {user ? (
-              <>
-                {role === "seller" ? (
-                  <>
-                    <Link to="/marche" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
-                      Marché
-                    </Link>
-                    <Link to="/dashboard" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
-                      Mes Produits
-                    </Link>
-                  </>
-                ) : (
-                  <Link to="/mon-compte" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
-                    Mon Compte
-                  </Link>
-                )}
-                <button onClick={() => signOut()} className="font-headline font-bold text-sm text-on-surface-variant hover:text-destructive px-3 py-2">
-                  <span className="material-symbols-outlined text-lg">logout</span>
-                </button>
-              </>
+              <button onClick={() => signOut()} className="font-headline font-bold text-sm text-on-surface-variant hover:text-destructive px-3 py-2">
+                <span className="material-symbols-outlined text-lg">logout</span>
+              </button>
             ) : (
               <Link to="/auth" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
                 Connexion

@@ -4,7 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index";
-import DevenirProducteur from "./pages/DevenirProducteur";
 import SellerDashboard from "./pages/SellerDashboard";
 import ProductDetail from "./pages/ProductDetail";
 import Auth from "./pages/Auth";
@@ -34,7 +33,6 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/marche" element={<Marche />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/devenir-producteur" element={<DevenirProducteur />} />
               <Route path="/dashboard" element={<SellerDashboard />} />
               <Route path="/produit/:id" element={<ProductDetail />} />
               <Route path="/checkout" element={<Checkout />} />

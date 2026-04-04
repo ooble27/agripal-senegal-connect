@@ -20,9 +20,6 @@ const Navbar = () => {
           <Link to="/marche" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground hover:scale-95 transition-transform duration-200">
             Marché
           </Link>
-          <Link to="/devenir-producteur" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground hover:scale-95 transition-transform duration-200">
-            Artisans
-          </Link>
         </div>
 
         <div className="flex items-center gap-3">
@@ -35,11 +32,9 @@ const Navbar = () => {
                     Mes Produits
                   </Link>
                 ) : (
-                  <>
-                    <Link to="/mon-compte" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
-                      Mon Compte
-                    </Link>
-                  </>
+                  <Link to="/mon-compte" className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:scale-95 transition-transform px-4 py-2">
+                    Mon Compte
+                  </Link>
                 )}
                 <button onClick={() => signOut()} className="font-headline font-bold text-sm text-on-surface-variant hover:text-destructive px-3 py-2">
                   <span className="material-symbols-outlined text-lg">logout</span>
@@ -52,7 +47,7 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Cart button - desktop only (mobile uses BottomNav) */}
+          {/* Cart button - desktop only */}
           <button
             onClick={() => setIsOpen(true)}
             className="hidden md:flex relative bg-primary-container text-primary-container-foreground font-headline font-extrabold uppercase tracking-tight text-sm px-5 md:px-6 py-2 rounded-full hover:scale-95 transition-transform duration-200"
@@ -82,53 +77,27 @@ const Navbar = () => {
       {mobileOpen && (
         <div className="md:hidden border-t border-border/30 bg-background/95 backdrop-blur-xl animate-in slide-in-from-top-2 duration-200">
           <div className="flex flex-col px-6 py-4 gap-1">
-            <Link
-              to="/marche"
-              onClick={() => setMobileOpen(false)}
-              className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 border-b border-border/20"
-            >
+            <Link to="/marche" onClick={() => setMobileOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 border-b border-border/20">
               Marché
-            </Link>
-            <Link
-              to="/devenir-producteur"
-              onClick={() => setMobileOpen(false)}
-              className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 border-b border-border/20"
-            >
-              Artisans
             </Link>
             {user ? (
               <>
                 {role === "seller" ? (
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setMobileOpen(false)}
-                    className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 border-b border-border/20"
-                  >
+                  <Link to="/dashboard" onClick={() => setMobileOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 border-b border-border/20">
                     Mes Produits
                   </Link>
                 ) : (
-                  <Link
-                    to="/mon-compte"
-                    onClick={() => setMobileOpen(false)}
-                    className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 border-b border-border/20"
-                  >
+                  <Link to="/mon-compte" onClick={() => setMobileOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 border-b border-border/20">
                     Mon Compte
                   </Link>
                 )}
-                <button
-                  onClick={() => { signOut(); setMobileOpen(false); }}
-                  className="font-headline font-bold text-sm text-destructive text-left py-3 flex items-center gap-2"
-                >
+                <button onClick={() => { signOut(); setMobileOpen(false); }} className="font-headline font-bold text-sm text-destructive text-left py-3 flex items-center gap-2">
                   <span className="material-symbols-outlined text-lg">logout</span>
                   Déconnexion
                 </button>
               </>
             ) : (
-              <Link
-                to="/auth"
-                onClick={() => setMobileOpen(false)}
-                className="font-headline font-extrabold uppercase tracking-tight text-sm text-primary py-3"
-              >
+              <Link to="/auth" onClick={() => setMobileOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-primary py-3">
                 Connexion
               </Link>
             )}

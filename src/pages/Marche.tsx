@@ -68,7 +68,7 @@ const Marche = () => {
 
   const firstName = profile?.full_name?.split(" ")[0] || "there";
 
-  // Group products by category for horizontal scroll sections
+  // Group products by category
   const productsByCategory = categories
     .map((cat) => ({
       category: cat,
@@ -107,7 +107,6 @@ const Marche = () => {
 
         {/* ═══════ SEARCH BAR ═══════ */}
         <section className="px-5 md:px-12 pt-3 md:pt-8 max-w-[1440px] mx-auto">
-          {/* Desktop header */}
           <div className="hidden md:flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
             <div>
               <span className="text-primary font-headline font-extrabold text-xs uppercase tracking-widest">Catalogue</span>
@@ -161,10 +160,7 @@ const Marche = () => {
         <section className="px-5 md:px-12 mt-5 md:mt-0 md:mb-8 max-w-[1440px] mx-auto">
           <div className="flex items-center justify-between mb-3 md:hidden">
             <h3 className="font-headline font-extrabold text-sm">Catégories</h3>
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className="text-primary text-xs font-bold"
-            >
+            <button onClick={() => setSelectedCategory(null)} className="text-primary text-xs font-bold">
               Voir tout
             </button>
           </div>
@@ -196,7 +192,7 @@ const Marche = () => {
           </div>
         </section>
 
-        {/* ═══════ PRODUCT SECTIONS ═══════ */}
+        {/* ═══════ PRODUCTS ═══════ */}
         <section className="mt-4 md:mt-0 max-w-[1440px] mx-auto">
           {loading ? (
             <div className="text-center py-20">
@@ -211,15 +207,13 @@ const Marche = () => {
               </p>
             </div>
           ) : selectedCategory || searchQuery ? (
-            /* Grid view when filtering/searching */
-            <div className="px-4 md:px-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+            <div className="px-4 md:px-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
               {filtered.map((product, i) => (
                 <ProductCard key={product.id} product={product} index={i} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
               ))}
             </div>
           ) : (
-            /* Horizontal scroll sections by category (Uber Eats style) */
-            <div className="space-y-6 md:space-y-10">
+            <div className="space-y-8 md:space-y-10">
               {productsByCategory.map((group) => (
                 <div key={group.category.id}>
                   <div className="flex items-center justify-between px-5 md:px-12 mb-3">
@@ -231,14 +225,15 @@ const Marche = () => {
                     </div>
                     <button
                       onClick={() => setSelectedCategory(group.category.id)}
-                      className="flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors"
+                      className="text-xs font-headline font-bold text-primary flex items-center gap-1"
                     >
-                      <span className="material-symbols-outlined text-xl">arrow_forward</span>
+                      Voir tout
+                      <span className="material-symbols-outlined text-base">chevron_right</span>
                     </button>
                   </div>
                   <div className="flex gap-3 overflow-x-auto px-5 md:px-12 pb-2 scrollbar-hide">
                     {group.items.slice(0, 8).map((product, i) => (
-                      <div key={product.id} className="shrink-0 w-[160px] md:w-[200px]">
+                      <div key={product.id} className="shrink-0 w-[160px] md:w-[220px]">
                         <ProductCard product={product} index={i} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
                       </div>
                     ))}
@@ -246,12 +241,11 @@ const Marche = () => {
                 </div>
               ))}
 
-              {/* All products section */}
               <div>
                 <div className="flex items-center justify-between px-5 md:px-12 mb-3">
                   <h3 className="font-headline font-extrabold text-base md:text-xl">Tous les produits</h3>
                 </div>
-                <div className="px-4 md:px-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+                <div className="px-4 md:px-12 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
                   {filtered.map((product, i) => (
                     <ProductCard key={product.id} product={product} index={i} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
                   ))}
@@ -261,7 +255,6 @@ const Marche = () => {
           )}
         </section>
 
-        {/* Desktop Footer only */}
         <div className="hidden md:block mt-12">
           <Footer />
         </div>
@@ -270,7 +263,7 @@ const Marche = () => {
   );
 };
 
-/* ═══════ PRODUCT CARD COMPONENT (Uber Eats / Costco style) ═══════ */
+/* ═══════ PRODUCT CARD ═══════ */
 const ProductCard = ({
   product,
   index,
@@ -284,13 +277,13 @@ const ProductCard = ({
 }) => (
   <Link to={`/produit/${product.id}`}>
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.03, duration: 0.25 }}
+      transition={{ delay: index * 0.03, duration: 0.2 }}
       className="group bg-surface-container-lowest rounded-2xl overflow-hidden flex flex-col h-full border border-border/10 hover:shadow-lg transition-all"
     >
-      {/* Image with + button overlay */}
-      <div className="relative aspect-square overflow-hidden bg-surface-container">
+      {/* Image */}
+      <div className="relative aspect-[4/3] overflow-hidden bg-surface-container">
         {product.image_url ? (
           <img
             alt={product.name}
@@ -304,23 +297,21 @@ const ProductCard = ({
           </div>
         )}
 
-        {/* + Add button (bottom-right of image) */}
+        {/* Quick add */}
         <button
           onClick={(e) => onAddToCart(product, e)}
           disabled={product.stock <= 0}
-          className="absolute bottom-2 right-2 w-9 h-9 md:w-10 md:h-10 rounded-full bg-surface-container-lowest shadow-md flex items-center justify-center hover:bg-primary hover:text-primary-foreground active:scale-90 transition-all disabled:opacity-40"
+          className="absolute bottom-2 right-2 w-9 h-9 rounded-xl bg-primary-container text-primary-container-foreground shadow-md flex items-center justify-center hover:scale-110 active:scale-90 transition-all disabled:opacity-40"
         >
           <span className="material-symbols-outlined text-lg">add</span>
         </button>
 
-        {/* Out of stock overlay */}
         {product.stock <= 0 && (
           <div className="absolute inset-0 bg-foreground/40 flex items-center justify-center">
             <span className="bg-destructive text-destructive-foreground px-3 py-1 rounded-full text-[10px] font-bold">Rupture</span>
           </div>
         )}
 
-        {/* Stock badge */}
         {product.stock > 0 && product.stock <= 5 && (
           <div className="absolute top-2 left-2">
             <span className="bg-accent text-accent-foreground text-[9px] font-bold px-2 py-0.5 rounded-full">
@@ -330,15 +321,17 @@ const ProductCard = ({
         )}
       </div>
 
-      {/* Info below image */}
-      <div className="p-2.5 md:p-4 flex flex-col flex-grow">
-        <span className="text-sm md:text-lg font-headline font-extrabold text-primary leading-tight">
-          {formatPrice(product.price)}
-        </span>
-        <h3 className="text-xs md:text-sm font-headline font-bold leading-tight mt-1 line-clamp-2 text-foreground">
+      {/* Info */}
+      <div className="p-3 md:p-4 flex flex-col flex-grow">
+        <h3 className="text-sm md:text-base font-headline font-bold leading-tight line-clamp-2 text-foreground mb-1">
           {product.name}
         </h3>
-        <p className="text-[10px] md:text-xs text-on-surface-variant mt-0.5">{product.unit}</p>
+        <p className="text-[11px] md:text-xs text-on-surface-variant mb-2">{product.unit}</p>
+        <div className="mt-auto flex items-center justify-between">
+          <span className="text-base md:text-lg font-headline font-extrabold text-primary">
+            {formatPrice(product.price)}
+          </span>
+        </div>
       </div>
     </motion.div>
   </Link>

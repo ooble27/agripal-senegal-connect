@@ -42,7 +42,6 @@ const MOCK_PRODUCTS: Product[] = [
   mockProduct("m6", "Pomme Verte", 1000, "le kg", "cat-fruits", "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=400&fit=crop"),
   mockProduct("m7", "Ananas", 1200, "la pièce", "cat-fruits", "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&h=400&fit=crop"),
   mockProduct("m8", "Citron Vert", 300, "le kg", "cat-fruits", "https://images.unsplash.com/photo-1590502593747-42a996133562?w=400&h=400&fit=crop"),
-  mockProduct("m10", "Tomates", 400, "le kg", "cat-legumes", "https://images.unsplash.com/photo-1546470427-0d4db154ceb8?w=400&h=400&fit=crop"),
   mockProduct("m11", "Oignons", 350, "le kg", "cat-legumes", "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=400&h=400&fit=crop"),
   mockProduct("m12", "Piment Rouge", 600, "le kg", "cat-legumes", "https://images.unsplash.com/photo-1583119022894-919a68a3d0e3?w=400&h=400&fit=crop"),
   mockProduct("m13", "Aubergine", 450, "le kg", "cat-legumes", "https://images.unsplash.com/photo-1615484477778-ca3b77940c25?w=400&h=400&fit=crop"),
@@ -53,11 +52,7 @@ const MOCK_PRODUCTS: Product[] = [
   mockProduct("m20", "Riz Brisé", 500, "le kg", "cat-cereales", "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400&h=400&fit=crop"),
   mockProduct("m21", "Mil", 400, "le kg", "cat-cereales", "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=400&fit=crop"),
   mockProduct("m22", "Maïs", 350, "le kg", "cat-cereales", "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=400&h=400&fit=crop"),
-  mockProduct("m23", "Fonio", 800, "le kg", "cat-cereales", "https://images.unsplash.com/photo-1536304993881-460e32f50e42?w=400&h=400&fit=crop"),
-  mockProduct("m30", "Manioc", 300, "le kg", "cat-tubercules", "https://images.unsplash.com/photo-1598511726623-d2e9996e2d45?w=400&h=400&fit=crop"),
   mockProduct("m31", "Igname", 600, "le kg", "cat-tubercules", "https://images.unsplash.com/photo-1590165482129-1b8b27698780?w=400&h=400&fit=crop"),
-  mockProduct("m32", "Patate Douce", 450, "le kg", "cat-tubercules", "https://images.unsplash.com/photo-1596097635121-14b63a7ab715?w=400&h=400&fit=crop"),
-  mockProduct("m40", "Poivre Noir", 2500, "le kg", "cat-epices", "https://images.unsplash.com/photo-1599909533601-bbfbc5625067?w=400&h=400&fit=crop"),
   mockProduct("m41", "Curcuma", 3000, "le kg", "cat-epices", "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=400&h=400&fit=crop"),
   mockProduct("m42", "Gingembre", 1500, "le kg", "cat-epices", "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&h=400&fit=crop"),
 ];
@@ -247,56 +242,12 @@ const Marche = () => {
                 {searchQuery ? "Essayez avec d'autres termes." : "Aucun produit dans cette catégorie."}
               </p>
             </div>
-          ) : selectedCategory || searchQuery ? (
-            /* Filtered: full grid */
-            <div className="px-5 md:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+          ) : (
+            /* All products grid - always show flat grid */
+            <div className="px-5 md:px-12 grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
               {filtered.map((product) => (
                 <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
               ))}
-            </div>
-          ) : (
-            /* Default: category rows then full grid */
-            <div className="space-y-6">
-              {productsByCategory.map((group) => (
-                <div key={group.category.id}>
-                  <div className="flex items-center justify-between px-5 md:px-12 mb-2">
-                    <h3 className="font-headline font-extrabold text-sm md:text-base flex items-center gap-2">
-                      {group.category.icon && (
-                        <span className="material-symbols-outlined text-primary text-base">{group.category.icon}</span>
-                      )}
-                      {group.category.name}
-                    </h3>
-                    <button
-                      onClick={() => setSelectedCategory(group.category.id)}
-                      className="text-[11px] font-headline font-bold text-primary flex items-center gap-0.5"
-                    >
-                      Voir tout
-                      <span className="material-symbols-outlined text-sm">chevron_right</span>
-                    </button>
-                  </div>
-
-                  {/* Horizontal scroll row */}
-                  <div className="flex gap-3 overflow-x-auto px-5 md:px-12 pb-2 scrollbar-hide">
-                    {group.items.slice(0, 10).map((product) => (
-                      <div key={product.id} className="shrink-0 w-[160px] md:w-[200px]">
-                        <ProductCard product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-
-              {/* All products grid */}
-              <div>
-                <div className="px-5 md:px-12 mb-3">
-                  <h3 className="font-headline font-extrabold text-sm md:text-base">Tous les produits</h3>
-                </div>
-                <div className="px-5 md:px-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-                  {filtered.map((product) => (
-                    <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
-                  ))}
-                </div>
-              </div>
             </div>
           )}
         </section>

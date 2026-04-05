@@ -224,8 +224,14 @@ const Marche = () => {
         {/* ═══════ PRODUCTS ═══════ */}
         <section className="mt-3 md:mt-0 max-w-[1440px] mx-auto pb-4">
           {loading ? (
-            <div className="text-center py-20">
-              <span className="material-symbols-outlined text-4xl text-on-surface-variant animate-spin">progress_activity</span>
+            <div className="px-5 md:px-12 grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="aspect-square rounded-xl bg-surface-container mb-2" />
+                  <div className="h-4 bg-surface-container rounded-lg w-3/4 mb-1.5" />
+                  <div className="h-3 bg-surface-container rounded-lg w-1/2" />
+                </div>
+              ))}
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16 mx-5">

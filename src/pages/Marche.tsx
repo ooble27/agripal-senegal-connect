@@ -238,8 +238,8 @@ const Marche = () => {
           ) : (
             /* All products grid - always show flat grid */
             <div className="px-5 md:px-12 grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-              {filtered.map((product) => (
-                <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} />
+              {filtered.map((product, i) => (
+                <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} formatPrice={formatPrice} index={i} />
               ))}
             </div>
           )}

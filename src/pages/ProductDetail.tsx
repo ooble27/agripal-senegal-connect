@@ -186,7 +186,7 @@ const ProductDetail = () => {
         {/* ═══════ MOBILE VIEW ═══════ */}
         <div className="md:hidden pb-24">
           {/* Fixed header with X and share */}
-          <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3">
+          <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 safe-area-top">
             <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-surface-container-lowest/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
               <span className="material-symbols-outlined text-on-surface">close</span>
             </button>

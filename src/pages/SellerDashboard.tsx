@@ -809,7 +809,7 @@ const SellerDashboard = () => {
 
       {/* Main Content */}
       <main className="lg:ml-72 flex-1 min-h-screen">
-        <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl px-5 md:px-10 py-4 md:py-5 flex items-center justify-between border-b border-border/20">
+        <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl px-5 md:px-10 py-4 md:py-5 flex items-center justify-between border-b border-border/20 safe-area-top">
           <div className="flex items-center gap-3">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-full hover:bg-surface-container">
               <span className="material-symbols-outlined text-2xl">menu</span>

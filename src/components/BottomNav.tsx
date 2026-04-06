@@ -4,7 +4,6 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
-  { path: "/", icon: "home", label: "Accueil" },
   { path: "/marche", icon: "storefront", label: "Marché" },
   { path: "__cart__", icon: "shopping_cart", label: "Panier" },
   { path: "__profile__", icon: "person", label: "Profil" },

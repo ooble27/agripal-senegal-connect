@@ -31,17 +31,10 @@ const BottomNav = () => {
           const href = isCart ? "#" : isProfile ? getProfilePath() : item.path;
 
           const content = (
-            <div className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl min-w-[60px] relative">
-              {active && (
-                <motion.div
-                  layoutId="bottomnav-pill"
-                  className="absolute inset-0 bg-primary-container rounded-2xl"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
+            <div className="flex flex-col items-center gap-0.5 px-4 py-1.5 min-w-[64px] relative">
               <span
-                className={`material-symbols-outlined text-xl relative z-10 ${active ? "text-on-primary-container" : "text-on-surface-variant"}`}
-                style={active ? { fontVariationSettings: "'FILL' 1" } : {}}
+                className={`material-symbols-outlined text-[22px] transition-all duration-300 ${active ? "text-primary scale-110" : "text-on-surface-variant"}`}
+                style={active ? { fontVariationSettings: "'FILL' 1, 'wght' 600" } : {}}
               >
                 {item.icon}
               </span>
@@ -49,14 +42,21 @@ const BottomNav = () => {
                 <motion.span
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="absolute top-0.5 right-2 w-4 h-4 bg-primary text-primary-foreground text-[9px] font-bold rounded-full flex items-center justify-center z-20"
+                  className="absolute top-0 right-3 w-[18px] h-[18px] bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full flex items-center justify-center z-20"
                 >
                   {totalItems}
                 </motion.span>
               )}
-              <span className={`text-[10px] font-bold relative z-10 ${active ? "text-on-primary-container" : "text-on-surface-variant"}`}>
+              <span className={`text-[10px] font-medium transition-colors duration-300 ${active ? "text-primary font-bold" : "text-on-surface-variant"}`}>
                 {item.label}
               </span>
+              {active && (
+                <motion.div
+                  layoutId="bottomnav-dot"
+                  className="w-1 h-1 rounded-full bg-primary mt-0.5"
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              )}
             </div>
           );
 

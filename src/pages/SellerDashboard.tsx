@@ -771,7 +771,8 @@ const SellerDashboard = () => {
       )}
 
       {/* Sidebar */}
-      <aside className={`h-screen w-72 fixed left-0 top-0 bg-background font-headline flex flex-col p-8 gap-8 z-50 border-r border-border/30 transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+      <aside className={`h-screen w-72 fixed left-0 top-0 bg-background font-headline flex flex-col p-8 gap-8 z-50 border-r border-border/30 transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+        style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 2rem)" }}>
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h2 className="text-xl font-extrabold tracking-tight text-foreground leading-tight">

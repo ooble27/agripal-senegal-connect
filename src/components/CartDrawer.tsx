@@ -23,7 +23,7 @@ const CartDrawer = () => {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent side="right" className="w-full sm:max-w-md bg-background flex flex-col p-0">
-        <SheetHeader className="px-6 pt-6 pb-4 border-b border-border">
+        <SheetHeader className="px-6 pt-6 pb-4 border-b border-border safe-area-top">
           <SheetTitle className="font-headline font-extrabold text-2xl tracking-tight flex items-center gap-3">
             <span className="material-symbols-outlined text-primary">shopping_bag</span>
             Mon Panier

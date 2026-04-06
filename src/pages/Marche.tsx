@@ -136,7 +136,7 @@ const Marche = () => {
   return (
     <div className="min-h-screen bg-surface-container-lowest pb-20 md:pb-0">
       <Navbar />
-      <main className="pt-20">
+      <main className="pt-28 md:pt-24">
 
         {/* ═══════ HEADER — all screens ═══════ */}
         <section className="px-5 md:px-12 pt-3 md:pt-6 max-w-[1440px] mx-auto">

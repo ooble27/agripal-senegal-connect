@@ -12,6 +12,7 @@ import Checkout from "./pages/Checkout";
 import MyOrders from "./pages/MyOrders";
 import BuyerAccount from "./pages/BuyerAccount";
 import Marche from "./pages/Marche";
+import BoutiquePublique from "./pages/BoutiquePublique";
 import NotFound from "./pages/NotFound";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -34,6 +35,7 @@ const AnimatedRoutes = () => {
         <Route path="/checkout" element={<PageTransition><Checkout /></PageTransition>} />
         <Route path="/mes-commandes" element={<PageTransition><MyOrders /></PageTransition>} />
         <Route path="/mon-compte" element={<PageTransition><BuyerAccount /></PageTransition>} />
+        <Route path="/boutique/:id" element={<PageTransition><BoutiquePublique /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>

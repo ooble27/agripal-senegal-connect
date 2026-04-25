@@ -277,7 +277,7 @@ const ProductDetail = () => {
 
           {/* Seller info */}
           <div className="px-5 py-3">
-            <div className="flex items-center gap-3 bg-surface-container-lowest rounded-2xl p-3 border border-border/20">
+            <Link to={shop ? `/boutique/${shop.id}` : "#"} className="flex items-center gap-3 bg-surface-container-lowest rounded-2xl p-3 border border-border/20 active:scale-[0.98] transition-transform">
               <div className="w-10 h-10 rounded-full bg-primary-container/20 flex items-center justify-center overflow-hidden shrink-0">
                 {sellerProfile?.avatar_url ? (
                   <img src={sellerProfile.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -289,12 +289,14 @@ const ProductDetail = () => {
                 <p className="font-headline font-extrabold text-sm truncate">{sellerName}</p>
                 <p className="text-[10px] text-on-surface-variant">{sellerCity}</p>
               </div>
-              {(shop?.phone || sellerProfile?.phone) && (
-                <a href={`tel:${shop?.phone || sellerProfile?.phone}`} className="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-on-primary-container text-sm">call</span>
-                </a>
-              )}
-            </div>
+              <span className="material-symbols-outlined text-on-surface-variant text-base shrink-0">chevron_right</span>
+            </Link>
+            {(shop?.phone || sellerProfile?.phone) && (
+              <a href={`tel:${shop?.phone || sellerProfile?.phone}`} className="flex items-center gap-2 mt-2 px-3 py-2.5 rounded-2xl bg-primary-container/10 text-primary text-sm font-bold">
+                <span className="material-symbols-outlined text-base">call</span>
+                Appeler le vendeur
+              </a>
+            )}
           </div>
 
           {/* Description */}
@@ -441,15 +443,26 @@ const ProductDetail = () => {
                       <p className="font-headline font-extrabold">{sellerName}</p>
                       <p className="text-sm text-on-surface-variant">{sellerCity}</p>
                     </div>
-                    {(shop?.phone || sellerProfile?.phone) && (
-                      <a
-                        href={`tel:${shop?.phone || sellerProfile?.phone}`}
-                        className="inline-flex items-center gap-2 bg-primary-container text-on-primary-container px-5 py-2.5 rounded-full font-headline font-bold text-sm hover:scale-95 transition-transform"
-                      >
-                        <span className="material-symbols-outlined text-base">call</span>
-                        Appeler
-                      </a>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {(shop?.phone || sellerProfile?.phone) && (
+                        <a
+                          href={`tel:${shop?.phone || sellerProfile?.phone}`}
+                          className="inline-flex items-center gap-2 bg-surface-container text-on-surface-variant px-4 py-2.5 rounded-full font-headline font-bold text-sm hover:scale-95 transition-transform"
+                        >
+                          <span className="material-symbols-outlined text-base">call</span>
+                          Appeler
+                        </a>
+                      )}
+                      {shop && (
+                        <Link
+                          to={`/boutique/${shop.id}`}
+                          className="inline-flex items-center gap-2 bg-primary-container text-on-primary-container px-4 py-2.5 rounded-full font-headline font-bold text-sm hover:scale-95 transition-transform"
+                        >
+                          <span className="material-symbols-outlined text-base">storefront</span>
+                          Boutique
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </div>
               </motion.div>

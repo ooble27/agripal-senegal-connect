@@ -1,0 +1,35 @@
+name: Déploiement fonctions edge Supabase
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/**"
+  workflow_dispatch:
+
+# Un seul déploiement à la fois. Toute nouvelle exécution annule celles
+# en cours ou en queue — évite qu'une queue vieille de 15 minutes fasse
+# expirer les runs plus récents et bloque les correctifs.
+concurrency:
+  group: deploy-supabase-functions
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: |
+          supabase functions deploy send-email --project-ref uukxacjjviiktmbikdwp
+          supabase functions deploy ai-assist --project-ref uukxacjjviiktmbikdwp
+          supabase functions deploy sumsub-token --project-ref uukxacjjviiktmbikdwp
+          supabase functions deploy sumsub-webhook --project-ref uukxacjjviiktmbikdwp --no-verify-jwt
+          supabase functions deploy mail-webhook --project-ref uukxacjjviiktmbikdwp --no-verify-jwt
+          supabase functions deploy push-notify --project-ref uukxacjjviiktmbikdwp
+          supabase functions deploy order-notify --project-ref uukxacjjviiktmbikdwp --no-verify-jwt
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

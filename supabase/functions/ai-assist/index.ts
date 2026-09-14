@@ -59,6 +59,15 @@ async function callClaude(
   userMessage: string,
   maxTokens = 1024,
 ): Promise<ClaudeCallResult> {
+  return callClaudeMultiTurn(apiKey, system, [{ role: "user", content: userMessage }], maxTokens);
+}
+
+async function callClaudeMultiTurn(
+  apiKey: string,
+  system: string,
+  messages: Array<{ role: "user" | "assistant"; content: string }>,
+  maxTokens = 1024,
+): Promise<ClaudeCallResult> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -70,7 +79,7 @@ async function callClaude(
       model: ANTHROPIC_MODEL,
       max_tokens: maxTokens,
       system,
-      messages: [{ role: "user", content: userMessage }],
+      messages,
     }),
   });
 
@@ -370,8 +379,92 @@ async function draftCampaign(
   };
 }
 
+// ────────────────────────────────────────────────────────────
+// Agent 4 — Assistant contextuel temps réel (chat)
+// ────────────────────────────────────────────────────────────
+
+const SYSTEM_CONTEXT_CHAT = `Tu es l'assistant IA du back-office Ooble — une plateforme canadienne d'échange USDT/CAD non-custodial réglementée par CANAFE.
+
+Tu assistes le staff en temps réel : tu as accès à l'état actuel de la plateforme (commandes, KYC, messagerie, trésorerie, taux) et tu réponds aux questions opérationnelles.
+
+Ton rôle :
+- Répondre aux questions sur l'état de la plateforme (« Combien de commandes en attente ? », « Quel est le volume du jour ? »)
+- Donner des recommandations opérationnelles (« Faut-il traiter cette commande en priorité ? », « Ce client est-il à risque ? »)
+- Aider à la rédaction et à la conformité
+- Signaler les anomalies ou points d'attention
+
+Contraintes :
+- Français québécois professionnel — direct, précis, jamais familier
+- Réponses concises : 2-5 phrases pour une question simple, 1-3 paragraphes max pour une analyse
+- Utilise les données fournies — ne fabrique JAMAIS de chiffres
+- Si une information manque, dis-le clairement
+- Formate en markdown (puces, **gras** pour les chiffres clés, titres si la réponse est structurée)
+- Vocabulaire Ooble : « ordre » (pas « transaction »), « réseau » (pas « blockchain »), « USDT », « Interac e-Transfer »
+
+Tu reçois l'état de la plateforme en contexte avant chaque question. Utilise-le pour donner des réponses factuelles et à jour.`;
+
+interface PlatformContext {
+  pendingOrders: number;
+  inProgressOrders: number;
+  completedToday: number;
+  cancelledToday: number;
+  volumeCadToday: number;
+  pendingKyc: number;
+  unreadMessages: number;
+  currentRate: number | null;
+  recentOrders: Array<{
+    ref: string;
+    type: string;
+    status: string;
+    cadAmount: number;
+    usdtAmount: number;
+    client: string;
+    createdAt: string;
+  }>;
+  alerts: string[];
+}
+
+function platformContextToText(ctx: PlatformContext): string {
+  const nf = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 2 });
+  const lines = [
+    "ÉTAT ACTUEL DE LA PLATEFORME :",
+    `- Commandes en attente : ${ctx.pendingOrders}`,
+    `- Commandes en cours de traitement : ${ctx.inProgressOrders}`,
+    `- Complétées aujourd'hui : ${ctx.completedToday}`,
+    `- Annulées aujourd'hui : ${ctx.cancelledToday}`,
+    `- Volume CAD aujourd'hui : ${nf.format(ctx.volumeCadToday)} $`,
+    `- KYC en attente de vérification : ${ctx.pendingKyc}`,
+    `- Messages non lus : ${ctx.unreadMessages}`,
+    `- Taux USDT/CAD actuel : ${ctx.currentRate ? `1 USDT = ${nf.format(ctx.currentRate)} CAD` : "Non disponible"}`,
+  ];
+  if (ctx.recentOrders.length > 0) {
+    lines.push(`\nDERNIÈRES COMMANDES (${ctx.recentOrders.length}) :`);
+    for (const o of ctx.recentOrders.slice(0, 15)) {
+      lines.push(`- ${o.ref} · ${o.type === "buy" ? "Achat" : "Vente"} · ${nf.format(o.cadAmount)} CAD / ${nf.format(o.usdtAmount)} USDT · ${o.status} · ${o.client} · ${o.createdAt}`);
+    }
+  }
+  if (ctx.alerts.length > 0) {
+    lines.push("\nALERTES :");
+    for (const a of ctx.alerts) lines.push(`⚠ ${a}`);
+  }
+  return lines.join("\n");
+}
+
+async function contextChat(
+  apiKey: string,
+  input: {
+    messages: Array<{ role: "user" | "assistant"; content: string }>;
+    context: PlatformContext;
+  },
+): Promise<{ reply: string; call: ClaudeCallResult }> {
+  const contextBlock = platformContextToText(input.context);
+  const systemWithContext = `${SYSTEM_CONTEXT_CHAT}\n\n${contextBlock}`;
+  const call = await callClaudeMultiTurn(apiKey, systemWithContext, input.messages, 2048);
+  return { reply: call.text, call };
+}
+
 interface Payload {
-  agent: "draft-mail" | "summarize-client" | "draft-campaign";
+  agent: "draft-mail" | "summarize-client" | "draft-campaign" | "context-chat";
   // draft-mail / draft-campaign
   intention?: string;
   client?: ClientContext | null;
@@ -382,6 +475,9 @@ interface Payload {
   // summarize-client
   orders?: OrderSummary[];
   notes?: string[];
+  // context-chat
+  messages?: Array<{ role: "user" | "assistant"; content: string }>;
+  context?: PlatformContext;
 }
 
 Deno.serve(async (req) => {
@@ -462,6 +558,19 @@ Deno.serve(async (req) => {
       });
       await logCall(admin, { agent: "summarize-client", staffId: userId, inputPreview, call, startedAt });
       return json({ ok: true, summary, tokens: { in: call.inputTokens, out: call.outputTokens } });
+    }
+
+    if (payload.agent === "context-chat") {
+      if (!payload.messages || payload.messages.length === 0) return json({ error: "Champ 'messages' requis." }, 400);
+      if (!payload.context) return json({ error: "Champ 'context' requis." }, 400);
+      const lastMsg = payload.messages[payload.messages.length - 1];
+      const inputPreview = preview(lastMsg?.content ?? "");
+      const { reply, call } = await contextChat(anthropicKey, {
+        messages: payload.messages,
+        context: payload.context,
+      });
+      await logCall(admin, { agent: "context-chat", staffId: userId, inputPreview, call, startedAt });
+      return json({ ok: true, reply, tokens: { in: call.inputTokens, out: call.outputTokens } });
     }
 
     return json({ error: `Agent inconnu : ${payload.agent}` }, 400);

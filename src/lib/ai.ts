@@ -149,6 +149,51 @@ export async function draftCampaign(input: DraftCampaignInput): Promise<DraftCam
   return invoke<DraftCampaignResult>({ agent: "draft-campaign", ...input });
 }
 
+// ────────────────────────────────────────────────────────────
+// Agent 4 — Assistant contextuel temps réel (chat)
+// ────────────────────────────────────────────────────────────
+
+export interface PlatformContext {
+  pendingOrders: number;
+  inProgressOrders: number;
+  completedToday: number;
+  cancelledToday: number;
+  volumeCadToday: number;
+  pendingKyc: number;
+  unreadMessages: number;
+  currentRate: number | null;
+  recentOrders: Array<{
+    ref: string;
+    type: string;
+    status: string;
+    cadAmount: number;
+    usdtAmount: number;
+    client: string;
+    createdAt: string;
+  }>;
+  alerts: string[];
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ContextChatInput {
+  messages: ChatMessage[];
+  context: PlatformContext;
+}
+
+export interface ContextChatResult {
+  ok: true;
+  reply: string;
+  tokens: { in: number; out: number };
+}
+
+export async function contextChat(input: ContextChatInput): Promise<ContextChatResult | AICallError> {
+  return invoke<ContextChatResult>({ agent: "context-chat", ...input });
+}
+
 export function isAIError<T extends { ok?: true }>(res: T | AICallError): res is AICallError {
   return "error" in res;
 }

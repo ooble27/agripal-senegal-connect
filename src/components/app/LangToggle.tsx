@@ -50,31 +50,38 @@ export const LangPill = ({ className }: { className?: string }) => {
   const isFr = lang === "fr";
 
   return (
-    <button
-      type="button"
-      onClick={() => setLang(isFr ? "en" : "fr")}
-      aria-label={isFr ? "Switch to English" : "Passer en français"}
+    <div
       className={cn(
-        "relative flex h-8 w-[3.75rem] shrink-0 items-center rounded-full border border-border bg-secondary/80 p-[3px] transition-colors",
+        "relative flex h-8 shrink-0 items-center rounded-full border border-border bg-secondary/80 p-[3px]",
         className,
       )}
     >
-      <span className={cn(
-        "absolute left-[6px] text-[10px] font-bold tracking-wide transition-opacity",
-        isFr ? "opacity-0" : "opacity-30 text-muted-foreground",
-      )}>FR</span>
-      <span className={cn(
-        "absolute right-[6px] text-[10px] font-bold tracking-wide transition-opacity",
-        isFr ? "opacity-30 text-muted-foreground" : "opacity-0",
-      )}>EN</span>
       <span
         className={cn(
-          "flex h-[22px] min-w-[22px] items-center justify-center rounded-full bg-card px-1 text-[10px] font-bold tracking-wide text-foreground shadow-sm transition-transform duration-200 ease-out",
-          isFr ? "translate-x-0" : "translate-x-[calc(3.75rem-22px-6px)]",
+          "pointer-events-none absolute inset-y-[3px] w-[calc(50%-3px)] rounded-full bg-card shadow-sm transition-transform duration-200 ease-out",
+          isFr ? "left-[3px] translate-x-0" : "left-[3px] translate-x-full",
+        )}
+      />
+      <button
+        type="button"
+        onClick={() => setLang("fr")}
+        className={cn(
+          "relative z-10 flex h-full w-9 items-center justify-center rounded-full text-[11px] font-bold tracking-wide transition-colors",
+          isFr ? "text-foreground" : "text-muted-foreground",
         )}
       >
-        {isFr ? "FR" : "EN"}
-      </span>
-    </button>
+        FR
+      </button>
+      <button
+        type="button"
+        onClick={() => setLang("en")}
+        className={cn(
+          "relative z-10 flex h-full w-9 items-center justify-center rounded-full text-[11px] font-bold tracking-wide transition-colors",
+          isFr ? "text-muted-foreground" : "text-foreground",
+        )}
+      >
+        EN
+      </button>
+    </div>
   );
 };

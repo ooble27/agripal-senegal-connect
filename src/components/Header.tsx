@@ -113,9 +113,9 @@ const Header = ({ inverted }: { inverted?: boolean }) => {
               <button
                 onClick={close}
                 aria-label={t("nav.closeMenu")}
-                className="flex h-9 w-9 items-center justify-center rounded-[10px] border border-border bg-card transition-colors hover:bg-secondary active:scale-95"
+                className="flex h-9 w-9 items-center justify-center text-foreground transition-colors active:scale-95"
               >
-                <X className="h-[18px] w-[18px]" />
+                <X className="h-5 w-5" strokeWidth={1.8} />
               </button>
             </div>
 

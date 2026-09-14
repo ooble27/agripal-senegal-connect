@@ -124,8 +124,7 @@ export async function sendRefundEmail(input: {
       <p style="margin:4px 0 0;font-size:22px;font-weight:700;">${escHtml(input.amount)}</p>
     </div>
     <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">
-      Le montant sera crédité selon le mode de paiement original.
-      Veuillez prévoir un délai de 1 à 5 jours ouvrables.
+      Le remboursement a été effectué et le montant est disponible dans votre compte.
     </p>
     <p style="margin:24px 0 0;font-size:14px;color:#666;">
       Si vous avez des questions, n'hésitez pas à nous contacter.<br/>

@@ -102,9 +102,9 @@ const Dashboard = () => {
         )
       }
     >
-      <div className="space-y-4">
-        <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
-          {/* Taux USDT / CAD */}
+      <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
+        {/* Colonne gauche : taux + activité récente */}
+        <div className="space-y-4">
           <section className="flex flex-col rounded-2xl border border-border bg-card p-5">
             <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
               {t("dash.rate")}
@@ -119,68 +119,68 @@ const Dashboard = () => {
             <RateChart data={history.points} className="hidden w-full text-foreground/55 md:mt-4 md:block md:min-h-[6rem] md:flex-1" />
           </section>
 
-          {/* Actions + réseaux */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <Link
-                to="/app/acheter"
-                className={cn(
-                  "flex items-center gap-3 rounded-2xl border border-border bg-card px-5 py-4 transition-colors",
-                  (TRADING_ENABLED || isStaff)
-                    ? "hover:bg-secondary/50 active:bg-secondary"
-                    : "pointer-events-none opacity-40",
-                )}
-                aria-disabled={!(TRADING_ENABLED || isStaff)}
-                tabIndex={(TRADING_ENABLED || isStaff) ? undefined : -1}
-              >
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground/70">
-                  <Coins className="h-5 w-5" strokeWidth={1.6} />
-                </span>
-                <span className="text-[15px] font-medium">{t("dash.buy")}</span>
-              </Link>
-              <Link
-                to="/app/vendre"
-                className={cn(
-                  "flex items-center gap-3 rounded-2xl border border-border bg-card px-5 py-4 transition-colors",
-                  (TRADING_ENABLED || isStaff)
-                    ? "hover:bg-secondary/50 active:bg-secondary"
-                    : "pointer-events-none opacity-40",
-                )}
-                aria-disabled={!(TRADING_ENABLED || isStaff)}
-                tabIndex={(TRADING_ENABLED || isStaff) ? undefined : -1}
-              >
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground/70">
-                  <HandCoins className="h-5 w-5" strokeWidth={1.6} />
-                </span>
-                <span className="text-[15px] font-medium">{t("dash.sell")}</span>
-              </Link>
-            </div>
-            {!TRADING_ENABLED && !isStaff && (
-              <p className="text-center text-[12px] text-muted-foreground/70">
-                Les transactions sont temporairement suspendues.
-              </p>
-            )}
+          <RecentActivity />
+        </div>
 
-            <div>
-              <p className="mb-2.5 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-                Recevez sur 6 réseaux
-              </p>
-              <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden">
-                {NETWORKS.map((n) => (
-                  <div
-                    key={n.id}
-                    className="flex shrink-0 items-center gap-2.5 rounded-[10px] border border-border bg-card py-2 pl-2 pr-3.5"
-                  >
-                    <img src={`/coins/${n.id}.svg`} alt="" className="h-7 w-7 rounded-full" draggable={false} />
-                    <span className="whitespace-nowrap text-sm font-normal">{n.name}</span>
-                  </div>
-                ))}
-              </div>
+        {/* Colonne droite : actions + réseaux */}
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Link
+              to="/app/acheter"
+              className={cn(
+                "flex items-center gap-3 rounded-2xl border border-border bg-card px-5 py-4 transition-colors",
+                (TRADING_ENABLED || isStaff)
+                  ? "hover:bg-secondary/50 active:bg-secondary"
+                  : "pointer-events-none opacity-40",
+              )}
+              aria-disabled={!(TRADING_ENABLED || isStaff)}
+              tabIndex={(TRADING_ENABLED || isStaff) ? undefined : -1}
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground/70">
+                <Coins className="h-5 w-5" strokeWidth={1.6} />
+              </span>
+              <span className="text-[15px] font-medium">{t("dash.buy")}</span>
+            </Link>
+            <Link
+              to="/app/vendre"
+              className={cn(
+                "flex items-center gap-3 rounded-2xl border border-border bg-card px-5 py-4 transition-colors",
+                (TRADING_ENABLED || isStaff)
+                  ? "hover:bg-secondary/50 active:bg-secondary"
+                  : "pointer-events-none opacity-40",
+              )}
+              aria-disabled={!(TRADING_ENABLED || isStaff)}
+              tabIndex={(TRADING_ENABLED || isStaff) ? undefined : -1}
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground/70">
+                <HandCoins className="h-5 w-5" strokeWidth={1.6} />
+              </span>
+              <span className="text-[15px] font-medium">{t("dash.sell")}</span>
+            </Link>
+          </div>
+          {!TRADING_ENABLED && !isStaff && (
+            <p className="text-center text-[12px] text-muted-foreground/70">
+              Les transactions sont temporairement suspendues.
+            </p>
+          )}
+
+          <div>
+            <p className="mb-2.5 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+              Recevez sur 6 réseaux
+            </p>
+            <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden">
+              {NETWORKS.map((n) => (
+                <div
+                  key={n.id}
+                  className="flex shrink-0 items-center gap-2.5 rounded-[10px] border border-border bg-card py-2 pl-2 pr-3.5"
+                >
+                  <img src={`/coins/${n.id}.svg`} alt="" className="h-7 w-7 rounded-full" draggable={false} />
+                  <span className="whitespace-nowrap text-sm font-normal">{n.name}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-
-        <RecentActivity />
       </div>
     </AppShell>
   );

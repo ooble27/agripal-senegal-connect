@@ -6,7 +6,7 @@ import { useT } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import Logo from "./Logo";
 import ThemeToggle from "./app/ThemeToggle";
-import LangToggle from "./app/LangToggle";
+import { LangPill } from "./app/LangToggle";
 
 /**
  * En-tête public. `inverted` l'adapte à un panneau `bg-foreground` en restant
@@ -65,7 +65,7 @@ const Header = ({ inverted }: { inverted?: boolean }) => {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <LangToggle className={cn("h-8 w-8 rounded-lg border text-[11px] font-bold", inverted ? "border-background/20 text-background hover:bg-background/10" : "border-border bg-card text-foreground hover:bg-secondary")} />
+          <LangPill />
           <ThemeToggle />
           <Link
             to="/connexion"
@@ -93,15 +93,13 @@ const Header = ({ inverted }: { inverted?: boolean }) => {
           <ThemeToggle />
           <button
             className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-[10px] border transition-colors active:scale-95",
-              inverted
-                ? "border-background/20 text-background hover:bg-background/10"
-                : "border-border bg-card text-foreground hover:bg-secondary",
+              "flex h-9 w-9 items-center justify-center transition-colors active:scale-95",
+              inverted ? "text-background" : "text-foreground",
             )}
             onClick={() => setOpen(true)}
             aria-label={t("nav.openMenu")}
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5" strokeWidth={1.8} />
           </button>
         </div>
       </div>
@@ -138,7 +136,7 @@ const Header = ({ inverted }: { inverted?: boolean }) => {
             <div className="shrink-0 px-6 pb-10 pt-6">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-[13px] font-medium text-muted-foreground">{t("acct.language")}</span>
-                <LangToggle className="h-9 w-9 rounded-[10px] border border-border bg-card text-[12px] font-bold text-foreground" />
+                <LangPill />
               </div>
               <div className="flex gap-2.5">
                 <Button asChild variant="secondary" shape="rounded" size="default" className="flex-1">

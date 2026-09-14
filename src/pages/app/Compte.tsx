@@ -4,7 +4,7 @@ import { LogOut, ShieldCheck, KeyRound, LayoutGrid, ChevronRight, MessageSquare,
 import { Link } from "react-router-dom";
 import AppShell from "@/components/app/AppShell";
 import CopyRow from "@/components/app/CopyRow";
-import { LangPicker } from "@/components/app/LangToggle";
+import { LangPill } from "@/components/app/LangToggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { getMyProfile, type MyProfile } from "@/lib/profile";
@@ -125,7 +125,7 @@ const Compte = () => {
       {/* Language */}
       <div className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-card px-5 py-4">
         <span className="flex-1 text-sm font-medium">{t("acct.language")}</span>
-        <LangPicker />
+        <LangPill />
       </div>
 
       {/* Notifications push */}

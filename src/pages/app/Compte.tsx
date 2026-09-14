@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, ShieldCheck, KeyRound, Sun, Moon, LayoutGrid, ChevronRight, MessageSquare, Building2, Bell, BellOff } from "lucide-react";
+import { LogOut, ShieldCheck, KeyRound, LayoutGrid, ChevronRight, MessageSquare, Building2, Bell, BellOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import AppShell from "@/components/app/AppShell";
 import CopyRow from "@/components/app/CopyRow";
-import { LangPicker } from "@/components/app/LangToggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { getMyProfile, type MyProfile } from "@/lib/profile";
 import { getMyKyc, type KycDbStatus } from "@/lib/kyc";
-import { getTheme, setTheme, type Theme } from "@/lib/theme";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { TKey } from "@/lib/translations";
@@ -33,7 +31,6 @@ const Compte = () => {
   const navigate = useNavigate();
   const { user, signOut, isStaff } = useAuth();
   const t = useT();
-  const [theme, setThemeState] = useState<Theme>(getTheme);
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [kyc, setKyc] = useState<KycDbStatus | null>(null);
   const [pushOn, setPushOn] = useState(false);
@@ -45,11 +42,6 @@ const Compte = () => {
     getMyKyc().then((k) => setKyc(k?.status ?? "not_started"));
     if (hasPush) isSubscribed().then(setPushOn);
   }, []);
-
-  const chooseTheme = (th: Theme) => {
-    setTheme(th);
-    setThemeState(th);
-  };
 
   const logout = async () => {
     await signOut();
@@ -128,35 +120,6 @@ const Compte = () => {
           </div>
         </div>
       )}
-
-      {/* Appearance */}
-      <div className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-card px-5 py-4">
-        <span className="flex-1 text-sm font-medium">{t("acct.appearance")}</span>
-        <div className="flex rounded-lg border border-border bg-secondary/60 p-0.5">
-          {([
-            { key: "light" as Theme, icon: Sun, labelKey: "acct.light" as TKey },
-            { key: "dark" as Theme, icon: Moon, labelKey: "acct.dark" as TKey },
-          ]).map(({ key, icon: Icon, labelKey }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => chooseTheme(key)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
-                theme === key ? "bg-card text-foreground dark:bg-neutral-600" : "text-muted-foreground",
-              )}
-            >
-              <Icon className="h-3.5 w-3.5" /> {t(labelKey)}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Language */}
-      <div className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-card px-5 py-4">
-        <span className="flex-1 text-sm font-medium">{t("acct.language")}</span>
-        <LangPicker />
-      </div>
 
       {/* Notifications push */}
       {hasPush && (

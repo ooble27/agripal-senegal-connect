@@ -81,13 +81,13 @@ const AppShell = ({ children, header, backTo, wide, center, className }: AppShel
           )}
           <div className="min-w-0">{header}</div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <ThemeToggle className="h-9 w-9 rounded-[10px]" />
+        <div className="flex shrink-0 items-center gap-2.5">
+          <ThemeToggle />
           <LangToggle className="h-9 w-9 rounded-[10px] text-[12px]" />
           <Link
             to="/app/compte"
             aria-label={lang === "en" ? "My account" : "Mon compte"}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-all hover:bg-secondary active:scale-95"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground/70 transition-all hover:text-foreground active:scale-95"
           >
             <User className="h-5 w-5" strokeWidth={1.8} />
           </Link>

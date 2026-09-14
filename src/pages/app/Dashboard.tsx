@@ -71,7 +71,7 @@ const Dashboard = () => {
   const t = useT();
   const rate = useUsdtRate();
   const history = useUsdtHistory();
-  const { user } = useAuth();
+  const { user, isStaff } = useAuth();
   const firstName = user?.name?.trim().split(/\s+/)[0] ?? "";
 
   const greeting = (() => {
@@ -126,12 +126,12 @@ const Dashboard = () => {
                 to="/app/acheter"
                 className={cn(
                   "flex items-center gap-3 rounded-2xl border border-border bg-card px-5 py-4 transition-colors",
-                  TRADING_ENABLED
+                  (TRADING_ENABLED || isStaff)
                     ? "hover:bg-secondary/50 active:bg-secondary"
                     : "pointer-events-none opacity-40",
                 )}
-                aria-disabled={!TRADING_ENABLED}
-                tabIndex={TRADING_ENABLED ? undefined : -1}
+                aria-disabled={!(TRADING_ENABLED || isStaff)}
+                tabIndex={(TRADING_ENABLED || isStaff) ? undefined : -1}
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground/70">
                   <Coins className="h-5 w-5" strokeWidth={1.6} />
@@ -142,12 +142,12 @@ const Dashboard = () => {
                 to="/app/vendre"
                 className={cn(
                   "flex items-center gap-3 rounded-2xl border border-border bg-card px-5 py-4 transition-colors",
-                  TRADING_ENABLED
+                  (TRADING_ENABLED || isStaff)
                     ? "hover:bg-secondary/50 active:bg-secondary"
                     : "pointer-events-none opacity-40",
                 )}
-                aria-disabled={!TRADING_ENABLED}
-                tabIndex={TRADING_ENABLED ? undefined : -1}
+                aria-disabled={!(TRADING_ENABLED || isStaff)}
+                tabIndex={(TRADING_ENABLED || isStaff) ? undefined : -1}
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground/70">
                   <HandCoins className="h-5 w-5" strokeWidth={1.6} />
@@ -155,7 +155,7 @@ const Dashboard = () => {
                 <span className="text-[15px] font-medium">{t("dash.sell")}</span>
               </Link>
             </div>
-            {!TRADING_ENABLED && (
+            {!TRADING_ENABLED && !isStaff && (
               <p className="text-center text-[12px] text-muted-foreground/70">
                 Les transactions sont temporairement suspendues.
               </p>

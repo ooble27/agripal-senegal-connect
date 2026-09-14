@@ -54,10 +54,10 @@ const StepHeader = ({ title, sub, onBack, backLabel }: { title: string; sub: str
 
 const AppVendre = () => {
   const rate = useUsdtRate();
-  const { user } = useAuth();
+  const { user, isStaff } = useAuth();
   const t = useT();
 
-  if (!TRADING_ENABLED) {
+  if (!TRADING_ENABLED && !isStaff) {
     return (
       <AppShell center>
         <div className="flex flex-col items-center py-16 text-center">

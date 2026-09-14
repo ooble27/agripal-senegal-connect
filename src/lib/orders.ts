@@ -51,18 +51,22 @@ export interface CreateOrderInput {
 
 /** Crée un ordre pour l'utilisateur connecté. Renvoie l'id ou une erreur. */
 export async function createOrder(input: CreateOrderInput): Promise<{ id: string } | { error: string }> {
-  const { TRADING_ENABLED } = await import("@/lib/config");
-  if (!TRADING_ENABLED) {
-    return {
-      error: getLang() === "en"
-        ? "Trading is temporarily suspended. Account creation and verification remain available."
-        : "Les transactions sont temporairement suspendues. La création de compte et la vérification restent disponibles.",
-    };
-  }
-
   const { data: auth } = await supabase.auth.getSession();
   const uid = auth.session?.user?.id;
   if (!uid) return { error: getLang() === "en" ? "You must be logged in." : "Vous devez être connecté." };
+
+  const { TRADING_ENABLED } = await import("@/lib/config");
+  if (!TRADING_ENABLED) {
+    const { data: roleRows } = await supabase.from("user_roles").select("role").eq("user_id", uid);
+    const isStaff = (roleRows ?? []).length > 0;
+    if (!isStaff) {
+      return {
+        error: getLang() === "en"
+          ? "Trading is temporarily suspended. Account creation and verification remain available."
+          : "Les transactions sont temporairement suspendues. La création de compte et la vérification restent disponibles.",
+      };
+    }
+  }
 
   const rateLockedUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
   // Vente : l'adresse de dépôt Ooble sera générée côté serveur plus tard.

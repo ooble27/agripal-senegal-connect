@@ -90,6 +90,7 @@ export interface DraftMailInput {
   intention: string;
   client?: AIClientContext | null;
   previousMails?: string;
+  context?: PlatformContext;
 }
 
 export interface DraftMailResult {
@@ -162,6 +163,7 @@ export interface PlatformContext {
   pendingKyc: number;
   unreadMessages: number;
   currentRate: number | null;
+  sellRate: number | null;
   recentOrders: Array<{
     ref: string;
     type: string;
@@ -169,9 +171,43 @@ export interface PlatformContext {
     cadAmount: number;
     usdtAmount: number;
     client: string;
+    clientEmail: string;
+    network: string;
     createdAt: string;
   }>;
   alerts: string[];
+  pendingKycDetails: Array<{
+    clientName: string;
+    email: string;
+    docType: string;
+    status: string;
+    submittedAt: string;
+  }>;
+  recentThreads: Array<{
+    clientName: string;
+    clientEmail: string;
+    subject: string;
+    lastMessageAt: string;
+    messageCount: number;
+    hasUnread: boolean;
+    lastMessages: Array<{
+      direction: "inbound" | "outbound";
+      fromName: string;
+      bodyPreview: string;
+      createdAt: string;
+    }>;
+  }>;
+  complianceFlags: Array<{
+    flagType: string;
+    orderId: string | null;
+    details: string;
+    createdAt: string;
+  }>;
+  treasuryBalances: Array<{
+    network: string;
+    totalUsdt: number;
+    addressCount: number;
+  }>;
 }
 
 export interface ChatMessage {

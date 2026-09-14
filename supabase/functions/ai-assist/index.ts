@@ -116,11 +116,16 @@ const SYSTEM_DRAFT_MAIL = `Tu es l'assistant de rédaction mail de Ooble, une pl
 
 Tu produis des mails en français québécois professionnel — jamais familier, jamais corporate creux. Ton : direct, précis, chaleureux mais sans effusion. On dit « vous », pas « tu ».
 
+Tu as accès au contexte en temps réel de la plateforme (commandes, KYC, messagerie, trésorerie). Utilise ces informations pour rédiger des mails précis et personnalisés sans que le staff ait besoin de tout t'expliquer. Par exemple :
+- Si le staff dit « dis-lui qu'on a reçu son paiement », cherche dans les commandes récentes pour trouver la commande du client et mentionne le bon montant et la bonne référence.
+- Si le staff dit « relance pour le KYC », vérifie le statut KYC du client dans le contexte.
+- Si le staff répond à un fil de discussion, lis les messages précédents pour comprendre la conversation.
+
 Contraintes strictes :
 - Structure : salutation « Bonjour {{prenom}}, » — ne remplace PAS {{prenom}}, garde le placeholder — puis 2-4 paragraphes courts, puis une signature en 2 lignes (« Cordialement, » suivi de la marque au moment de l'insertion).
 - Utilise du markdown simple : **gras** pour souligner un élément critique (référence, montant), * ou - pour les listes.
 - Pour les appels à l'action, écris le lien seul sur sa ligne : \`[Reprendre la vérification](https://ooble.ca/app/verification)\`. Le composer le rendra en bouton.
-- N'invente PAS de faits (montants, dates, adresses, référence d'ordre). Utilise des placeholders {{ref}}, {{montant}}, {{date}} etc. si l'info manque.
+- Quand tu TROUVES les vrais chiffres dans le contexte (montant, référence d'ordre, taux), utilise-les. Sinon, utilise des placeholders {{ref}}, {{montant}}, {{date}}.
 - Vocabulaire Ooble : « USDT », « Interac e-Transfer », « CANAFE », « KYC », « ordre » (pas « transaction »), « réseau » (pas « blockchain » quand on parle à un client).
 - Longueur : 80-180 mots. Un mail court est plus lu.
 - Ne signe PAS le mail — la signature est ajoutée par le composer.
@@ -134,8 +139,13 @@ SUBJECT: <sujet du mail>
 
 async function draftMail(
   apiKey: string,
-  input: { intention: string; client?: ClientContext | null; previousMails?: string },
+  input: { intention: string; client?: ClientContext | null; previousMails?: string; platformContext?: PlatformContext },
 ): Promise<{ subject: string; body: string; call: ClaudeCallResult }> {
+  let system = SYSTEM_DRAFT_MAIL;
+  if (input.platformContext) {
+    system += "\n\n" + platformContextToText(input.platformContext);
+  }
+
   const parts: string[] = [];
   parts.push(`Intention du staff : ${input.intention}`);
   if (input.client) {
@@ -143,12 +153,12 @@ async function draftMail(
     parts.push(clientContextToText(input.client));
   }
   if (input.previousMails) {
-    parts.push("\nDerniers échanges avec ce client (résumé) :");
+    parts.push("\nDerniers échanges avec ce client (historique du fil) :");
     parts.push(input.previousMails);
   }
   parts.push("\nProduit maintenant le mail au format demandé.");
 
-  const call = await callClaude(apiKey, SYSTEM_DRAFT_MAIL, parts.join("\n"), 800);
+  const call = await callClaude(apiKey, system, parts.join("\n"), 800);
 
   // Parse "SUBJECT: ...\n\n<body>"
   const subjMatch = /^SUBJECT:\s*(.+?)\n/i.exec(call.text);
@@ -412,6 +422,7 @@ interface PlatformContext {
   pendingKyc: number;
   unreadMessages: number;
   currentRate: number | null;
+  sellRate: number | null;
   recentOrders: Array<{
     ref: string;
     type: string;
@@ -419,9 +430,43 @@ interface PlatformContext {
     cadAmount: number;
     usdtAmount: number;
     client: string;
+    clientEmail: string;
+    network: string;
     createdAt: string;
   }>;
   alerts: string[];
+  pendingKycDetails?: Array<{
+    clientName: string;
+    email: string;
+    docType: string;
+    status: string;
+    submittedAt: string;
+  }>;
+  recentThreads?: Array<{
+    clientName: string;
+    clientEmail: string;
+    subject: string;
+    lastMessageAt: string;
+    messageCount: number;
+    hasUnread: boolean;
+    lastMessages: Array<{
+      direction: "inbound" | "outbound";
+      fromName: string;
+      bodyPreview: string;
+      createdAt: string;
+    }>;
+  }>;
+  complianceFlags?: Array<{
+    flagType: string;
+    orderId: string | null;
+    details: string;
+    createdAt: string;
+  }>;
+  treasuryBalances?: Array<{
+    network: string;
+    totalUsdt: number;
+    addressCount: number;
+  }>;
 }
 
 function platformContextToText(ctx: PlatformContext): string {
@@ -435,18 +480,66 @@ function platformContextToText(ctx: PlatformContext): string {
     `- Volume CAD aujourd'hui : ${nf.format(ctx.volumeCadToday)} $`,
     `- KYC en attente de vérification : ${ctx.pendingKyc}`,
     `- Messages non lus : ${ctx.unreadMessages}`,
-    `- Taux USDT/CAD actuel : ${ctx.currentRate ? `1 USDT = ${nf.format(ctx.currentRate)} CAD` : "Non disponible"}`,
+    `- Taux achat USDT/CAD : ${ctx.currentRate ? `1 USDT = ${nf.format(ctx.currentRate)} CAD` : "Non disponible"}`,
+    `- Taux vente USDT/CAD : ${ctx.sellRate ? `1 USDT = ${nf.format(ctx.sellRate)} CAD` : "Non disponible"}`,
   ];
+
   if (ctx.recentOrders.length > 0) {
     lines.push(`\nDERNIÈRES COMMANDES (${ctx.recentOrders.length}) :`);
     for (const o of ctx.recentOrders.slice(0, 15)) {
-      lines.push(`- ${o.ref} · ${o.type === "buy" ? "Achat" : "Vente"} · ${nf.format(o.cadAmount)} CAD / ${nf.format(o.usdtAmount)} USDT · ${o.status} · ${o.client} · ${o.createdAt}`);
+      const net = o.network ? ` [${o.network}]` : "";
+      lines.push(`- ${o.ref} · ${o.type === "buy" ? "Achat" : "Vente"} · ${nf.format(o.cadAmount)} CAD / ${nf.format(o.usdtAmount)} USDT · ${o.status} · ${o.client} (${o.clientEmail})${net} · ${o.createdAt}`);
     }
   }
+
+  if (ctx.pendingKycDetails && ctx.pendingKycDetails.length > 0) {
+    lines.push(`\nKYC EN ATTENTE / REFUSÉS (${ctx.pendingKycDetails.length}) :`);
+    for (const k of ctx.pendingKycDetails) {
+      lines.push(`- ${k.clientName} (${k.email}) · ${k.docType} · ${k.status} · soumis le ${k.submittedAt}`);
+    }
+  }
+
+  if (ctx.recentThreads && ctx.recentThreads.length > 0) {
+    lines.push(`\nMESSAGERIE — CONVERSATIONS RÉCENTES (${ctx.recentThreads.length}) :`);
+    for (const t of ctx.recentThreads) {
+      const badge = t.hasUnread ? " 🔴 NON LU" : "";
+      lines.push(`- ${t.clientName} (${t.clientEmail}) · « ${t.subject} » · ${t.messageCount} msg · ${t.lastMessageAt}${badge}`);
+      if (t.lastMessages && t.lastMessages.length > 0) {
+        for (const m of t.lastMessages) {
+          const dir = m.direction === "inbound" ? "← Client" : "→ Staff";
+          lines.push(`    ${dir} (${m.createdAt}): ${m.bodyPreview}`);
+        }
+      }
+    }
+  }
+
+  if (ctx.treasuryBalances && ctx.treasuryBalances.length > 0) {
+    const totalUsdt = ctx.treasuryBalances.reduce((s, b) => s + b.totalUsdt, 0);
+    lines.push(`\nTRÉSORERIE USDT (total : ${nf.format(totalUsdt)} USDT) :`);
+    for (const b of ctx.treasuryBalances) {
+      lines.push(`- ${b.network.toUpperCase()} : ${nf.format(b.totalUsdt)} USDT (${b.addressCount} adresse${b.addressCount > 1 ? "s" : ""})`);
+    }
+  }
+
+  if (ctx.complianceFlags && ctx.complianceFlags.length > 0) {
+    lines.push(`\nALERTES CONFORMITÉ NON RÉSOLUES (${ctx.complianceFlags.length}) :`);
+    const flagLabels: Record<string, string> = {
+      large_transaction: "Grande opération (≥ 10 000 $ CAD)",
+      suspicious_activity: "Activité suspecte",
+      travel_rule: "Règle de voyage",
+    };
+    for (const f of ctx.complianceFlags) {
+      const label = flagLabels[f.flagType] ?? f.flagType;
+      const order = f.orderId ? ` · ordre ${f.orderId.slice(0, 8)}` : "";
+      lines.push(`- ${label}${order} · ${f.createdAt}`);
+    }
+  }
+
   if (ctx.alerts.length > 0) {
-    lines.push("\nALERTES :");
+    lines.push("\nALERTES OPÉRATIONNELLES :");
     for (const a of ctx.alerts) lines.push(`⚠ ${a}`);
   }
+
   return lines.join("\n");
 }
 
@@ -475,7 +568,7 @@ interface Payload {
   // summarize-client
   orders?: OrderSummary[];
   notes?: string[];
-  // context-chat
+  // context-chat + draft-mail (platform awareness)
   messages?: Array<{ role: "user" | "assistant"; content: string }>;
   context?: PlatformContext;
 }
@@ -520,6 +613,7 @@ Deno.serve(async (req) => {
         intention,
         client: payload.client ?? null,
         previousMails: payload.previousMails,
+        platformContext: payload.context,
       });
       await logCall(admin, { agent: "draft-mail", staffId: userId, inputPreview, call, startedAt });
       return json({ ok: true, subject, body, tokens: { in: call.inputTokens, out: call.outputTokens } });

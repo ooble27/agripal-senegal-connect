@@ -4,7 +4,6 @@ import { ArrowLeft, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/i18n";
 import ThemeToggle from "./ThemeToggle";
-import LangToggle from "./LangToggle";
 import BottomNav from "./BottomNav";
 
 /**
@@ -83,7 +82,6 @@ const AppShell = ({ children, header, backTo, wide, center, className }: AppShel
         </div>
         <div className="flex shrink-0 items-center gap-2.5">
           <ThemeToggle />
-          <LangToggle className="h-9 w-9 rounded-[10px] text-[12px]" />
           <Link
             to="/app/compte"
             aria-label={lang === "en" ? "My account" : "Mon compte"}

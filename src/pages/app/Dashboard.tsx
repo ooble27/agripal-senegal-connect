@@ -102,28 +102,24 @@ const Dashboard = () => {
         )
       }
     >
-      <div className="space-y-4 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
-        {/* Colonne gauche : taux + activité récente */}
-        <div className="space-y-4">
-          <section className="flex flex-col rounded-2xl border border-border bg-card p-5">
-            <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              {t("dash.rate")}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {/* Taux USDT / CAD — toujours en premier */}
+        <section className="flex flex-col rounded-2xl border border-border bg-card p-5 md:row-span-1">
+          <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("dash.rate")}
+          </span>
+
+          <div className="mt-4 flex items-baseline gap-2">
+            <span className="font-display text-[34px] font-light leading-none tracking-tight">
+              {nf.format(rate.buy)}
             </span>
+            <span className="text-[15px] font-medium text-muted-foreground">CAD</span>
+          </div>
+          <RateChart data={history.points} className="hidden w-full text-foreground/55 md:mt-4 md:block md:min-h-[6rem] md:flex-1" />
+        </section>
 
-            <div className="mt-4 flex items-baseline gap-2">
-              <span className="font-display text-[34px] font-light leading-none tracking-tight">
-                {nf.format(rate.buy)}
-              </span>
-              <span className="text-[15px] font-medium text-muted-foreground">CAD</span>
-            </div>
-            <RateChart data={history.points} className="hidden w-full text-foreground/55 md:mt-4 md:block md:min-h-[6rem] md:flex-1" />
-          </section>
-
-          <RecentActivity />
-        </div>
-
-        {/* Colonne droite : actions + réseaux */}
-        <div className="space-y-4">
+        {/* Actions + réseaux — col droite sur desktop, juste après taux sur mobile */}
+        <div className="space-y-4 md:row-span-2">
           <div className="grid grid-cols-2 gap-3">
             <Link
               to="/app/acheter"
@@ -181,6 +177,9 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Activité récente — sous réseaux sur mobile, sous taux sur desktop */}
+        <RecentActivity />
       </div>
     </AppShell>
   );

@@ -1,0 +1,213 @@
+<!--
+  Source de public/og-image.png (aperçu de partage — réseaux sociaux, WhatsApp).
+
+  Composition à deux panneaux plutôt qu'une capture de la section héros :
+  panneau blanc à gauche (logo, titre, pastille) au même thème « noir et
+  blanc » que la landing page — pas de fond de couleur, pas de texture —,
+  panneau blanc à droite avec l'illustration de pièce USDT réutilisée telle
+  quelle depuis `CoinsArt`/`UsdtCoin` (src/components/illustrations.tsx) —
+  même tracé, mêmes couleurs, pour rester une vraie pièce de la marque.
+
+  FONT_500/600/700/800 sont des marqueurs à remplacer par les polices Poppins
+  encodées en base64 avant capture (ce fichier n'affiche pas le bon texte tel
+  quel, faute de police). Pour régénérer :
+
+    1. Récupérer les 4 fichiers .ttf Poppins (poids 500/600/700/800) depuis
+       https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800
+    2. Remplacer chaque FONT_<poids> par "data:font/ttf;base64,<contenu>"
+    3. Capturer ce HTML en 1200×630 (device scale 1) avec un navigateur headless
+       et enregistrer le résultat dans public/og-image.png
+-->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face { font-family: "Poppins"; font-weight: 500; src: url("FONT_500") format("truetype"); }
+  @font-face { font-family: "Poppins"; font-weight: 600; src: url("FONT_600") format("truetype"); }
+  @font-face { font-family: "Poppins"; font-weight: 700; src: url("FONT_700") format("truetype"); }
+  @font-face { font-family: "Poppins"; font-weight: 800; src: url("FONT_800") format("truetype"); }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 1200px;
+    height: 630px;
+    font-family: "Poppins", sans-serif;
+    position: relative;
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  /* ---------- Panneau gauche : même thème que la landing page (blanc, encre) ---------- */
+  .panel-left {
+    position: absolute;
+    inset: 0;
+    width: 700px;
+    background: #ffffff;
+    border-right: 1px solid #e6e6e6;
+    overflow: hidden;
+  }
+
+  .logo {
+    position: absolute;
+    top: 56px;
+    left: 72px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+  .logo-mark {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: #0f343e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .logo-word {
+    font-weight: 600;
+    font-size: 22px;
+    color: #171717;
+    letter-spacing: -0.02em;
+  }
+
+  .left-content {
+    position: relative;
+    height: 100%;
+    padding: 0 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  h1 {
+    font-weight: 500;
+    font-size: 58px;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: #171717;
+  }
+  h1 .accent {
+    color: rgba(23,23,23,0.32);
+  }
+
+  p.sub {
+    margin-top: 24px;
+    font-weight: 500;
+    font-size: 19px;
+    line-height: 1.55;
+    color: #666666;
+    max-width: 440px;
+  }
+
+  .badges {
+    margin-top: 34px;
+    display: flex;
+    gap: 10px;
+  }
+  .badge {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: #f5f5f5;
+    font-weight: 600;
+    font-size: 15px;
+    color: #171717;
+  }
+  .badge .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #29998e;
+  }
+
+  /* ---------- Panneau droit : blanc, illustration de marque ---------- */
+  .panel-right {
+    position: absolute;
+    inset: 0;
+    left: 700px;
+    width: 500px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .domain {
+    position: absolute;
+    right: 36px;
+    bottom: 26px;
+    font-weight: 500;
+    font-size: 14px;
+    color: rgba(23,23,23,0.3);
+  }
+</style>
+</head>
+<body>
+  <div class="panel-left">
+    <div class="logo">
+      <span class="logo-mark">
+        <svg viewBox="0 0 32 32" width="24" height="24">
+          <circle cx="12.5" cy="16" r="4.6" fill="none" stroke="#29998e" stroke-width="2.6" />
+          <circle cx="20.5" cy="16" r="4.6" fill="none" stroke="#ffffff" stroke-width="2.6" />
+        </svg>
+      </span>
+      <span class="logo-word">Ooble</span>
+    </div>
+
+    <div class="left-content">
+      <h1>Achetez et<br />vendez des USDT<br /><span class="accent">en dollars canadiens</span></h1>
+      <p class="sub">Réglé directement vers votre wallet ou votre compte Interac. Ooble ne conserve aucun solde.</p>
+      <div class="badges">
+        <span class="badge"><span class="dot"></span>Non-custodial</span>
+        <span class="badge"><span class="dot"></span>Interac e-Transfer</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-right">
+    <!-- CoinsArt, reprise à l'identique depuis src/components/illustrations.tsx -->
+    <svg viewBox="78 62 272 186" width="440" fill="none">
+      <path
+        d="M120 160 a 90 90 0 1 1 26 60"
+        fill="none"
+        stroke="#0F3A43"
+        stroke-width="3.5"
+        stroke-linecap="round"
+        stroke-dasharray="2 12"
+        opacity="0.5"
+      />
+      <!-- grande pièce -->
+      <g transform="translate(210 155)">
+        <circle cx="0" cy="11.5" r="72" fill="#17694f" stroke="#14201f" stroke-width="3" />
+        <circle cx="0" cy="0" r="72" fill="#26A17B" stroke="#14201f" stroke-width="3" />
+        <rect x="-30.2" y="-31.7" width="60.5" height="10.8" rx="5.4" fill="#fff" />
+        <rect x="-5.4" y="-31.7" width="10.8" height="59" rx="5.4" fill="#fff" />
+        <rect x="-17.3" y="-1.4" width="34.6" height="10.8" rx="5.4" fill="#fff" />
+      </g>
+      <!-- petite pièce haut droite -->
+      <g transform="translate(318 96) rotate(12)">
+        <circle cx="0" cy="4.2" r="26" fill="#17694f" stroke="#14201f" stroke-width="3" />
+        <circle cx="0" cy="0" r="26" fill="#26A17B" stroke="#14201f" stroke-width="3" />
+        <rect x="-10.9" y="-11.4" width="21.8" height="3.9" rx="1.95" fill="#fff" />
+        <rect x="-1.95" y="-11.4" width="3.9" height="21.3" rx="1.95" fill="#fff" />
+        <rect x="-6.2" y="-0.5" width="12.5" height="3.9" rx="1.95" fill="#fff" />
+      </g>
+      <!-- petite pièce bas gauche -->
+      <g transform="translate(104 214) rotate(-14)">
+        <circle cx="0" cy="3.2" r="20" fill="#17694f" stroke="#14201f" stroke-width="3" />
+        <circle cx="0" cy="0" r="20" fill="#26A17B" stroke="#14201f" stroke-width="3" />
+        <rect x="-8.4" y="-8.8" width="16.8" height="3" rx="1.5" fill="#fff" />
+        <rect x="-1.5" y="-8.8" width="3" height="16.4" rx="1.5" fill="#fff" />
+        <rect x="-4.8" y="-0.4" width="9.6" height="3" rx="1.5" fill="#fff" />
+      </g>
+    </svg>
+  </div>
+
+  <div class="domain">ooble.ca</div>
+</body>
+</html>

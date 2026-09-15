@@ -1,15 +1,16 @@
 import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: ["./index.html", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
     container: {
       center: true,
       padding: "2rem",
       screens: {
-        "2xl": "1440px",
+        "2xl": "1400px",
       },
     },
     extend: {
@@ -22,8 +23,6 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
-          container: "hsl(var(--primary-container))",
-          "container-foreground": "hsl(var(--primary-container-foreground))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -49,52 +48,24 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        tertiary: {
-          DEFAULT: "hsl(var(--tertiary))",
-          foreground: "hsl(var(--tertiary-foreground))",
+        deep: {
+          DEFAULT: "hsl(var(--deep))",
+          foreground: "hsl(var(--deep-foreground))",
         },
-        surface: {
-          DEFAULT: "hsl(var(--surface))",
-          dim: "hsl(var(--surface-dim))",
-          "container-lowest": "hsl(var(--surface-container-lowest))",
-          "container-low": "hsl(var(--surface-container-low))",
-          container: "hsl(var(--surface-container))",
-          "container-high": "hsl(var(--surface-container-high))",
-          "container-highest": "hsl(var(--surface-container-highest))",
-        },
-        "on-surface": {
-          DEFAULT: "hsl(var(--on-surface))",
-          variant: "hsl(var(--on-surface-variant))",
-        },
-        outline: {
-          DEFAULT: "hsl(var(--outline))",
-          variant: "hsl(var(--outline-variant))",
-        },
-        inverse: {
-          surface: "hsl(var(--inverse-surface))",
-          "on-surface": "hsl(var(--inverse-on-surface))",
-        },
-        sidebar: {
-          DEFAULT: "hsl(var(--sidebar-background))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
-        },
+        "accent-tint": "hsl(var(--accent-tint))",
+        "accent-ink": "hsl(var(--accent-ink))",
       },
       fontFamily: {
-        headline: ["Manrope", "sans-serif"],
-        body: ["Inter", "sans-serif"],
+        display: ['"Poppins"', "system-ui", "sans-serif"],
+        body: ['"Poppins"', "system-ui", "sans-serif"],
+      },
+      maxWidth: {
+        container: "1120px",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        xl: "calc(var(--radius) * 2)",
-        "2xl": "calc(var(--radius) * 3)",
       },
       keyframes: {
         "accordion-down": {
@@ -112,5 +83,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [animate],
 } satisfies Config;

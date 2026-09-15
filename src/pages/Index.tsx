@@ -1,301 +1,440 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Coins, HandCoins } from "lucide-react";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Link, Navigate } from "react-router-dom";
-import heroBg from "@/assets/hero-bg.jpg";
-import { useAuth } from "@/contexts/AuthContext";
+import Reveal from "@/components/Reveal";
+import RotatingWord from "@/components/RotatingWord";
+import AppFlowArt from "@/components/AppFlowArt";
+import InteracFlowArt from "@/components/InteracFlowArt";
+import { Button } from "@/components/ui/button";
+import { InteracLogo } from "@/components/marks";
+import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
+import type { TKey } from "@/lib/translations";
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.6, ease: "easeOut" as const } }),
-};
+const Wrap = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`mx-auto max-w-[1200px] px-6 sm:px-10 ${className}`}>{children}</div>
+);
 
-const steps = [
-  { icon: "search", num: "01", title: "Explorez le Marché", description: "Parcourez les produits frais de nos artisans locaux, filtrés par catégorie et localisation." },
-  { icon: "add_shopping_cart", num: "02", title: "Composez votre Panier", description: "Sélectionnez vos produits préférés et ajoutez-les à votre panier en un clic." },
-  { icon: "payments", num: "03", title: "Payez Simplement", description: "Réglez via Wave ou Orange Money. Paiement instantané, sécurisé et sans friction." },
-  { icon: "local_shipping", num: "04", title: "Recevez chez Vous", description: "Livraison rapide à Dakar et environs. Du champ à votre table en moins de 24h." },
-];
+/** Libellé de section en petites capitales espacées. */
+const Kicker = ({ children, inverted }: { children: React.ReactNode; inverted?: boolean }) => (
+  <p
+    className={cn(
+      "text-[12px] uppercase tracking-[0.16em]",
+      inverted ? "text-background/55" : "text-muted-foreground",
+    )}
+  >
+    {children}
+  </p>
+);
+
+/** Titre de section — 56 px sur grand écran, jamais gras. */
+const H2 = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <h2
+    className={cn(
+      "font-display text-[2.1rem] leading-[1.04] tracking-[-0.045em] sm:text-[2.9rem] lg:text-[3.5rem]",
+      className,
+    )}
+  >
+    {children}
+  </h2>
+);
+
+/** Second membre d'un titre, en gris clair. */
+const Soft = ({ children }: { children: React.ReactNode }) => (
+  <span className="text-foreground/35">{children}</span>
+);
 
 const Index = () => {
-  const { user, role, loading } = useAuth();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const t = useT();
+  const [faqOpen, setFaqOpen] = useState<number | null>(null);
 
-  if (!loading && user && role === "buyer") {
-    return <Navigate to="/marche" replace />;
-  }
+  const networks = [
+    { id: "trx", tick: "TRC20", name: "Tron", note: t("net.trx") },
+    { id: "eth", tick: "ERC20", name: "Ethereum", note: t("net.eth") },
+    { id: "bnb", tick: "BEP20", name: "BNB Chain", note: t("net.bnb") },
+    { id: "matic", tick: "POL", name: "Polygon", note: t("net.matic") },
+    { id: "sol", tick: "SOL", name: "Solana", note: t("net.sol") },
+    { id: "avax", tick: "AVAX-C", name: "Avalanche", note: t("net.avax") },
+  ];
+
+  const essentials: { tKey: TKey; dKey: TKey }[] = [
+    { tKey: "ess.1t", dKey: "ess.1d" },
+    { tKey: "ess.2t", dKey: "ess.2d" },
+    { tKey: "ess.3t", dKey: "ess.3d" },
+    { tKey: "ess.4t", dKey: "ess.4d" },
+  ];
+
+  const steps: { n: string; tKey: TKey; dKey: TKey }[] = [
+    { n: "01", tKey: "how.1t", dKey: "how.1d" },
+    { n: "02", tKey: "how.2t", dKey: "how.2d" },
+    { n: "03", tKey: "how.3t", dKey: "how.3d" },
+  ];
+
+  const specs: { kKey: TKey; vKey: TKey }[] = [
+    { kKey: "nc.s1k", vKey: "nc.s1v" },
+    { kKey: "nc.s2k", vKey: "nc.s2v" },
+    { kKey: "nc.s3k", vKey: "nc.s3v" },
+    { kKey: "nc.s4k", vKey: "nc.s4v" },
+    { kKey: "nc.s5k", vKey: "nc.s5v" },
+  ];
+
+  const faqs: { qKey: TKey; aKey: TKey }[] = [
+    { qKey: "faq.1q", aKey: "faq.1a" },
+    { qKey: "faq.2q", aKey: "faq.2a" },
+    { qKey: "faq.3q", aKey: "faq.3a" },
+    { qKey: "faq.4q", aKey: "faq.4a" },
+    { qKey: "faq.5q", aKey: "faq.5a" },
+    { qKey: "faq.6q", aKey: "faq.6a" },
+  ];
+
+  useEffect(() => {
+    let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "theme-color";
+      document.head.appendChild(meta);
+    }
+    const update = () => {
+      const darks = Array.from(document.querySelectorAll<HTMLElement>("[data-dark]"));
+      const onDark = darks.some((el) => {
+        const r = el.getBoundingClientRect();
+        return r.top <= 4 && r.bottom > 4;
+      });
+      meta!.setAttribute("content", onDark ? "#131E21" : "#ffffff");
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
 
   return (
-    <div className="min-h-screen bg-background pb-16 md:pb-0 relative">
-      {/* Floating hamburger menu */}
-      <div className="fixed top-4 right-4 z-[60]">
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="w-11 h-11 flex items-center justify-center rounded-full bg-background/80 backdrop-blur-xl shadow-lg border border-border/30"
-          aria-label="Menu"
-        >
-          <span className="material-symbols-outlined text-2xl text-foreground">
-            {menuOpen ? "close" : "menu"}
-          </span>
-        </button>
-      </div>
+    <div className="ink-neutral app-type min-h-screen bg-background tracking-[-0.015em]">
+      <Header />
 
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="fixed top-16 right-4 z-[60] bg-background/95 backdrop-blur-xl rounded-2xl shadow-xl border border-border/30 min-w-[200px] overflow-hidden"
-          >
-            <div className="flex flex-col p-3 gap-1">
-              <Link to="/marche" onClick={() => setMenuOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 px-4 rounded-xl hover:bg-surface-container transition-colors">
-                Marché
-              </Link>
-              {user ? (
-                <>
-                  {role === "seller" ? (
-                    <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 px-4 rounded-xl hover:bg-surface-container transition-colors">
-                      Mes Produits
-                    </Link>
-                  ) : (
-                    <Link to="/mon-compte" onClick={() => setMenuOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-on-surface-variant hover:text-foreground py-3 px-4 rounded-xl hover:bg-surface-container transition-colors">
-                      Mon Compte
-                    </Link>
-                  )}
-                </>
-              ) : (
-                <Link to="/auth" onClick={() => setMenuOpen(false)} className="font-headline font-extrabold uppercase tracking-tight text-sm text-primary py-3 px-4 rounded-xl hover:bg-surface-container transition-colors">
-                  Connexion
-                </Link>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <main>
+        {/* ===================== HÉROS ===================== */}
+        <section>
+          {/* Le héros occupe une vraie hauteur d'écran, pas un simple bloc. */}
+          <Wrap className="flex min-h-[78svh] flex-col justify-center pb-20 pt-24 text-center lg:min-h-[82svh] lg:pb-28 lg:pt-28">
+            {/* Pas de `text-balance` ici : il entre en conflit avec les <br>
+                explicites et casse le titre en quatre lignes. */}
+            {/*
+              La boîte du mot défilant prend la largeur de sa variante la plus
+              longue : le corps du titre et la largeur maximale sont calibrés
+              pour que la deuxième ligne tienne, sinon elle se scinde.
+            */}
+            <h1 className="animate-up mx-auto max-w-[1120px] font-display text-[2.6rem] leading-[0.98] tracking-[-0.05em] sm:text-[4rem] lg:text-[5.75rem]">
+              {t("hero.title1")}
+              <br />
+              {t("hero.title2")}
+              <RotatingWord
+                words={t("hero.words").split("|")}
+                className="text-foreground/35"
+              />
+            </h1>
 
-      <main className="pt-4">
-        {/* ═══════ HERO ═══════ */}
-        <section className="px-4 md:px-12 py-4 md:py-8 max-w-[1440px] mx-auto">
-          <div className="relative rounded-[2rem] md:rounded-[2.5rem] overflow-hidden min-h-[85vh] md:min-h-[700px] flex items-end md:items-center">
-            {/* Background image */}
-            <div className="absolute inset-0 z-0">
-              <img src={heroBg} alt="Terres agricoles du Sénégal" className="w-full h-full object-cover" width={1920} height={1080} />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10 md:bg-gradient-to-r md:from-black/80 md:via-black/50 md:to-transparent" />
-            </div>
-
-            {/* Hero content */}
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="relative z-10 px-6 md:px-16 pb-12 md:pb-0 w-full md:w-2/3"
-            >
-              <motion.span
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white font-headline font-bold text-[11px] md:text-xs uppercase tracking-widest mb-5 md:mb-8"
-              >
-                <span className="w-2 h-2 rounded-full bg-primary-container animate-pulse" />
-                L'Agronome Digital
-              </motion.span>
-
-              <h1 className="text-[2.5rem] md:text-7xl lg:text-8xl font-headline font-extrabold text-white tracking-tighter leading-[0.92] mb-5 md:mb-8">
-                Cultiver l'âme<br />
-                <span className="text-primary-container">de nos terroirs.</span>
-              </h1>
-
-              <p className="text-base md:text-xl text-white/75 font-body max-w-xl leading-relaxed mb-8 md:mb-10">
-                Une connexion directe entre les foyers sénégalais et les gardiens de notre terre. Des produits purs, une équité radicale.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Link
-                  to="/marche"
-                  className="bg-primary-container text-primary-container-foreground px-8 py-4 md:px-10 md:py-5 rounded-full font-headline font-extrabold text-base md:text-lg flex items-center justify-center gap-3 hover:scale-[0.97] active:scale-95 transition-transform shadow-[0_8px_32px_rgba(154,205,50,0.3)]"
-                >
-                  Découvrir le Marché
-                  <span className="material-symbols-outlined">arrow_forward</span>
-                </Link>
-                <Link
-                  to="/auth?role=seller"
-                  className="bg-white/10 backdrop-blur-md text-white border border-white/20 px-8 py-4 md:px-10 md:py-5 rounded-full font-headline font-extrabold text-base md:text-lg hover:bg-white hover:text-foreground transition-all text-center"
-                >
-                  Devenir Vendeur
-                </Link>
-              </div>
-
-              {/* Trust indicators */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1, duration: 0.6 }}
-                className="flex items-center gap-6 mt-8 md:mt-12"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary-container text-lg">verified</span>
-                  <span className="text-white/60 text-xs font-headline font-bold">100% Local</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary-container text-lg">eco</span>
-                  <span className="text-white/60 text-xs font-headline font-bold">Sans Pesticides</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary-container text-lg">schedule</span>
-                  <span className="text-white/60 text-xs font-headline font-bold">Livré en 24h</span>
-                </div>
-              </motion.div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* ═══════ HOW IT WORKS ═══════ */}
-        <section className="py-20 md:py-32 px-4 md:px-12 max-w-[1440px] mx-auto">
-          <div className="text-center mb-14 md:mb-20">
-            <span className="text-primary font-headline font-extrabold text-xs uppercase tracking-widest">Simple & Rapide</span>
-            <h2 className="text-3xl md:text-6xl font-headline font-extrabold tracking-tighter mt-2">Comment ça marche ?</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            {steps.map((step, i) => (
-              <motion.div key={step.num} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="relative group">
-                <div className="bg-surface-container-lowest rounded-2xl p-6 md:p-8 border border-border/20 hover:border-primary-container/50 hover:shadow-xl transition-all h-full">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center group-hover:bg-primary-container transition-colors">
-                      <span className="material-symbols-outlined text-primary text-xl">{step.icon}</span>
-                    </div>
-                    <span className="text-4xl font-headline font-extrabold text-border/40">{step.num}</span>
-                  </div>
-                  <h3 className="text-lg md:text-xl font-headline font-extrabold mb-2">{step.title}</h3>
-                  <p className="text-on-surface-variant font-body text-sm leading-relaxed">{step.description}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        {/* ═══════ VALUES ═══════ */}
-        <section className="py-16 md:py-28 px-4 md:px-12 max-w-[1440px] mx-auto">
-          <div className="bg-surface-container-low rounded-3xl p-8 md:p-16 lg:p-20">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-              <div>
-                <span className="text-primary font-headline font-extrabold text-xs uppercase tracking-widest">Nos Engagements</span>
-                <h2 className="text-3xl md:text-5xl font-headline font-extrabold tracking-tighter mt-2 mb-8">L'Art de Bien Faire</h2>
-                <div className="space-y-6">
-                  {[
-                    { icon: "handshake", title: "Équité Radicale", desc: "Les agriculteurs fixent leurs propres prix. Zéro intermédiaire inutile." },
-                    { icon: "temp_preferences_custom", title: "Traçabilité Absolue", desc: "Chaque produit raconte une histoire. Du champ d'origine au producteur." },
-                    { icon: "nutrition", title: "Pureté Originelle", desc: "Zéro pesticide chimique. Méthodes ancestrales et biologiques." },
-                  ].map((v, i) => (
-                    <motion.div key={v.title} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="flex gap-4 items-start">
-                      <div className="w-12 h-12 shrink-0 rounded-xl bg-primary-container/20 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-primary text-xl">{v.icon}</span>
-                      </div>
-                      <div>
-                        <h3 className="font-headline font-extrabold text-lg">{v.title}</h3>
-                        <p className="text-on-surface-variant text-sm font-body leading-relaxed mt-1">{v.desc}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-              <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6 }} className="relative">
-                <div className="aspect-square rounded-3xl bg-primary/10 flex items-center justify-center overflow-hidden">
-                  <div className="relative w-full h-full">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary-container/30 to-primary/20 rounded-3xl" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
-                        <span className="material-symbols-outlined text-primary text-7xl md:text-8xl mb-4 block">eco</span>
-                        <div className="text-2xl md:text-3xl font-headline font-extrabold text-primary">100% Local</div>
-                        <div className="text-sm text-on-surface-variant font-body mt-2">Sénégal • Niayes • Casamance</div>
-                      </div>
-                    </div>
-                    <div className="absolute top-8 right-8 grid grid-cols-3 gap-2">
-                      {[...Array(9)].map((_, j) => (
-                        <div key={j} className="w-2 h-2 rounded-full bg-primary-container/40" />
-                      ))}
-                    </div>
-                    <div className="absolute bottom-8 left-8 grid grid-cols-3 gap-2">
-                      {[...Array(9)].map((_, j) => (
-                        <div key={j} className="w-2 h-2 rounded-full bg-primary/20" />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════ SELLER CTA ═══════ */}
-        <section className="py-16 md:py-24 px-4 md:px-12 max-w-[1440px] mx-auto">
-          <div className="bg-inverse-surface rounded-2xl md:rounded-3xl p-8 md:p-16 lg:p-20 flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
-            <div className="flex-1 text-surface">
-              <span className="inline-block px-4 py-1.5 rounded-full bg-primary-container text-primary-container-foreground font-headline font-extrabold text-[10px] uppercase tracking-widest mb-6">
-                Vendeurs
-              </span>
-              <h2 className="text-3xl md:text-5xl lg:text-6xl font-headline font-extrabold tracking-tighter mb-6">
-                Vous Cultivez.<br />Nous Vous Connectons.
-              </h2>
-              <p className="text-base md:text-lg text-inverse-on-surface mb-8 leading-relaxed max-w-lg">
-                Devenez un Artisan Agrumen. Bénéficiez d'outils de gestion, de visibilité et de paiements instantanés via Wave et Orange Money.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-primary-container text-xl">trending_up</span>
-                  <div>
-                    <div className="font-headline font-extrabold">Revenu Direct</div>
-                    <div className="text-sm text-inverse-on-surface">Fixez vos prix, zéro commission cachée.</div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-primary-container text-xl">dashboard</span>
-                  <div>
-                    <div className="font-headline font-extrabold">Dashboard Pro</div>
-                    <div className="text-sm text-inverse-on-surface">Gérez vos produits et commandes facilement.</div>
-                  </div>
-                </div>
-              </div>
-              <Link to="/auth?role=seller" className="inline-block bg-primary-container text-primary-container-foreground px-8 py-4 rounded-full font-headline font-extrabold text-base md:text-lg hover:scale-95 transition-transform">
-                Devenir Partenaire
-              </Link>
-            </div>
-            <div className="flex-1 w-full max-w-md lg:max-w-none">
-              <div className="aspect-square rounded-2xl bg-surface/5 flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary-container/10 to-transparent" />
-                <div className="text-center relative z-10">
-                  <span className="material-symbols-outlined text-primary-container text-8xl mb-4 block">eco</span>
-                  <div className="text-lg font-headline font-extrabold text-surface">Vendez vos produits</div>
-                  <div className="text-sm text-inverse-on-surface mt-1">en 5 minutes</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════ FINAL CTA ═══════ */}
-        <section className="py-16 md:py-24 px-4 md:px-12 max-w-[1440px] mx-auto text-center">
-          <div className="bg-primary-container rounded-2xl md:rounded-3xl p-10 md:p-24 lg:p-32 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10 pointer-events-none">
-              <div className="absolute top-0 left-0 w-48 h-48 border-4 border-primary-container-foreground rounded-full -translate-x-1/2 -translate-y-1/2" />
-              <div className="absolute bottom-0 right-0 w-72 h-72 border-4 border-primary-container-foreground rounded-full translate-x-1/2 translate-y-1/2" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 border border-primary-container-foreground rounded-full" />
-            </div>
-            <h2 className="text-3xl md:text-6xl lg:text-8xl font-headline font-extrabold text-primary-container-foreground tracking-tighter mb-6 relative z-10">
-              Mangez Local.<br />Soutenez nos Héros.
-            </h2>
-            <p className="text-base md:text-xl text-primary-container-foreground/80 font-body max-w-2xl mx-auto mb-8 md:mb-12 relative z-10">
-              Rejoignez des milliers de Sénégalais qui font le choix de la qualité, de la fraîcheur et de la justice sociale.
+            <p className="animate-up mx-auto mt-8 max-w-[480px] text-[14px] leading-[1.65] text-muted-foreground [animation-delay:140ms] sm:text-[15px]">
+              {t("hero.sub")}
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4 relative z-10">
-              <Link to="/marche" className="bg-inverse-surface text-surface px-8 py-5 md:px-12 md:py-6 rounded-full font-headline font-extrabold text-lg md:text-xl shadow-2xl hover:scale-105 transition-transform">
-                Explorer le Marché
-              </Link>
+
+            <div className="animate-up mt-10 flex flex-wrap justify-center gap-3 [animation-delay:260ms]">
+              <Button asChild variant="appSolid" shape="rounded" size="lg" className="px-7">
+                <Link to="/inscription">
+                  <Coins className="h-4 w-4" strokeWidth={1.8} />
+                  {t("hero.buy")}
+                </Link>
+              </Button>
+              <Button asChild variant="secondary" shape="rounded" size="lg" className="px-7">
+                <Link to="/inscription">
+                  <HandCoins className="h-4 w-4" strokeWidth={1.8} />
+                  {t("hero.sell")}
+                </Link>
+              </Button>
             </div>
-          </div>
+
+            <AppFlowArt className="animate-up mx-auto mt-12 [animation-delay:380ms] sm:mt-14" />
+          </Wrap>
+        </section>
+
+        {/* ===================== L'ESSENTIEL ===================== */}
+        <section>
+          <Wrap className="pt-24 lg:pt-28">
+            <div className="grid gap-10 lg:grid-cols-2 lg:items-start lg:gap-20">
+              <Reveal>
+                <H2>
+                  {t("ess.title1")}
+                  <br />
+                  {t("ess.title2")}
+                  <br />
+                  <Soft>{t("ess.title3")}</Soft>
+                </H2>
+
+                <div className="mt-12 border-t pt-7">
+                  <Kicker>{t("ess.margin")}</Kicker>
+                  <p className="mt-3 font-display text-[3rem] leading-none tracking-[-0.05em] sm:text-[3.6rem]">
+                    + 2 %
+                  </p>
+                  <p className="mt-4 max-w-[320px] text-[14px] leading-[1.6] text-muted-foreground">
+                    {t("ess.marginSub")}
+                  </p>
+                </div>
+              </Reveal>
+
+              <div>
+                {essentials.map((e, i) => (
+                  <Reveal key={e.tKey} delay={i * 90}>
+                    <div className={cn("border-t py-6", i === essentials.length - 1 && "border-b")}>
+                      <p className="font-display text-[20px] tracking-[-0.02em]">{t(e.tKey)}</p>
+                      <p className="mt-2 text-[15px] leading-[1.6] text-muted-foreground">{t(e.dKey)}</p>
+                    </div>
+                  </Reveal>
+                ))}
+              </div>
+            </div>
+          </Wrap>
+        </section>
+
+        {/* ===================== COMMENT ÇA MARCHE ===================== */}
+        <section id="comment" className="scroll-mt-24">
+          <Wrap className="pt-24 lg:pt-28">
+            <Reveal>
+              <div className="mb-4 flex flex-col justify-between gap-6 sm:flex-row sm:items-end sm:gap-12">
+                <div>
+                  <Kicker>{t("how.kicker")}</Kicker>
+                  <H2 className="mt-4">{t("how.title")}</H2>
+                </div>
+                <p className="max-w-[300px] text-[15px] leading-[1.6] text-muted-foreground">
+                  {t("how.sub")}
+                </p>
+              </div>
+            </Reveal>
+
+            {steps.map((s, i) => (
+              <Reveal key={s.n} delay={i * 110}>
+                <div
+                  className={cn(
+                    "grid items-baseline gap-x-12 gap-y-3 border-t py-8 sm:grid-cols-[96px_1fr] lg:grid-cols-[96px_1fr_1fr]",
+                    i === steps.length - 1 && "border-b",
+                  )}
+                >
+                  <p className="font-display text-[2rem] leading-none tracking-[-0.045em] text-foreground/25 lg:text-[2.875rem]">
+                    {s.n}
+                  </p>
+                  <h3 className="font-display text-[1.35rem] tracking-[-0.03em] sm:text-[1.625rem]">
+                    {t(s.tKey)}
+                  </h3>
+                  <p className="text-[15px] leading-[1.7] text-muted-foreground sm:col-start-2 lg:col-start-3 lg:row-start-1">
+                    {t(s.dKey)}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </Wrap>
+        </section>
+
+        {/* ===================== RÉSEAUX ===================== */}
+        <section id="reseaux" className="scroll-mt-24">
+          <Wrap className="pt-24 lg:pt-28">
+            <Reveal>
+              <div className="mb-10 flex flex-col justify-between gap-6 sm:flex-row sm:items-end sm:gap-12">
+                <div>
+                  <Kicker>{t("net.kicker")}</Kicker>
+                  <H2 className="mt-4">{t("net.title")}</H2>
+                </div>
+                <p className="max-w-[300px] text-[15px] leading-[1.6] text-muted-foreground">
+                  {t("net.sub")}
+                </p>
+              </div>
+            </Reveal>
+
+            <div className="grid lg:grid-cols-2 lg:gap-x-16">
+              {networks.map((n, i) => (
+                <Reveal key={n.id} delay={i * 70} className="flex items-center gap-5 border-t py-5">
+                  <img
+                    src={`/coins/${n.id}.svg`}
+                    alt=""
+                    draggable={false}
+                    className="h-[34px] w-[34px] shrink-0 rounded-full"
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-display text-[20px] tracking-[-0.02em]">
+                      {n.name}
+                    </span>
+                    <span className="block text-[14px] text-muted-foreground">{n.note}</span>
+                  </span>
+                  <span className="shrink-0 text-[13px] tracking-[0.1em] text-muted-foreground">
+                    {n.tick}
+                  </span>
+                </Reveal>
+              ))}
+            </div>
+          </Wrap>
+        </section>
+
+        {/* ===================== NON-CUSTODIAL (panneau inversé) ===================== */}
+        <section data-dark className="mt-24 bg-foreground py-20 text-background lg:mt-28 lg:py-24">
+          <Wrap className="grid gap-12 lg:grid-cols-2 lg:items-start lg:gap-20">
+            <Reveal>
+              <Kicker inverted>{t("nc.kicker")}</Kicker>
+              <h2 className="mt-5 font-display text-[2.1rem] leading-[1.04] tracking-[-0.045em] text-background sm:text-[2.9rem] lg:text-[3.5rem]">
+                {t("nc.title1")}
+                <br />
+                <span className="text-background/50">{t("nc.title2")}</span>
+              </h2>
+              <p className="mt-7 max-w-[400px] text-[16px] leading-[1.7] text-background/65">
+                {t("nc.sub")}
+              </p>
+            </Reveal>
+
+            <dl>
+              {specs.map((s, i) => (
+                <Reveal
+                  key={s.kKey}
+                  delay={i * 80}
+                  className={cn(
+                    "flex justify-between gap-6 border-t border-background/15 py-5 text-[17px]",
+                    i === specs.length - 1 && "border-b border-background/15",
+                  )}
+                >
+                  <dt>{t(s.kKey)}</dt>
+                  <dd className="shrink-0 text-background/55">{t(s.vKey)}</dd>
+                </Reveal>
+              ))}
+            </dl>
+          </Wrap>
+        </section>
+
+        {/* ===================== INTERAC ===================== */}
+        <section>
+          <Wrap className="pt-24 lg:pt-28">
+            <Reveal className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+              <div>
+                <Kicker>{t("int.kicker")}</Kicker>
+                <h2 className="mt-4 font-display text-[1.9rem] leading-[1.06] tracking-[-0.04em] sm:text-[2.4rem] lg:text-[2.75rem]">
+                  {t("int.title1")}
+                  <br />
+                  <span className="text-foreground/35">{t("int.title2")}</span>
+                </h2>
+                <p className="mt-6 max-w-[420px] text-[16px] leading-[1.7] text-muted-foreground">
+                  {t("int.sub")}
+                </p>
+                <div className="mt-7 inline-flex items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-1.5">
+                  <InteracLogo className="h-7" />
+                  <span className="text-[13px] text-muted-foreground">{t("int.badge")}</span>
+                </div>
+                <p className="mt-5 max-w-[420px] text-[12px] leading-[1.7] text-muted-foreground">
+                  {t("int.note")}
+                </p>
+              </div>
+
+              <InteracFlowArt className="mx-auto w-full max-w-[440px]" aria-hidden />
+            </Reveal>
+          </Wrap>
+        </section>
+
+        {/* ===================== DESK OTC ===================== */}
+        <section>
+          <Wrap className="pt-24 lg:pt-28">
+            <Reveal className="grid gap-8 border-b pb-8 lg:grid-cols-2 lg:items-end lg:gap-20">
+              <div>
+                <Kicker>{t("otc.kicker")}</Kicker>
+                <h2 className="mt-4 font-display text-[1.9rem] leading-[1.06] tracking-[-0.04em] sm:text-[2.4rem] lg:text-[2.75rem]">
+                  {t("otc.title1")}
+                  <br />
+                  {t("otc.title2")}
+                </h2>
+              </div>
+              <div>
+                <p className="text-[16px] leading-[1.7] text-muted-foreground">
+                  {t("otc.sub")}
+                </p>
+                <Button
+                  asChild
+                  variant="secondary"
+                  shape="rounded"
+                  size="default"
+                  className="mt-6 px-6"
+                >
+                  <Link to="/contact">{t("otc.cta")}</Link>
+                </Button>
+              </div>
+            </Reveal>
+          </Wrap>
+        </section>
+
+        {/* ===================== FAQ ===================== */}
+        <section id="faq" className="scroll-mt-24">
+          <Wrap className="pt-24 lg:pt-28">
+            <Reveal>
+              <Kicker>{t("faq.kicker")}</Kicker>
+              <H2 className="mb-10 mt-4">{t("faq.title")}</H2>
+            </Reveal>
+
+            {faqs.map((item, i) => {
+              const open = faqOpen === i;
+              return (
+                <Reveal key={item.qKey} delay={i * 60} className="border-t">
+                  <button
+                    onClick={() => setFaqOpen(open ? null : i)}
+                    aria-expanded={open}
+                    className="flex w-full items-center justify-between gap-6 py-6 text-left"
+                  >
+                    <span className="font-display text-[17px] tracking-[-0.02em] sm:text-[20px]">
+                      {t(item.qKey)}
+                    </span>
+                    <span
+                      className={cn(
+                        "shrink-0 text-[22px] leading-none text-foreground/35 transition-transform",
+                        open && "rotate-45",
+                      )}
+                      aria-hidden
+                    >
+                      +
+                    </span>
+                  </button>
+                  {open && (
+                    <p className="mb-7 max-w-[680px] text-[15px] leading-[1.7] text-muted-foreground">
+                      {t(item.aKey)}
+                    </p>
+                  )}
+                </Reveal>
+              );
+            })}
+            <div className="border-t" />
+          </Wrap>
+        </section>
+
+        {/* ===================== CTA ===================== */}
+        <section>
+          <Wrap className="pt-28 text-center lg:pt-32">
+            <Reveal>
+              <h2 className="mx-auto max-w-[760px] text-balance font-display text-[2.6rem] leading-[0.98] tracking-[-0.05em] sm:text-[3.6rem] lg:text-[5rem]">
+                {t("cta.title1")}
+                <br />
+                <Soft>{t("cta.title2")}</Soft>
+              </h2>
+            </Reveal>
+            <Reveal delay={140} className="mt-10 flex flex-wrap justify-center gap-3">
+              <Button asChild variant="appSolid" shape="rounded" size="lg" className="px-7">
+                <Link to="/inscription">
+                  <Coins className="h-4 w-4" strokeWidth={1.8} />
+                  {t("cta.signup")}
+                </Link>
+              </Button>
+              <Button asChild variant="secondary" shape="rounded" size="lg" className="px-7">
+                <Link to="/faq">{t("cta.faq")}</Link>
+              </Button>
+            </Reveal>
+          </Wrap>
         </section>
       </main>
+
       <Footer />
     </div>
   );

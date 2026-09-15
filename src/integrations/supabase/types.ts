@@ -7,310 +7,431 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
-      categories: {
+      blockchain_transactions: {
         Row: {
+          confirmations: number
+          confirmed: boolean
           created_at: string
-          icon: string | null
+          direction: string
           id: string
-          name: string
+          network: Database["public"]["Enums"]["usdt_network"]
+          order_id: string
+          tx_hash: string
+          updated_at: string
+          usdt_amount: number
         }
         Insert: {
+          confirmations?: number
+          confirmed?: boolean
           created_at?: string
-          icon?: string | null
+          direction: string
           id?: string
-          name: string
+          network: Database["public"]["Enums"]["usdt_network"]
+          order_id: string
+          tx_hash: string
+          updated_at?: string
+          usdt_amount: number
         }
         Update: {
+          confirmations?: number
+          confirmed?: boolean
           created_at?: string
-          icon?: string | null
+          direction?: string
           id?: string
-          name?: string
-        }
-        Relationships: []
-      }
-      order_items: {
-        Row: {
-          created_at: string
-          id: string
-          order_id: string
-          product_id: string
-          quantity: number
-          shop_id: string
-          unit_price: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          order_id: string
-          product_id: string
-          quantity?: number
-          shop_id: string
-          unit_price: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
+          network?: Database["public"]["Enums"]["usdt_network"]
           order_id?: string
-          product_id?: string
-          quantity?: number
-          shop_id?: string
-          unit_price?: number
+          tx_hash?: string
+          updated_at?: string
+          usdt_amount?: number
         }
         Relationships: [
           {
-            foreignKeyName: "order_items_order_id_fkey"
+            foreignKeyName: "blockchain_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_flags: {
+        Row: {
+          created_at: string
+          details: Json | null
+          flag_type: string
+          id: string
+          order_id: string | null
+          resolved: boolean
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          flag_type: string
+          id?: string
+          order_id?: string | null
+          resolved?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          flag_type?: string
+          id?: string
+          order_id?: string | null
+          resolved?: boolean
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_flags_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "order_items_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "compliance_flags_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      exchange_rates: {
+        Row: {
+          buy_rate: number
+          fetched_at: string
+          id: number
+          sell_rate: number
+          source: string
+        }
+        Insert: {
+          buy_rate: number
+          fetched_at?: string
+          id?: never
+          sell_rate: number
+          source: string
+        }
+        Update: {
+          buy_rate?: number
+          fetched_at?: string
+          id?: never
+          sell_rate?: number
+          source?: string
+        }
+        Relationships: []
+      }
+      kyc_verifications: {
+        Row: {
+          created_at: string
+          doc_type: string | null
+          document_paths: Json | null
+          external_reference: string | null
+          id: string
+          provider: string
+          result_payload: Json | null
+          status: Database["public"]["Enums"]["kyc_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          doc_type?: string | null
+          document_paths?: Json | null
+          external_reference?: string | null
+          id?: string
+          provider?: string
+          result_payload?: Json | null
+          status?: Database["public"]["Enums"]["kyc_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          doc_type?: string | null
+          document_paths?: Json | null
+          external_reference?: string | null
+          id?: string
+          provider?: string
+          result_payload?: Json | null
+          status?: Database["public"]["Enums"]["kyc_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
           {
-            foreignKeyName: "order_items_shop_id_fkey"
-            columns: ["shop_id"]
+            foreignKeyName: "kyc_verifications_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "shops"
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_events: {
+        Row: {
+          actor: string
+          created_at: string
+          id: number
+          new_status: Database["public"]["Enums"]["order_status"]
+          note: string | null
+          order_id: string
+          previous_status: Database["public"]["Enums"]["order_status"] | null
+        }
+        Insert: {
+          actor: string
+          created_at?: string
+          id?: never
+          new_status: Database["public"]["Enums"]["order_status"]
+          note?: string | null
+          order_id: string
+          previous_status?: Database["public"]["Enums"]["order_status"] | null
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          id?: never
+          new_status?: Database["public"]["Enums"]["order_status"]
+          note?: string | null
+          order_id?: string
+          previous_status?: Database["public"]["Enums"]["order_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
       }
       orders: {
         Row: {
-          buyer_id: string
+          assigned_at: string | null
+          assigned_to: string | null
+          cad_amount: number
           created_at: string
+          fee_cad: number
           id: string
-          payment_method: string | null
-          payment_status: Database["public"]["Enums"]["payment_status"]
-          phone: string | null
-          shipping_address: string | null
-          shipping_city: string | null
+          interac_email: string | null
+          locked_rate: number
+          network: Database["public"]["Enums"]["usdt_network"]
+          rate_locked_until: string
+          side: Database["public"]["Enums"]["order_side"]
           status: Database["public"]["Enums"]["order_status"]
-          total: number
           updated_at: string
+          usdt_amount: number
+          user_id: string
+          wallet_address: string
         }
         Insert: {
-          buyer_id: string
+          assigned_at?: string | null
+          assigned_to?: string | null
+          cad_amount: number
           created_at?: string
+          fee_cad?: number
           id?: string
-          payment_method?: string | null
-          payment_status?: Database["public"]["Enums"]["payment_status"]
-          phone?: string | null
-          shipping_address?: string | null
-          shipping_city?: string | null
+          interac_email?: string | null
+          locked_rate: number
+          network?: Database["public"]["Enums"]["usdt_network"]
+          rate_locked_until: string
+          side: Database["public"]["Enums"]["order_side"]
           status?: Database["public"]["Enums"]["order_status"]
-          total?: number
           updated_at?: string
+          usdt_amount: number
+          user_id: string
+          wallet_address: string
         }
         Update: {
-          buyer_id?: string
+          assigned_at?: string | null
+          assigned_to?: string | null
+          cad_amount?: number
           created_at?: string
+          fee_cad?: number
           id?: string
-          payment_method?: string | null
-          payment_status?: Database["public"]["Enums"]["payment_status"]
-          phone?: string | null
-          shipping_address?: string | null
-          shipping_city?: string | null
+          interac_email?: string | null
+          locked_rate?: number
+          network?: Database["public"]["Enums"]["usdt_network"]
+          rate_locked_until?: string
+          side?: Database["public"]["Enums"]["order_side"]
           status?: Database["public"]["Enums"]["order_status"]
-          total?: number
           updated_at?: string
-        }
-        Relationships: []
-      }
-      product_images: {
-        Row: {
-          created_at: string
-          display_order: number
-          id: string
-          image_url: string
-          product_id: string
-        }
-        Insert: {
-          created_at?: string
-          display_order?: number
-          id?: string
-          image_url: string
-          product_id: string
-        }
-        Update: {
-          created_at?: string
-          display_order?: number
-          id?: string
-          image_url?: string
-          product_id?: string
+          usdt_amount?: number
+          user_id?: string
+          wallet_address?: string
         }
         Relationships: [
           {
-            foreignKeyName: "product_images_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "orders_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      products: {
+      payment_confirmations: {
         Row: {
-          category_id: string | null
-          created_at: string
-          description: string | null
+          amount_cad: number
+          confirmed_at: string
+          confirmed_by: string | null
+          direction: string
           id: string
-          image_url: string | null
-          is_active: boolean
-          name: string
-          price: number
-          shop_id: string
-          stock: number
-          unit: string
-          updated_at: string
+          method: string
+          order_id: string
+          reference: string | null
         }
         Insert: {
-          category_id?: string | null
-          created_at?: string
-          description?: string | null
+          amount_cad: number
+          confirmed_at?: string
+          confirmed_by?: string | null
+          direction: string
           id?: string
-          image_url?: string | null
-          is_active?: boolean
-          name: string
-          price: number
-          shop_id: string
-          stock?: number
-          unit?: string
-          updated_at?: string
+          method?: string
+          order_id: string
+          reference?: string | null
         }
         Update: {
-          category_id?: string | null
-          created_at?: string
-          description?: string | null
+          amount_cad?: number
+          confirmed_at?: string
+          confirmed_by?: string | null
+          direction?: string
           id?: string
-          image_url?: string | null
-          is_active?: boolean
-          name?: string
-          price?: number
-          shop_id?: string
-          stock?: number
-          unit?: string
-          updated_at?: string
+          method?: string
+          order_id?: string
+          reference?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "products_category_id_fkey"
-            columns: ["category_id"]
+            foreignKeyName: "payment_confirmations_order_id_fkey"
+            columns: ["order_id"]
             isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "products_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
       }
       profiles: {
         Row: {
-          address: string | null
-          avatar_url: string | null
-          city: string | null
+          account_type: Database["public"]["Enums"]["account_type"]
+          business_address: string | null
+          business_name: string | null
+          business_number: string | null
+          business_phone: string | null
           created_at: string
-          full_name: string
+          daily_limit_cad: number
+          email: string | null
+          full_name: string | null
           id: string
+          interac_answer: string | null
+          interac_question: string | null
+          kyc_status: Database["public"]["Enums"]["kyc_status"]
           phone: string | null
+          sell_ref: string | null
           updated_at: string
-          user_id: string
         }
         Insert: {
-          address?: string | null
-          avatar_url?: string | null
-          city?: string | null
+          account_type?: Database["public"]["Enums"]["account_type"]
+          business_address?: string | null
+          business_name?: string | null
+          business_number?: string | null
+          business_phone?: string | null
           created_at?: string
-          full_name?: string
-          id?: string
+          daily_limit_cad?: number
+          email?: string | null
+          full_name?: string | null
+          id: string
+          interac_answer?: string | null
+          interac_question?: string | null
+          kyc_status?: Database["public"]["Enums"]["kyc_status"]
           phone?: string | null
+          sell_ref?: string | null
           updated_at?: string
-          user_id: string
         }
         Update: {
-          address?: string | null
-          avatar_url?: string | null
-          city?: string | null
+          account_type?: Database["public"]["Enums"]["account_type"]
+          business_address?: string | null
+          business_name?: string | null
+          business_number?: string | null
+          business_phone?: string | null
           created_at?: string
-          full_name?: string
+          daily_limit_cad?: number
+          email?: string | null
+          full_name?: string | null
           id?: string
+          interac_answer?: string | null
+          interac_question?: string | null
+          kyc_status?: Database["public"]["Enums"]["kyc_status"]
           phone?: string | null
+          sell_ref?: string | null
           updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
-      shops: {
+      saved_recipients: {
         Row: {
-          city: string | null
           created_at: string
-          description: string | null
           id: string
-          is_active: boolean
-          location: string | null
-          logo_url: string | null
-          name: string
-          phone: string | null
-          seller_id: string
-          updated_at: string
+          kind: Database["public"]["Enums"]["recipient_kind"]
+          label: string
+          last_used_at: string | null
+          network: Database["public"]["Enums"]["usdt_network"] | null
+          user_id: string
+          value: string
         }
         Insert: {
-          city?: string | null
           created_at?: string
-          description?: string | null
           id?: string
-          is_active?: boolean
-          location?: string | null
-          logo_url?: string | null
-          name: string
-          phone?: string | null
-          seller_id: string
-          updated_at?: string
+          kind: Database["public"]["Enums"]["recipient_kind"]
+          label: string
+          last_used_at?: string | null
+          network?: Database["public"]["Enums"]["usdt_network"] | null
+          user_id: string
+          value: string
         }
         Update: {
-          city?: string | null
           created_at?: string
-          description?: string | null
           id?: string
-          is_active?: boolean
-          location?: string | null
-          logo_url?: string | null
-          name?: string
-          phone?: string | null
-          seller_id?: string
-          updated_at?: string
+          kind?: Database["public"]["Enums"]["recipient_kind"]
+          label?: string
+          last_used_at?: string | null
+          network?: Database["public"]["Enums"]["usdt_network"] | null
+          user_id?: string
+          value?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "saved_recipients_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
+          created_at: string
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          created_at?: string
           id?: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
@@ -329,17 +450,30 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "buyer" | "seller" | "admin"
+      account_type: "individual" | "business"
+      app_role: "admin" | "operator" | "kyc_reviewer" | "support" | "marketing"
+      kyc_status: "not_started" | "pending" | "approved" | "rejected"
+      order_side: "buy" | "sell"
       order_status:
-        | "pending"
-        | "confirmed"
-        | "preparing"
-        | "shipped"
-        | "delivered"
+        | "created"
+        | "awaiting_payment"
+        | "payment_received"
+        | "settling"
+        | "completed"
         | "cancelled"
-      payment_status: "pending" | "paid" | "released" | "refunded"
+        | "expired"
+        | "refunded"
+      recipient_kind: "wallet" | "interac"
+      usdt_network:
+        | "trc20"
+        | "bep20"
+        | "erc20"
+        | "polygon"
+        | "spl"
+        | "avalanche"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -447,36 +581,25 @@ export type Enums<
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
-
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["buyer", "seller", "admin"],
+      account_type: ["individual", "business"],
+      app_role: ["admin", "operator", "kyc_reviewer", "support", "marketing"],
+      kyc_status: ["not_started", "pending", "approved", "rejected"],
+      order_side: ["buy", "sell"],
       order_status: [
-        "pending",
-        "confirmed",
-        "preparing",
-        "shipped",
-        "delivered",
+        "created",
+        "awaiting_payment",
+        "payment_received",
+        "settling",
+        "completed",
         "cancelled",
+        "expired",
+        "refunded",
       ],
-      payment_status: ["pending", "paid", "released", "refunded"],
+      recipient_kind: ["wallet", "interac"],
+      usdt_network: ["trc20", "bep20", "erc20", "polygon", "spl", "avalanche"],
     },
   },
 } as const

@@ -131,6 +131,8 @@ export type Database = {
       kyc_verifications: {
         Row: {
           created_at: string
+          doc_type: string | null
+          document_paths: Json | null
           external_reference: string | null
           id: string
           provider: string
@@ -141,6 +143,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          doc_type?: string | null
+          document_paths?: Json | null
           external_reference?: string | null
           id?: string
           provider?: string
@@ -151,6 +155,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          doc_type?: string | null
+          document_paths?: Json | null
           external_reference?: string | null
           id?: string
           provider?: string

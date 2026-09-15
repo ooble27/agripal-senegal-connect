@@ -1,0 +1,121 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Ooble — feuille d'illustrations e-mail (originales)</title>
+<style>
+  body { margin: 0; background: transparent; }
+  .art { display: block; }
+</style>
+<div id="stage"></div>
+<script>
+  const INK = "#14201f";
+  const HALO = "#EEF2F2";
+  const PETROL = "#0F3A43";
+  const TEAL = "#2FA39B";
+  const TEALD = "#1c8378";
+  const YEL = "#F2C14E";
+
+  /** Pièce USDT stylisée (même helper que la landing). */
+  function usdtCoin(cx, cy, r, rot = 0) {
+    const bar = Math.max(3, r * 0.15);
+    return `
+      <g transform="translate(${cx} ${cy}) rotate(${rot})">
+        <circle cx="0" cy="${r * 0.16}" r="${r}" fill="#17694f" stroke="${INK}" stroke-width="3" />
+        <circle cx="0" cy="0" r="${r}" fill="#26A17B" stroke="${INK}" stroke-width="3" />
+        <rect x="${-r * 0.42}" y="${-r * 0.44}" width="${r * 0.84}" height="${bar}" rx="${bar / 2}" fill="#fff" />
+        <rect x="${-bar / 2}" y="${-r * 0.44}" width="${bar}" height="${r * 0.82}" rx="${bar / 2}" fill="#fff" />
+        <rect x="${-r * 0.24}" y="${-r * 0.02}" width="${r * 0.48}" height="${bar}" rx="${bar / 2}" fill="#fff" />
+      </g>`;
+  }
+
+  /** Étincelle 4 branches. */
+  function spark(cx, cy, s = 14) {
+    const d = s * 0.28;
+    return `<path d="M${cx} ${cy - s} L${cx + d} ${cy - d} L${cx + s} ${cy} L${cx + d} ${cy + d} L${cx} ${cy + s} L${cx - d} ${cy + d} L${cx - s} ${cy} L${cx - d} ${cy - d} Z"
+      fill="${YEL}" stroke="${INK}" stroke-width="2" stroke-linejoin="round" />`;
+  }
+
+  const halo = `<circle cx="210" cy="180" r="160" fill="${HALO}" />`;
+
+  const arts = {
+    // BIENVENUE — rosette / médaille avec ruban + coche
+    welcome: `<svg id="svg-welcome" class="art" width="420" height="360" viewBox="0 0 420 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+      ${halo}
+      <!-- rubans -->
+      <path d="M180 214 H206 V308 L193 292 L180 308 Z" fill="${PETROL}" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round" />
+      <path d="M214 214 H240 V308 L227 292 L214 308 Z" fill="${TEALD}" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round" />
+      <!-- médaillon -->
+      <circle cx="210" cy="166" r="72" fill="${TEALD}" stroke="${INK}" stroke-width="3.5" />
+      <circle cx="210" cy="160" r="64" fill="${TEAL}" stroke="${INK}" stroke-width="3.5" />
+      <circle cx="210" cy="160" r="46" fill="#fff" stroke="${INK}" stroke-width="2.5" />
+      <path d="M189 160 l14 15 l25 -30" fill="none" stroke="${TEAL}" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" />
+      ${spark(120, 116, 16)}${spark(316, 118, 12)}${usdtCoin(330, 256, 24, 10)}
+    </svg>`,
+
+    // ACHAT — ticket / reçu + flèche vers pièce
+    buy: `<svg id="svg-buy" class="art" width="420" height="360" viewBox="0 0 420 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+      ${halo}
+      <g transform="rotate(-4 158 190)">
+        <rect x="64" y="116" width="190" height="150" rx="18" fill="#fff" stroke="${INK}" stroke-width="3.5" />
+        <circle cx="64" cy="191" r="12" fill="${HALO}" stroke="${INK}" stroke-width="3.5" />
+        <circle cx="254" cy="191" r="12" fill="${HALO}" stroke="${INK}" stroke-width="3.5" />
+        <line x1="86" y1="191" x2="232" y2="191" stroke="${INK}" stroke-width="2" stroke-dasharray="3 7" opacity="0.5" />
+        <rect x="86" y="140" width="34" height="24" rx="6" fill="${YEL}" stroke="${INK}" stroke-width="2.5" />
+        <rect x="130" y="144" width="92" height="7" rx="3.5" fill="${INK}" opacity="0.75" />
+        <rect x="130" y="157" width="60" height="6" rx="3" fill="${INK}" opacity="0.35" />
+        <rect x="86" y="212" width="146" height="34" rx="9" fill="${TEAL}" stroke="${INK}" stroke-width="2.5" />
+        <text x="159" y="235" text-anchor="middle" font-family="Manrope, Arial, sans-serif" font-weight="800" font-size="17" fill="#fff">500 $ CAD</text>
+      </g>
+      <path d="M266 188 h40" stroke="${PETROL}" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="2 11" />
+      <path d="M300 179 l12 9 l-12 9" fill="none" stroke="${PETROL}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+      ${usdtCoin(350, 188, 30, 8)}${spark(120, 300, 14)}
+    </svg>`,
+
+    // VENTE — pièce déposée dans une fente (envoi des USDT)
+    sell: `<svg id="svg-sell" class="art" width="420" height="360" viewBox="0 0 420 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+      ${halo}
+      <path d="M186 92 l12 14 l14 -14" fill="none" stroke="${PETROL}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7" />
+      ${usdtCoin(210, 150, 34, -8)}
+      <rect x="118" y="196" width="184" height="120" rx="22" fill="${PETROL}" stroke="${INK}" stroke-width="3.5" />
+      <path d="M118 262 h184 v32 a22 22 0 0 1 -22 22 H140 a22 22 0 0 1 -22 -22 Z" fill="${TEAL}" stroke="${INK}" stroke-width="3.5" />
+      <rect x="150" y="210" width="120" height="20" rx="10" fill="#0b2a31" stroke="${INK}" stroke-width="2.5" />
+      <circle cx="277" cy="288" r="5" fill="${INK}" />
+      ${spark(118, 120, 15)}${usdtCoin(330, 150, 18, 12)}
+    </svg>`,
+
+    // PAIEMENT REÇU — cercle de confirmation + pièces
+    received: `<svg id="svg-received" class="art" width="420" height="360" viewBox="0 0 420 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+      ${halo}
+      <circle cx="210" cy="172" r="78" fill="#E7F4EF" stroke="${INK}" stroke-width="3.5" />
+      <circle cx="210" cy="172" r="58" fill="${TEAL}" stroke="${INK}" stroke-width="3.5" />
+      <path d="M182 172 l19 19 l35 -42" fill="none" stroke="#fff" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" />
+      ${usdtCoin(322, 252, 26, 10)}${usdtCoin(98, 118, 20, -12)}
+      ${spark(320, 108, 15)}${spark(108, 250, 12)}
+    </svg>`,
+
+    // TERMINÉ — sceau / tampon validé
+    completed: `<svg id="svg-completed" class="art" width="420" height="360" viewBox="0 0 420 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+      ${halo}
+      <g transform="rotate(-8 210 168)">
+        <rect x="146" y="104" width="128" height="128" rx="28" fill="none" stroke="${PETROL}" stroke-width="4" />
+        <rect x="160" y="118" width="100" height="100" rx="22" fill="#E7F4EF" stroke="${PETROL}" stroke-width="2.5" stroke-dasharray="2 9" />
+        <path d="M184 170 l17 17 l32 -40" fill="none" stroke="${TEAL}" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" />
+      </g>
+      ${usdtCoin(324, 256, 24, 10)}${spark(108, 120, 16)}${spark(320, 110, 11)}
+    </svg>`,
+
+    // MARKETING — mégaphone + ondes + étincelles
+    news: `<svg id="svg-news" class="art" width="420" height="360" viewBox="0 0 420 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+      ${halo}
+      <rect x="88" y="176" width="26" height="40" rx="7" fill="${PETROL}" stroke="${INK}" stroke-width="3.5" />
+      <path d="M110 182 L250 138 L250 254 L110 210 Z" fill="${TEAL}" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round" />
+      <ellipse cx="250" cy="196" rx="15" ry="58" fill="${TEALD}" stroke="${INK}" stroke-width="3.5" />
+      <path d="M170 214 l6 40 a14 14 0 0 0 26 2 l4 -30 Z" fill="${PETROL}" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round" />
+      <path d="M286 168 a44 44 0 0 1 0 56" fill="none" stroke="${PETROL}" stroke-width="3.5" stroke-linecap="round" />
+      <path d="M300 152 a66 66 0 0 1 0 88" fill="none" stroke="${PETROL}" stroke-width="3.5" stroke-linecap="round" opacity="0.5" />
+      ${spark(150, 110, 16)}${spark(318, 300, 13)}${usdtCoin(150, 292, 22, -8)}
+    </svg>`,
+  };
+
+  document.getElementById("stage").innerHTML = Object.values(arts).join("\n");
+  window.__ARTS__ = Object.keys(arts);
+</script>

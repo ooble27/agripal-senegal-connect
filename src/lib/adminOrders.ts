@@ -106,9 +106,11 @@ export type KycStatus = "attente" | "verifie" | "refuse";
 
 export interface KycRequest {
   id: string;
+  userId?: string;
   clientName: string;
   email: string;
   docType: string;
+  documentPaths: Record<string, string> | null;
   submittedMinsAgo: number;
   status: KycStatus;
 }
@@ -120,12 +122,12 @@ export const KYC_STATUS_META: Record<KycStatus, { label: string; text: string }>
 };
 
 export const SEED_KYC: KycRequest[] = [
-  { id: "K1", clientName: "Amélie Tremblay", email: "amelie.t@gmail.com",     docType: "Permis de conduire", submittedMinsAgo: 14,  status: "attente" },
-  { id: "K2", clientName: "Marc Gagnon",     email: "marc.gagnon@icloud.com", docType: "Passeport",          submittedMinsAgo: 40,  status: "attente" },
-  { id: "K3", clientName: "Hugo Bouchard",   email: "hugo.bouchard@gmail.com",docType: "Carte santé",        submittedMinsAgo: 95,  status: "attente" },
-  { id: "K4", clientName: "Isabelle Girard", email: "i.girard@videotron.ca",  docType: "Permis de conduire", submittedMinsAgo: 240, status: "verifie" },
-  { id: "K5", clientName: "David Roy",       email: "davidroy88@gmail.com",   docType: "Passeport",          submittedMinsAgo: 520, status: "verifie" },
-  { id: "K6", clientName: "Vincent Ouellet", email: "vince.o@hotmail.com",    docType: "Carte santé",        submittedMinsAgo: 610, status: "refuse" },
+  { id: "K1", clientName: "Amélie Tremblay", email: "amelie.t@gmail.com",     docType: "Permis de conduire", documentPaths: null, submittedMinsAgo: 14,  status: "attente" },
+  { id: "K2", clientName: "Marc Gagnon",     email: "marc.gagnon@icloud.com", docType: "Passeport",          documentPaths: null, submittedMinsAgo: 40,  status: "attente" },
+  { id: "K3", clientName: "Hugo Bouchard",   email: "hugo.bouchard@gmail.com",docType: "Carte santé",        documentPaths: null, submittedMinsAgo: 95,  status: "attente" },
+  { id: "K4", clientName: "Isabelle Girard", email: "i.girard@videotron.ca",  docType: "Permis de conduire", documentPaths: null, submittedMinsAgo: 240, status: "verifie" },
+  { id: "K5", clientName: "David Roy",       email: "davidroy88@gmail.com",   docType: "Passeport",          documentPaths: null, submittedMinsAgo: 520, status: "verifie" },
+  { id: "K6", clientName: "Vincent Ouellet", email: "vince.o@hotmail.com",    docType: "Carte santé",        documentPaths: null, submittedMinsAgo: 610, status: "refuse" },
 ];
 
 /* ------------------------------------------------------------------ */

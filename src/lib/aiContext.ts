@@ -26,6 +26,15 @@ function snippet(text: string | null, len = 120): string {
   return clean.length <= len ? clean : `${clean.slice(0, len)}…`;
 }
 
+const OOBLE_DEPOSIT_ADDRESSES: Record<string, string> = {
+  trx: "TSPUk2W5bcGGNPpKzx1xTDc2NuxpRJRCBb",
+  bnb: "0xe1d04ef9b4c199ba6a59460ed8bd0a486dc4fc84",
+  eth: "0xe1d04ef9b4c199ba6a59460ed8bd0a486dc4fc84",
+  matic: "0xe1d04ef9b4c199ba6a59460ed8bd0a486dc4fc84",
+  sol: "8ES2hxsfqZVX3cjxWLBJ8jCdzSu9hTBYELSkX82UdnhN",
+  avax: "0xe1d04ef9b4c199ba6a59460ed8bd0a486dc4fc84",
+};
+
 export async function fetchPlatformContext(): Promise<PlatformContext> {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -34,7 +43,7 @@ export async function fetchPlatformContext(): Promise<PlatformContext> {
   const [ordersRes, kycCountRes, kycDetailsRes, mailCountRes, threadsRes, rateRes, flagsRes, treasuryRes] = await Promise.all([
     supabase
       .from("orders")
-      .select("id, side, status, cad_amount, usdt_amount, created_at, network, profiles(full_name, email)")
+      .select("id, side, status, cad_amount, usdt_amount, created_at, network, wallet_address, profiles(full_name, email)")
       .order("created_at", { ascending: false })
       .limit(50),
     supabase
@@ -84,6 +93,7 @@ export async function fetchPlatformContext(): Promise<PlatformContext> {
     usdt_amount: number;
     created_at: string;
     network: string | null;
+    wallet_address: string | null;
     profiles: { full_name: string | null; email: string | null } | null;
   }>;
 
@@ -126,6 +136,7 @@ export async function fetchPlatformContext(): Promise<PlatformContext> {
     client: o.profiles?.full_name?.trim() || "Client",
     clientEmail: o.profiles?.email ?? "",
     network: o.network ?? "",
+    walletAddress: o.wallet_address ?? "",
     createdAt: new Date(o.created_at).toLocaleString("fr-CA", {
       day: "numeric",
       month: "short",
@@ -281,6 +292,7 @@ export async function fetchPlatformContext(): Promise<PlatformContext> {
     sellRate,
     recentOrders,
     alerts,
+    oobleDepositAddresses: OOBLE_DEPOSIT_ADDRESSES,
     pendingKycDetails,
     recentThreads,
     complianceFlags,

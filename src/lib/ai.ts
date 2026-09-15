@@ -173,9 +173,11 @@ export interface PlatformContext {
     client: string;
     clientEmail: string;
     network: string;
+    walletAddress: string;
     createdAt: string;
   }>;
   alerts: string[];
+  oobleDepositAddresses: Record<string, string>;
   pendingKycDetails: Array<{
     clientName: string;
     email: string;

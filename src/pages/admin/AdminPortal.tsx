@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Inbox, ShoppingCart, ScanFace, Calculator, Users, ArrowLeft,
@@ -92,6 +92,23 @@ const AdminPortal = () => {
       setTab(visibleNav[0].id);
     }
   }, [visibleNav, allowedTabs, tab]);
+
+  useLayoutEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtmlBg = html.style.backgroundColor;
+    const prevBodyBg = body.style.backgroundColor;
+    html.style.backgroundColor = C.bg;
+    body.style.backgroundColor = C.bg;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    const prevTheme = meta?.getAttribute("content") ?? "";
+    meta?.setAttribute("content", C.bg);
+    return () => {
+      html.style.backgroundColor = prevHtmlBg;
+      body.style.backgroundColor = prevBodyBg;
+      if (meta) meta.setAttribute("content", prevTheme);
+    };
+  }, []);
 
   const topRole = roles.includes("admin") ? "admin" : roles[0];
   const badgeLabel = ROLE_LABEL[topRole] ?? "Staff";

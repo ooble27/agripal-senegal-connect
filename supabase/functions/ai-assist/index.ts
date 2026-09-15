@@ -120,6 +120,7 @@ Tu as accès au contexte en temps réel de la plateforme (commandes, KYC, messag
 - Si le staff dit « dis-lui qu'on a reçu son paiement », cherche dans les commandes récentes pour trouver la commande du client et mentionne le bon montant et la bonne référence.
 - Si le staff dit « relance pour le KYC », vérifie le statut KYC du client dans le contexte.
 - Si le staff répond à un fil de discussion, lis les messages précédents pour comprendre la conversation.
+- Tu connais les adresses de dépôt Ooble par réseau et les adresses wallet des clients (affichées dans les commandes). Ne demande JAMAIS au client une information que tu as déjà dans le contexte (adresse wallet, montant, référence, réseau).
 
 Contraintes strictes :
 - Structure : salutation « Bonjour {{prenom}}, » — ne remplace PAS {{prenom}}, garde le placeholder — puis 2-4 paragraphes courts, puis une signature en 2 lignes (« Cordialement, » suivi de la marque au moment de l'insertion).
@@ -432,9 +433,11 @@ interface PlatformContext {
     client: string;
     clientEmail: string;
     network: string;
+    walletAddress: string;
     createdAt: string;
   }>;
   alerts: string[];
+  oobleDepositAddresses?: Record<string, string>;
   pendingKycDetails?: Array<{
     clientName: string;
     email: string;
@@ -488,7 +491,8 @@ function platformContextToText(ctx: PlatformContext): string {
     lines.push(`\nDERNIÈRES COMMANDES (${ctx.recentOrders.length}) :`);
     for (const o of ctx.recentOrders.slice(0, 15)) {
       const net = o.network ? ` [${o.network}]` : "";
-      lines.push(`- ${o.ref} · ${o.type === "buy" ? "Achat" : "Vente"} · ${nf.format(o.cadAmount)} CAD / ${nf.format(o.usdtAmount)} USDT · ${o.status} · ${o.client} (${o.clientEmail})${net} · ${o.createdAt}`);
+      const wallet = o.walletAddress && o.walletAddress !== "a generer" ? ` → ${o.walletAddress}` : "";
+      lines.push(`- ${o.ref} · ${o.type === "buy" ? "Achat" : "Vente"} · ${nf.format(o.cadAmount)} CAD / ${nf.format(o.usdtAmount)} USDT · ${o.status} · ${o.client} (${o.clientEmail})${net}${wallet} · ${o.createdAt}`);
     }
   }
 
@@ -532,6 +536,21 @@ function platformContextToText(ctx: PlatformContext): string {
       const label = flagLabels[f.flagType] ?? f.flagType;
       const order = f.orderId ? ` · ordre ${f.orderId.slice(0, 8)}` : "";
       lines.push(`- ${label}${order} · ${f.createdAt}`);
+    }
+  }
+
+  if (ctx.oobleDepositAddresses) {
+    const networkLabels: Record<string, string> = {
+      trx: "Tron (TRC20)",
+      bnb: "BNB Smart Chain (BEP20)",
+      eth: "Ethereum (ERC20)",
+      matic: "Polygon",
+      sol: "Solana",
+      avax: "Avalanche",
+    };
+    lines.push("\nADRESSES DE DÉPÔT OOBLE (où les clients envoient leurs USDT pour les ordres de vente) :");
+    for (const [net, addr] of Object.entries(ctx.oobleDepositAddresses)) {
+      lines.push(`- ${networkLabels[net] ?? net} : ${addr}`);
     }
   }
 

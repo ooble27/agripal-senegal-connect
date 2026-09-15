@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bot, Send, Zap, AlertTriangle, Loader2 } from "lucide-react";
+import { Bot, Send, Zap, Loader2, RefreshCw } from "lucide-react";
 import { contextChat, isAIError, type ChatMessage } from "@/lib/ai";
 import { fetchPlatformContext } from "@/lib/aiContext";
 import type { PlatformContext } from "@/lib/ai";
 import { C, FONT, card, inputStyle } from "./adminTheme";
-
-const nfCad = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 0 });
 
 const QUICK_PROMPTS = [
   "Résume l'état actuel de la plateforme",
@@ -86,78 +84,98 @@ const AIAssistPanel = () => {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* Stats bar */}
-      <div style={{ ...card, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 1, overflow: "hidden" }}>
-        <StatCell label="En attente" value={ctx?.pendingOrders ?? "—"} loading={ctxLoading} />
-        <StatCell label="En cours" value={ctx?.inProgressOrders ?? "—"} loading={ctxLoading} />
-        <StatCell label="Complétées" value={ctx?.completedToday ?? "—"} sub="aujourd'hui" loading={ctxLoading} />
-        <StatCell label="Volume" value={ctx ? `${nfCad.format(ctx.volumeCadToday)} $` : "—"} sub="CAD aujourd'hui" loading={ctxLoading} />
-        <StatCell label="KYC" value={ctx?.pendingKyc ?? "—"} sub="en attente" loading={ctxLoading} />
-        <StatCell label="Messages" value={ctx?.unreadMessages ?? "—"} sub="non lus" loading={ctxLoading} />
-      </div>
-
-      {/* Alerts */}
-      {ctx && ctx.alerts.length > 0 && (
-        <div style={{ ...card, padding: "12px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
-          {ctx.alerts.map((a, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#f59e0b" }}>
-              <AlertTriangle style={{ width: 14, height: 14, flexShrink: 0 }} />
-              <span>{a}</span>
-            </div>
-          ))}
-        </div>
-      )}
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
       {/* Chat area */}
-      <div style={{ ...card, display: "flex", flexDirection: "column", minHeight: 420 }}>
+      <div style={{
+        ...card,
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 480,
+        overflow: "hidden",
+      }}>
         <div
           ref={scrollRef}
-          style={{ flex: 1, overflowY: "auto", padding: "16px 16px 8px", display: "flex", flexDirection: "column", gap: 12 }}
+          style={{
+            flex: 1, overflowY: "auto",
+            padding: "20px 20px 12px",
+            display: "flex", flexDirection: "column", gap: 14,
+          }}
         >
           {messages.length === 0 ? (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: "40px 20px" }}>
+            <div style={{
+              flex: 1, display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center",
+              gap: 20, padding: "48px 20px",
+            }}>
               <div style={{
-                width: 52, height: 52, borderRadius: 14,
-                background: C.l2, border: `1px solid ${C.bds}`,
+                width: 56, height: 56, borderRadius: 16,
+                background: `linear-gradient(135deg, ${C.l2}, ${C.l3})`,
+                border: `1px solid ${C.bds}`,
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                <Bot style={{ width: 24, height: 24, color: C.t2 }} strokeWidth={1.6} />
+                <Bot style={{ width: 26, height: 26, color: C.t2 }} strokeWidth={1.5} />
               </div>
-              <div style={{ textAlign: "center" }}>
-                <p style={{ fontSize: 14, color: C.t1, margin: 0, fontWeight: 500 }}>Assistant IA Ooble</p>
-                <p style={{ fontSize: 12, color: C.t3, margin: "6px 0 0", maxWidth: 340, lineHeight: 1.5 }}>
-                  Posez une question sur l'état de la plateforme, les commandes, les clients ou la conformité. L'IA a accès au contexte en temps réel.
+              <div style={{ textAlign: "center", maxWidth: 380 }}>
+                <p style={{
+                  fontSize: 16, color: C.t1, margin: 0,
+                  fontWeight: 400, fontFamily: FONT,
+                  letterSpacing: "-0.01em",
+                }}>
+                  Assistant IA
+                </p>
+                <p style={{
+                  fontSize: 12.5, color: C.t3, margin: "8px 0 0",
+                  lineHeight: 1.6, fontFamily: FONT,
+                }}>
+                  Posez une question sur les commandes, les clients, le KYC ou la conformité. L'assistant a accès au contexte en temps réel.
                 </p>
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 8 }}>
+              <div style={{
+                display: "flex", flexWrap: "wrap", gap: 8,
+                justifyContent: "center", marginTop: 4,
+              }}>
                 {QUICK_PROMPTS.map((q, i) => (
                   <button
                     key={i}
                     onClick={() => send(q)}
                     disabled={loading || !ctx}
                     style={{
-                      background: C.l2,
+                      background: "transparent",
                       border: `1px solid ${C.bds}`,
-                      borderRadius: 9,
-                      padding: "8px 14px",
+                      borderRadius: 10,
+                      padding: "9px 14px",
                       color: C.t2,
                       fontSize: 12,
                       fontFamily: FONT,
                       cursor: "pointer",
-                      transition: "all 0.12s",
+                      transition: "all 0.15s",
                       display: "flex",
                       alignItems: "center",
-                      gap: 6,
+                      gap: 7,
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.bdh; e.currentTarget.style.color = C.t1; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.bds; e.currentTarget.style.color = C.t2; }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = C.bd;
+                      e.currentTarget.style.color = C.t1;
+                      e.currentTarget.style.background = C.l2;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = C.bds;
+                      e.currentTarget.style.color = C.t2;
+                      e.currentTarget.style.background = "transparent";
+                    }}
                   >
-                    <Zap style={{ width: 12, height: 12 }} />
+                    <Zap style={{ width: 11, height: 11, opacity: 0.5 }} />
                     {q}
                   </button>
                 ))}
               </div>
+              {ctxLoading && (
+                <p style={{ fontSize: 11, color: C.t3, margin: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                  <RefreshCw style={{ width: 11, height: 11, animation: "spin 1.5s linear infinite" }} />
+                  Chargement du contexte…
+                </p>
+              )}
             </div>
           ) : (
             messages.map((m) => (
@@ -170,27 +188,27 @@ const AIAssistPanel = () => {
                   ...(m.role === "user" ? { flexDirection: "row-reverse" } : {}),
                 }}
               >
+                {m.role === "assistant" && (
+                  <div style={{
+                    width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+                    background: C.l2, border: `1px solid ${C.bds}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <Bot style={{ width: 15, height: 15, color: C.t3 }} strokeWidth={1.7} />
+                  </div>
+                )}
                 <div style={{
-                  width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                  background: m.role === "assistant" ? C.l3 : C.accent,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  {m.role === "assistant"
-                    ? <Bot style={{ width: 14, height: 14, color: C.t2 }} strokeWidth={1.8} />
-                    : <span style={{ fontSize: 11, fontWeight: 600, color: "#111" }}>Vous</span>
-                  }
-                </div>
-                <div style={{
-                  maxWidth: "80%",
+                  maxWidth: "82%",
                   background: m.role === "user" ? C.accent : C.l2,
                   color: m.role === "user" ? "#111" : C.t1,
-                  borderRadius: 12,
-                  padding: "10px 14px",
+                  borderRadius: m.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
+                  padding: "11px 15px",
                   fontSize: 13,
-                  lineHeight: 1.55,
+                  lineHeight: 1.6,
                   fontFamily: FONT,
                   whiteSpace: "pre-wrap",
                   wordBreak: "break-word",
+                  border: m.role === "user" ? "none" : `1px solid ${C.bds}`,
                 }}>
                   {m.content}
                 </div>
@@ -198,15 +216,18 @@ const AIAssistPanel = () => {
             ))
           )}
           {loading && (
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
               <div style={{
-                width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                background: C.l3, display: "flex", alignItems: "center", justifyContent: "center",
+                width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+                background: C.l2, border: `1px solid ${C.bds}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                <Bot style={{ width: 14, height: 14, color: C.t2 }} strokeWidth={1.8} />
+                <Bot style={{ width: 15, height: 15, color: C.t3 }} strokeWidth={1.7} />
               </div>
               <div style={{
-                background: C.l2, borderRadius: 12, padding: "10px 14px",
+                background: C.l2, border: `1px solid ${C.bds}`,
+                borderRadius: "14px 14px 14px 4px",
+                padding: "11px 15px",
                 display: "flex", alignItems: "center", gap: 8,
                 fontSize: 12, color: C.t3,
               }}>
@@ -222,19 +243,26 @@ const AIAssistPanel = () => {
           onSubmit={handleSubmit}
           style={{
             borderTop: `1px solid ${C.bds}`,
-            padding: 12,
+            padding: "12px 16px",
             display: "flex",
-            gap: 8,
+            gap: 10,
             alignItems: "center",
+            background: C.l1,
           }}
         >
           <input
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Posez une question à l'IA…"
+            placeholder="Posez une question…"
             disabled={loading || !ctx}
-            style={{ ...inputStyle, borderRadius: 10, padding: "10px 14px", fontSize: 13 }}
+            style={{
+              ...inputStyle,
+              borderRadius: 10,
+              padding: "11px 14px",
+              fontSize: 13,
+              background: C.bg,
+            }}
             onFocus={(e) => { e.currentTarget.style.borderColor = C.bdh; }}
             onBlur={(e) => { e.currentTarget.style.borderColor = C.bd; }}
           />
@@ -242,7 +270,7 @@ const AIAssistPanel = () => {
             type="submit"
             disabled={loading || !input.trim() || !ctx}
             style={{
-              width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+              width: 40, height: 40, borderRadius: 10, flexShrink: 0,
               background: input.trim() ? C.accent : C.l3,
               border: "none",
               color: input.trim() ? "#111" : C.t3,
@@ -260,15 +288,5 @@ const AIAssistPanel = () => {
     </div>
   );
 };
-
-const StatCell = ({ label, value, sub, loading }: { label: string; value: string | number; sub?: string; loading?: boolean }) => (
-  <div style={{ padding: "14px 16px", background: C.l1 }}>
-    <p style={{ fontSize: 10, color: C.t3, margin: 0, textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: FONT }}>{label}</p>
-    <p style={{ fontSize: 20, fontWeight: 300, color: loading ? C.t3 : C.t1, margin: "4px 0 0", fontFamily: FONT, fontVariantNumeric: "tabular-nums" }}>
-      {loading ? "…" : value}
-    </p>
-    {sub && <p style={{ fontSize: 10, color: C.t3, margin: "2px 0 0", fontFamily: FONT }}>{sub}</p>}
-  </div>
-);
 
 export default AIAssistPanel;

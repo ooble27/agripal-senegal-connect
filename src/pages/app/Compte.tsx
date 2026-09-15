@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, ShieldCheck, KeyRound, LayoutGrid, ChevronRight, MessageSquare, Building2, Bell, BellOff } from "lucide-react";
+import { LogOut, ShieldCheck, LayoutGrid, ChevronRight, MessageSquare, Building2, Globe, MapPin, Phone, Hash } from "lucide-react";
 import { Link } from "react-router-dom";
 import AppShell from "@/components/app/AppShell";
 import CopyRow from "@/components/app/CopyRow";
@@ -12,7 +12,6 @@ import { getMyKyc, type KycDbStatus } from "@/lib/kyc";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { TKey } from "@/lib/translations";
-import { pushSupported, isSubscribed, subscribePush, unsubscribePush } from "@/lib/pushNotifications";
 
 const KYC_KEYS: Record<KycDbStatus, TKey> = {
   not_started: "kyc.notStarted",
@@ -34,20 +33,18 @@ const Compte = () => {
   const t = useT();
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [kyc, setKyc] = useState<KycDbStatus | null>(null);
-  const [pushOn, setPushOn] = useState(false);
-  const [pushLoading, setPushLoading] = useState(false);
-  const hasPush = pushSupported();
 
   useEffect(() => {
     getMyProfile().then(setProfile);
     getMyKyc().then((k) => setKyc(k?.status ?? "not_started"));
-    if (hasPush) isSubscribed().then(setPushOn);
   }, []);
 
   const logout = async () => {
     await signOut();
     navigate("/connexion", { replace: true });
   };
+
+  const initial = user?.name?.charAt(0).toUpperCase() ?? "O";
 
   return (
     <AppShell
@@ -58,56 +55,59 @@ const Compte = () => {
         </div>
       }
     >
-      <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
-        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-deep font-display text-xl font-bold text-white">
-          {user?.name?.charAt(0).toUpperCase() ?? "O"}
-        </span>
-        <div className="min-w-0">
-          <p className="truncate font-display text-lg font-bold">{user?.name}</p>
-          <p className="truncate text-sm text-muted-foreground">{user?.email}</p>
-          {profile?.accountType === "business" && (
-            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-deep/10 px-2 py-0.5 text-[11px] font-semibold text-deep">
-              <Building2 className="h-3 w-3" /> {t("acct.business")}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {profile?.accountType === "business" && profile.businessName && (
-        <div className="mt-4 rounded-2xl border border-border bg-card">
-          <div className="flex items-center gap-2.5 px-5 pb-1 pt-4">
-            <Building2 className="h-4 w-4 text-muted-foreground" strokeWidth={1.9} />
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{t("acct.business")}</p>
+      {/* ─── Profile card ─── */}
+      <div className="overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="flex items-center gap-4 p-5">
+          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-deep font-display text-2xl font-bold text-white shadow-sm">
+            {initial}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-display text-xl font-bold tracking-tight">{user?.name}</p>
+            <p className="truncate text-sm text-muted-foreground">{user?.email}</p>
+            {profile?.accountType === "business" && (
+              <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-deep/10 px-2.5 py-0.5 text-[11px] font-semibold text-deep">
+                <Building2 className="h-3 w-3" /> {t("acct.business")}
+              </span>
+            )}
           </div>
+        </div>
+
+        {/* Business details (inline under profile) */}
+        {profile?.accountType === "business" && profile.businessName && (
           <div className="divide-y divide-border border-t border-border">
-            <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-sm text-muted-foreground">{t("acct.businessName")}</span>
+            <div className="flex items-center gap-3 px-5 py-3.5">
+              <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.7} />
+              <span className="flex-1 text-sm text-muted-foreground">{t("acct.businessName")}</span>
               <span className="text-sm font-medium">{profile.businessName}</span>
             </div>
             {profile.businessNumber && (
-              <div className="flex items-center justify-between px-5 py-3">
-                <span className="text-sm text-muted-foreground">NEQ / BN</span>
+              <div className="flex items-center gap-3 px-5 py-3.5">
+                <Hash className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.7} />
+                <span className="flex-1 text-sm text-muted-foreground">NEQ / BN</span>
                 <span className="font-mono text-sm">{profile.businessNumber}</span>
               </div>
             )}
             {profile.businessAddress && (
-              <div className="flex items-center justify-between px-5 py-3">
-                <span className="text-sm text-muted-foreground">{t("regb.address")}</span>
+              <div className="flex items-center gap-3 px-5 py-3.5">
+                <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.7} />
+                <span className="flex-1 text-sm text-muted-foreground">{t("regb.address")}</span>
                 <span className="text-right text-sm">{profile.businessAddress}</span>
               </div>
             )}
             {profile.businessPhone && (
-              <div className="flex items-center justify-between px-5 py-3">
-                <span className="text-sm text-muted-foreground">{t("regb.phone")}</span>
+              <div className="flex items-center gap-3 px-5 py-3.5">
+                <Phone className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.7} />
+                <span className="flex-1 text-sm text-muted-foreground">{t("regb.phone")}</span>
                 <span className="text-sm">{profile.businessPhone}</span>
               </div>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
+      {/* ─── Interac e-Transfer ─── */}
       {profile?.interacQuestion && (
-        <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-card">
           <div className="flex items-center gap-2.5 px-5 pb-1 pt-4">
             <MessageSquare className="h-4 w-4 text-muted-foreground" strokeWidth={1.9} />
             <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{t("acct.interac")}</p>
@@ -122,49 +122,18 @@ const Compte = () => {
         </div>
       )}
 
-      {/* Language */}
-      <div className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-card px-5 py-4">
-        <span className="flex-1 text-sm font-medium">{t("acct.language")}</span>
-        <LangPill />
-      </div>
-
-      {/* Notifications push */}
-      {hasPush && (
-        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-border bg-card px-5 py-4">
-          {pushOn
-            ? <Bell className="h-5 w-5 text-primary" strokeWidth={1.9} />
-            : <BellOff className="h-5 w-5 text-muted-foreground" strokeWidth={1.9} />}
-          <div className="flex-1">
-            <span className="text-sm font-medium">{t("acct.notifications")}</span>
-            <p className="text-[11.5px] text-muted-foreground">{t("acct.notifSub")}</p>
-          </div>
-          <button
-            type="button"
-            disabled={pushLoading}
-            onClick={async () => {
-              setPushLoading(true);
-              if (pushOn) {
-                await unsubscribePush();
-                setPushOn(false);
-              } else {
-                const ok = await subscribePush();
-                setPushOn(ok);
-              }
-              setPushLoading(false);
-            }}
-            className={cn(
-              "rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors",
-              pushOn ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary",
-            )}
-          >
-            {pushLoading ? "…" : pushOn ? t("acct.notifOff") : t("acct.notifOn")}
-          </button>
+      {/* ─── Settings group ─── */}
+      <div className="mt-3 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
+        {/* Language */}
+        <div className="flex items-center gap-3 px-5 py-4">
+          <Globe className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />
+          <span className="flex-1 text-sm font-medium">{t("acct.language")}</span>
+          <LangPill />
         </div>
-      )}
 
-      <div className="mt-4 divide-y divide-border rounded-2xl border border-border bg-card">
+        {/* KYC */}
         <Link to="/app/verification" className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-secondary/40">
-          <ShieldCheck className="h-5 w-5 text-muted-foreground" strokeWidth={1.9} />
+          <ShieldCheck className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />
           <span className="flex-1 text-sm font-medium">{t("acct.kyc")}</span>
           {kyc && (
             <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", KYC_TONE[kyc])}>
@@ -173,20 +142,19 @@ const Compte = () => {
           )}
           <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
         </Link>
-        <div className="flex items-center gap-3 px-5 py-4">
-          <KeyRound className="h-5 w-5 text-muted-foreground" strokeWidth={1.9} />
-          <span className="flex-1 text-sm font-medium">{t("acct.nonCustodial")}</span>
-        </div>
+
+        {/* Back-office (staff only) */}
         {isStaff && (
           <Link to="/admin" className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-secondary/40">
-            <LayoutGrid className="h-5 w-5 text-muted-foreground" strokeWidth={1.9} />
+            <LayoutGrid className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />
             <span className="flex-1 text-sm font-medium">{t("acct.backoffice")}</span>
             <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
           </Link>
         )}
       </div>
 
-      <div className="mt-6 flex justify-end">
+      {/* ─── Logout ─── */}
+      <div className="mt-5 flex justify-end">
         <Button variant="appOutline" shape="rounded" className="h-auto gap-2 px-[18px] py-[10px] text-sm" onClick={logout}>
           <LogOut className="h-4 w-4" /> {t("acct.logout")}
         </Button>

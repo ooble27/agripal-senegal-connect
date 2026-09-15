@@ -31,7 +31,6 @@ type TabId = "dashboard" | "queue" | "orders" | "kyc" | "accounting" | "complian
 
 const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
   { id: "dashboard",  label: "Tableau de bord", desc: "Vue d'ensemble : volumes, marge, alertes et actions à traiter.", icon: LayoutDashboard },
-  { id: "ai",         label: "Assistant IA",   desc: "Posez des questions à l'IA sur l'état de la plateforme, les commandes et les clients.", icon: Bot },
   { id: "queue",      label: "File d'attente", desc: "Prenez une commande en charge avant de la traiter — elle se verrouille pour l'équipe.", icon: Inbox },
   { id: "orders",     label: "Commandes",      desc: "Toutes les commandes et leur historique.", icon: ShoppingCart },
   { id: "kyc",        label: "KYC",            desc: "Vérifiez l'identité des clients avant leurs transactions.", icon: ScanFace },
@@ -39,6 +38,7 @@ const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
   { id: "compliance",  label: "Conformité",     desc: "Alertes CANAFE, déclarations, dossiers et programme de conformité.", icon: ShieldCheck },
   { id: "treasury",    label: "Trésorerie",     desc: "Inventaire USDT multi-réseaux, snapshots, mouvements et alertes de solde bas.", icon: Wallet },
   { id: "mailbox",     label: "Messagerie",     desc: "Envoyer un e-mail à un client à partir d'un template, historique des envois, boîte de réception.", icon: Mail },
+  { id: "ai",         label: "Assistant IA",   desc: "Posez des questions à l'IA sur l'état de la plateforme, les commandes et les clients.", icon: Bot },
   { id: "campaigns",   label: "Campagnes",      desc: "Campagnes marketing bien designées avec segmentation, aperçu live et historique.", icon: Megaphone },
   { id: "announcements", label: "Annonces",     desc: "Bannière publique et mode maintenance côté client.", icon: Bell },
   { id: "team",        label: "Équipe",         desc: "Membres, rôles et permissions du back-office.", icon: Users },
@@ -46,7 +46,7 @@ const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
 ];
 
 const ROLE_TABS: Record<AppRole, TabId[]> = {
-  admin:        ["dashboard", "ai", "queue", "orders", "kyc", "accounting", "compliance", "treasury", "mailbox", "campaigns", "announcements", "team", "audit"],
+  admin:        ["dashboard", "queue", "orders", "kyc", "accounting", "compliance", "treasury", "mailbox", "ai", "campaigns", "announcements", "team", "audit"],
   operator:     ["queue", "orders", "mailbox", "ai"],
   kyc_reviewer: ["kyc", "mailbox"],
   support:      ["queue", "orders", "mailbox", "ai"],

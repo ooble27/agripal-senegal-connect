@@ -79,11 +79,9 @@ function CaptureZone({
   }, [onFile]);
 
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
-      <div className="px-5 pt-5 pb-3">
-        <p className="text-[15px] font-semibold tracking-tight">{t(titleKey)}</p>
-        <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">{t(descKey)}</p>
-      </div>
+    <div>
+      <p className="text-[15px] font-semibold tracking-tight">{t(titleKey)}</p>
+      <p className="mt-1 mb-4 text-[12.5px] leading-relaxed text-muted-foreground">{t(descKey)}</p>
 
       {/* Hidden inputs */}
       <input
@@ -103,66 +101,64 @@ function CaptureZone({
       />
 
       {/* Preview or Capture area */}
-      <div className="px-5 pb-5">
-        {preview ? (
-          <div className="relative">
-            <div className="overflow-hidden rounded-2xl border border-border">
-              <img src={preview} alt="" className="w-full object-contain max-h-[280px] bg-secondary/30" />
+      {preview ? (
+        <div className="relative">
+          <div className="overflow-hidden rounded-2xl border border-border">
+            <img src={preview} alt="" className="w-full object-contain max-h-[280px] bg-secondary/30" />
+          </div>
+          <button
+            type="button"
+            onClick={onClear}
+            className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background shadow-sm transition-transform active:scale-90"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      ) : (
+        <div
+          className={cn(
+            "relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed py-10 transition-colors",
+            drag ? "border-primary bg-primary/5" : "border-border bg-secondary/20",
+          )}
+          onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+          onDragLeave={() => setDrag(false)}
+          onDrop={(e) => {
+            e.preventDefault(); setDrag(false);
+            const f = e.dataTransfer.files[0];
+            if (f) handleFile(f);
+          }}
+        >
+          {/* Guide overlay */}
+          {guideType === "card" ? (
+            <div className="mb-4 flex h-[100px] w-[160px] items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30">
+              <CreditCard className="h-8 w-8 text-muted-foreground/30" strokeWidth={1.2} />
             </div>
+          ) : (
+            <div className="mb-4 flex h-[100px] w-[100px] items-center justify-center rounded-full border-2 border-dashed border-muted-foreground/30">
+              <User className="h-8 w-8 text-muted-foreground/30" strokeWidth={1.2} />
+            </div>
+          )}
+
+          <div className="flex gap-2">
             <button
               type="button"
-              onClick={onClear}
-              className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background shadow-sm transition-transform active:scale-90"
+              onClick={() => cameraRef.current?.click()}
+              className="flex items-center gap-2 rounded-xl bg-foreground px-4 py-2.5 text-[13px] font-semibold text-background transition-all active:scale-95 btn-depth"
             >
-              <RotateCcw className="h-3.5 w-3.5" />
+              <Camera className="h-4 w-4" /> {t("kyc.takePhoto")}
+            </button>
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-[13px] font-semibold text-foreground transition-all hover:bg-secondary active:scale-95"
+            >
+              <Image className="h-4 w-4" /> {t("kyc.gallery")}
             </button>
           </div>
-        ) : (
-          <div
-            className={cn(
-              "relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed py-10 transition-colors",
-              drag ? "border-primary bg-primary/5" : "border-border bg-secondary/20",
-            )}
-            onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
-            onDragLeave={() => setDrag(false)}
-            onDrop={(e) => {
-              e.preventDefault(); setDrag(false);
-              const f = e.dataTransfer.files[0];
-              if (f) handleFile(f);
-            }}
-          >
-            {/* Guide overlay */}
-            {guideType === "card" ? (
-              <div className="mb-4 flex h-[100px] w-[160px] items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30">
-                <CreditCard className="h-8 w-8 text-muted-foreground/30" strokeWidth={1.2} />
-              </div>
-            ) : (
-              <div className="mb-4 flex h-[100px] w-[100px] items-center justify-center rounded-full border-2 border-dashed border-muted-foreground/30">
-                <User className="h-8 w-8 text-muted-foreground/30" strokeWidth={1.2} />
-              </div>
-            )}
 
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => cameraRef.current?.click()}
-                className="flex items-center gap-2 rounded-xl bg-foreground px-4 py-2.5 text-[13px] font-semibold text-background transition-all active:scale-95 btn-depth"
-              >
-                <Camera className="h-4 w-4" /> {t("kyc.takePhoto")}
-              </button>
-              <button
-                type="button"
-                onClick={() => inputRef.current?.click()}
-                className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-[13px] font-semibold text-foreground transition-all hover:bg-secondary active:scale-95"
-              >
-                <Image className="h-4 w-4" /> {t("kyc.gallery")}
-              </button>
-            </div>
-
-            <p className="mt-3 text-[11px] text-muted-foreground/60">JPG, PNG &middot; max 10 MB</p>
-          </div>
-        )}
-      </div>
+          <p className="mt-3 text-[11px] text-muted-foreground/60">JPG, PNG &middot; max 10 MB</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -391,45 +387,43 @@ const Verification = () => {
       {/* ── Document type ── */}
       {step === "doc_type" && (
         <>
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <p className="mb-1 text-[15px] font-semibold tracking-tight">{t("kyc.chooseDoc")}</p>
-            <p className="mb-4 text-[12.5px] text-muted-foreground">{t("kyc.chooseDocSub")}</p>
+          <p className="mb-1 text-[15px] font-semibold tracking-tight">{t("kyc.chooseDoc")}</p>
+          <p className="mb-4 text-[12.5px] text-muted-foreground">{t("kyc.chooseDocSub")}</p>
 
-            <div className="space-y-2.5">
-              {DOC_TYPES.map((d) => {
-                const selected = docType === d.id;
-                return (
-                  <button
-                    key={d.id}
-                    type="button"
-                    className={cn(
-                      "flex w-full items-center gap-3.5 rounded-xl border px-4 py-4 text-left transition-all active:scale-[0.98]",
-                      selected
-                        ? "border-foreground bg-foreground/[0.03]"
-                        : "border-border hover:bg-secondary/40",
-                    )}
-                    onClick={() => { setDocType(d.id); setIdFront(null); setIdBack(null); }}
-                  >
-                    <span className={cn(
-                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
-                      selected ? "bg-foreground text-background" : "bg-secondary text-foreground/60",
-                    )}>
-                      <d.icon className="h-[18px] w-[18px]" strokeWidth={1.7} />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[14px] font-semibold">{t(d.labelKey)}</p>
-                      <p className="mt-0.5 text-[12px] text-muted-foreground">{t(d.descKey)}</p>
-                    </div>
-                    <span className={cn(
-                      "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all",
-                      selected ? "border-foreground bg-foreground" : "border-border",
-                    )}>
-                      {selected && <Check className="h-3 w-3 text-background" strokeWidth={3} />}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+          <div className="space-y-2.5">
+            {DOC_TYPES.map((d) => {
+              const selected = docType === d.id;
+              return (
+                <button
+                  key={d.id}
+                  type="button"
+                  className={cn(
+                    "flex w-full items-center gap-3.5 rounded-xl border px-4 py-4 min-h-[76px] text-left transition-all active:scale-[0.98]",
+                    selected
+                      ? "border-foreground bg-foreground/[0.03]"
+                      : "border-border hover:bg-secondary/40",
+                  )}
+                  onClick={() => { setDocType(d.id); setIdFront(null); setIdBack(null); }}
+                >
+                  <span className={cn(
+                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors",
+                    selected ? "bg-foreground text-background" : "bg-secondary text-foreground/60",
+                  )}>
+                    <d.icon className="h-[18px] w-[18px]" strokeWidth={1.7} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14px] font-semibold">{t(d.labelKey)}</p>
+                    <p className="mt-0.5 text-[12px] text-muted-foreground line-clamp-1">{t(d.descKey)}</p>
+                  </div>
+                  <span className={cn(
+                    "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all",
+                    selected ? "border-foreground bg-foreground" : "border-border",
+                  )}>
+                    {selected && <Check className="h-3 w-3 text-background" strokeWidth={3} />}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           <div className="mt-5 flex justify-end">
@@ -509,31 +503,23 @@ const Verification = () => {
       {/* ── Review ── */}
       {(step === "review" || step === "submitting") && (
         <>
-          <div className="rounded-2xl border border-border bg-card overflow-hidden">
-            <div className="px-5 pt-5 pb-3">
-              <p className="text-[15px] font-semibold tracking-tight">{t("kyc.reviewTitle")}</p>
-              <p className="mt-1 text-[12.5px] text-muted-foreground">{t("kyc.reviewSub")}</p>
-            </div>
+          <p className="text-[15px] font-semibold tracking-tight">{t("kyc.reviewTitle")}</p>
+          <p className="mt-1 mb-4 text-[12.5px] text-muted-foreground">{t("kyc.reviewSub")}</p>
 
-            <div className="divide-y divide-border border-t border-border">
-              {/* Document type */}
-              <div className="flex items-center gap-3 px-5 py-3.5">
-                <IdCard className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.7} />
-                <span className="flex-1 text-[13px] text-muted-foreground">{t("kyc.docTypeLabel")}</span>
-                <span className="text-[13px] font-semibold">
-                  {docType && t(DOC_TYPES.find((d) => d.id === docType)!.labelKey)}
-                </span>
-              </div>
+          {/* Document type */}
+          <div className="flex items-center gap-3 rounded-xl border border-border px-4 py-3.5 mb-3">
+            <IdCard className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.7} />
+            <span className="flex-1 text-[13px] text-muted-foreground">{t("kyc.docTypeLabel")}</span>
+            <span className="text-[13px] font-semibold">
+              {docType && t(DOC_TYPES.find((d) => d.id === docType)!.labelKey)}
+            </span>
+          </div>
 
-              {/* Photos */}
-              <div className="px-5 py-4">
-                <div className={cn("grid gap-3", needsBack ? "grid-cols-3" : "grid-cols-2")}>
-                  <ReviewThumb file={idFront} label={t("kyc.front")} />
-                  {needsBack && <ReviewThumb file={idBack} label={t("kyc.back")} />}
-                  <ReviewThumb file={selfie} label={t("kyc.selfieLabel")} />
-                </div>
-              </div>
-            </div>
+          {/* Photos */}
+          <div className={cn("grid gap-3", needsBack ? "grid-cols-3" : "grid-cols-2")}>
+            <ReviewThumb file={idFront} label={t("kyc.front")} />
+            {needsBack && <ReviewThumb file={idBack} label={t("kyc.back")} />}
+            <ReviewThumb file={selfie} label={t("kyc.selfieLabel")} />
           </div>
 
           {error && (

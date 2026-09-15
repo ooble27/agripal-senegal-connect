@@ -283,14 +283,14 @@ const Verification = () => {
   if (step === "done") {
     return (
       <AppShell header={header}>
-        <div className="rounded-2xl border border-border bg-card px-6 py-10 text-center">
-          <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+        <div className="flex flex-col items-center text-center pt-6 pb-2">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
             <Check className="h-7 w-7 text-primary" strokeWidth={2} />
           </span>
-          <h2 className="mt-5 font-display text-[20px] font-semibold tracking-tight">{t("kyc.doneTitle")}</h2>
-          <p className="mx-auto mt-2 max-w-[320px] text-[14px] leading-relaxed text-muted-foreground">{t("kyc.doneSub")}</p>
-          <div className="mt-6">
-            <Button variant="appSolid" shape="rounded" size="lg" className="gap-2 px-6" onClick={() => navigate("/app/compte")}>
+          <h2 className="mt-5 font-display text-[22px] font-semibold tracking-tight">{t("kyc.doneTitle")}</h2>
+          <p className="mt-2 max-w-[320px] text-[14px] leading-relaxed text-muted-foreground">{t("kyc.doneSub")}</p>
+          <div className="mt-6 w-full">
+            <Button variant="appSolid" shape="rounded" size="lg" className="w-full gap-2" onClick={() => navigate("/app/compte")}>
               {t("kyc.backToAccount")}
             </Button>
           </div>
@@ -308,61 +308,67 @@ const Verification = () => {
 
     return (
       <AppShell header={header}>
-        <div className="rounded-2xl border border-border bg-card p-6 text-center">
-          <span className={cn("mx-auto flex h-14 w-14 items-center justify-center rounded-2xl", m.bg, m.tone)}>
-            <m.icon className="h-6 w-6" strokeWidth={1.8} />
+        {/* Status */}
+        <div className="flex flex-col items-center text-center pt-2 pb-2">
+          <span className={cn("flex h-16 w-16 items-center justify-center rounded-2xl", m.bg, m.tone)}>
+            <m.icon className="h-7 w-7" strokeWidth={1.6} />
           </span>
-          <h2 className="mt-4 font-display text-[20px] font-semibold tracking-tight">{t(m.titleKey)}</h2>
-          <p className="mx-auto mt-1.5 max-w-[360px] text-[14px] leading-relaxed text-muted-foreground">{t(m.subKey)}</p>
+          <h2 className="mt-4 font-display text-[22px] font-semibold tracking-tight">{t(m.titleKey)}</h2>
+          <p className="mt-1.5 max-w-[340px] text-[14px] leading-relaxed text-muted-foreground">{t(m.subKey)}</p>
         </div>
 
         {!verified && (
           <>
-            <div className="mt-4 rounded-2xl border border-border bg-card p-5">
-              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                {t("kyc.before")}
-              </p>
-              <ul className="space-y-3.5">
-                {CHECKLIST.map((c) => (
-                  <li key={c.key} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-secondary text-foreground/70">
-                      <c.icon className="h-4 w-4" strokeWidth={1.8} />
-                    </span>
-                    <span className="text-[13.5px] leading-relaxed text-muted-foreground">{t(c.key)}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* Separator */}
+            <div className="my-5 h-px bg-border" />
+
+            {/* Before you begin */}
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              {t("kyc.before")}
+            </p>
+            <ul className="space-y-4">
+              {CHECKLIST.map((c) => (
+                <li key={c.key} className="flex items-start gap-3">
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-secondary text-foreground/70">
+                    <c.icon className="h-4 w-4" strokeWidth={1.8} />
+                  </span>
+                  <span className="text-[13.5px] leading-relaxed text-muted-foreground">{t(c.key)}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* Separator */}
+            <div className="my-5 h-px bg-border" />
 
             {/* How it works */}
-            <div className="mt-4 rounded-2xl border border-border bg-card p-5">
-              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                {t("kyc.howItWorks")}
-              </p>
-              <div className="space-y-3">
-                {[
-                  { num: "1", key: "kyc.step1Desc" as TKey },
-                  { num: "2", key: "kyc.step2Desc" as TKey },
-                  { num: "3", key: "kyc.step3Desc" as TKey },
-                  { num: "4", key: "kyc.step4Desc" as TKey },
-                ].map((s) => (
-                  <div key={s.num} className="flex items-start gap-3">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-foreground text-[11px] font-bold text-background">
-                      {s.num}
-                    </span>
-                    <span className="text-[13px] leading-relaxed text-muted-foreground">{t(s.key)}</span>
-                  </div>
-                ))}
-              </div>
+            <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              {t("kyc.howItWorks")}
+            </p>
+            <div className="space-y-3.5">
+              {[
+                { num: "1", key: "kyc.step1Desc" as TKey },
+                { num: "2", key: "kyc.step2Desc" as TKey },
+                { num: "3", key: "kyc.step3Desc" as TKey },
+                { num: "4", key: "kyc.step4Desc" as TKey },
+              ].map((s) => (
+                <div key={s.num} className="flex items-start gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-foreground text-[11px] font-bold text-background">
+                    {s.num}
+                  </span>
+                  <span className="text-[13px] leading-relaxed text-muted-foreground">{t(s.key)}</span>
+                </div>
+              ))}
             </div>
 
-            <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-border bg-secondary/30 px-4 py-3">
-              <Lock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.9} />
-              <p className="text-[12.5px] leading-relaxed text-muted-foreground">{t("kyc.privacy")}</p>
+            {/* Privacy note */}
+            <div className="mt-6 flex items-start gap-2.5">
+              <Lock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground/50" strokeWidth={1.9} />
+              <p className="text-[12px] leading-relaxed text-muted-foreground/60">{t("kyc.privacy")}</p>
             </div>
 
-            <div className="mt-6 flex justify-end">
-              <Button variant="appSolid" shape="rounded" size="lg" className="gap-2 px-6" onClick={() => setStep("doc_type")}>
+            {/* CTA */}
+            <div className="mt-6">
+              <Button variant="appSolid" shape="rounded" size="lg" className="w-full gap-2" onClick={() => setStep("doc_type")}>
                 {inReview ? t("kyc.resume") : t("kyc.start")}
                 <ChevronRight className="h-4 w-4" />
               </Button>

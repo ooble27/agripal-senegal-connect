@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Inbox, ShoppingCart, ScanFace, Calculator, Users, ArrowLeft,
   BadgeCheck, UserRound, Megaphone, Headphones, ShieldCheck, ScrollText,
@@ -24,7 +24,6 @@ import AnnouncementsPanel from "@/components/admin/AnnouncementsPanel";
 import TreasuryPanel from "@/components/admin/TreasuryPanel";
 import MailboxPanel from "@/components/admin/MailboxPanel";
 import CampaignsPanel from "@/components/admin/CampaignsPanel";
-import AIAssistPanel from "@/components/admin/AIAssistPanel";
 import { C, FONT } from "@/components/admin/adminTheme";
 
 type TabId = "dashboard" | "queue" | "orders" | "kyc" | "accounting" | "compliance" | "treasury" | "mailbox" | "campaigns" | "announcements" | "team" | "audit" | "ai";
@@ -70,6 +69,7 @@ const ROLE_ICON: Record<AppRole, typeof BadgeCheck> = {
 };
 
 const AdminPortal = () => {
+  const navigate = useNavigate();
   const { roles } = useAuth();
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -228,7 +228,7 @@ const AdminPortal = () => {
                 return (
                   <button
                     key={id}
-                    onClick={() => { setTab(id); setSelected(null); }}
+                    onClick={() => { if (id === "ai") { navigate("/admin/ai"); return; } setTab(id); setSelected(null); }}
                     className={cn(
                       "flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-medium transition-colors",
                       on
@@ -277,7 +277,6 @@ const AdminPortal = () => {
               ) : (
                 <>
                   {tab === "dashboard" && <KpiDashboard orders={orders} onNavigate={navigateTab} />}
-                  {tab === "ai" && <AIAssistPanel />}
                   {tab === "queue" && <OrdersQueue orders={orders} onOpen={openOrder} onPatch={patch} />}
                   {tab === "orders" && <OrdersList orders={orders} onOpen={openOrder} />}
                   {tab === "kyc" && <KycPanel />}

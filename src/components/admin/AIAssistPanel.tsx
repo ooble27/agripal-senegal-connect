@@ -49,7 +49,7 @@ function inlineFormat(s: string): string {
     .replace(/`(.+?)`/g, '<code>$1</code>');
 }
 
-const AIAssistPanel = () => {
+const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -129,7 +129,8 @@ const AIAssistPanel = () => {
   return (
     <div style={{
       display: "flex", flexDirection: "column",
-      height: "calc(100vh - 200px)", minHeight: 400,
+      height: fullPage ? "calc(100vh - 70px)" : "calc(100vh - 200px)",
+      minHeight: 400,
       position: "relative",
     }}>
       {/* Messages area */}

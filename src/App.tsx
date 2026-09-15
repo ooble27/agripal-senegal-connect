@@ -19,6 +19,7 @@ import Activite from "./pages/app/Activite";
 import OrderDetail from "./pages/app/OrderDetail";
 import Verification from "./pages/app/Verification";
 import AdminPortal from "./pages/admin/AdminPortal";
+import AdminAI from "./pages/admin/AdminAI";
 import RequireAuth from "./components/app/RequireAuth";
 import RequireStaff from "./components/app/RequireStaff";
 import NotFound from "./pages/NotFound";
@@ -57,6 +58,7 @@ const App = () => (
 
         {/* Back-office — réservé à l'équipe (rôles dans user_roles) */}
         <Route path="/admin" element={<RequireStaff><AdminPortal /></RequireStaff>} />
+        <Route path="/admin/ai" element={<RequireStaff><AdminAI /></RequireStaff>} />
 
         <Route path="*" element={<NotFound />} />
         </Routes>

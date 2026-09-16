@@ -27,3 +27,6 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+# Supabase CLI temp
+supabase/.temp/

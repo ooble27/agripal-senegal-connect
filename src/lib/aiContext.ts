@@ -56,9 +56,8 @@ export async function fetchPlatformContext(): Promise<PlatformContext> {
     supabase
       .from("kyc_verifications")
       .select("id, status, result_payload, created_at, profiles(full_name, email)")
-      .in("status", ["pending", "rejected"])
       .order("created_at", { ascending: false })
-      .limit(15),
+      .limit(20),
     supabase
       .from("mail_threads")
       .select("id", { count: "exact", head: true })

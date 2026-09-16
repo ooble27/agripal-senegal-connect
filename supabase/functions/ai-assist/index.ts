@@ -853,9 +853,9 @@ function platformContextToText(ctx: PlatformContext): string {
   }
 
   if (ctx.pendingKycDetails && ctx.pendingKycDetails.length > 0) {
-    lines.push(`\nKYC EN ATTENTE / REFUSÉS (${ctx.pendingKycDetails.length}) :`);
+    lines.push(`\nSOUMISSIONS KYC RÉCENTES (${ctx.pendingKycDetails.length}) :`);
     for (const k of ctx.pendingKycDetails) {
-      lines.push(`- ${k.clientName} (${k.email}) · ${k.docType} · ${k.status} · soumis le ${k.submittedAt}`);
+      lines.push(`- ${k.clientName} (${k.email}) · ${k.docType} · Statut : ${k.status} · soumis le ${k.submittedAt}`);
     }
   }
 

@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   Inbox, ShoppingCart, ScanFace, Calculator, Users, ArrowLeft,
   BadgeCheck, UserRound, Megaphone, Headphones, ShieldCheck, ScrollText,
-  LayoutDashboard, Bell, Wallet, Mail, Bot,
+  LayoutDashboard, Bell, Wallet, Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, type AppRole } from "@/lib/auth";
@@ -24,9 +24,10 @@ import AnnouncementsPanel from "@/components/admin/AnnouncementsPanel";
 import TreasuryPanel from "@/components/admin/TreasuryPanel";
 import MailboxPanel from "@/components/admin/MailboxPanel";
 import CampaignsPanel from "@/components/admin/CampaignsPanel";
+import AIFloatingChat from "@/components/admin/AIFloatingChat";
 import { C, FONT } from "@/components/admin/adminTheme";
 
-type TabId = "dashboard" | "queue" | "orders" | "kyc" | "accounting" | "compliance" | "treasury" | "mailbox" | "campaigns" | "announcements" | "team" | "audit" | "ai";
+type TabId = "dashboard" | "queue" | "orders" | "kyc" | "accounting" | "compliance" | "treasury" | "mailbox" | "campaigns" | "announcements" | "team" | "audit";
 
 const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
   { id: "dashboard",  label: "Tableau de bord", desc: "Vue d'ensemble : volumes, marge, alertes et actions à traiter.", icon: LayoutDashboard },
@@ -37,7 +38,6 @@ const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
   { id: "compliance",  label: "Conformité",     desc: "Alertes CANAFE, déclarations, dossiers et programme de conformité.", icon: ShieldCheck },
   { id: "treasury",    label: "Trésorerie",     desc: "Inventaire USDT multi-réseaux, snapshots, mouvements et alertes de solde bas.", icon: Wallet },
   { id: "mailbox",     label: "Messagerie",     desc: "Envoyer un e-mail à un client à partir d'un template, historique des envois, boîte de réception.", icon: Mail },
-  { id: "ai",         label: "Assistant IA",   desc: "Posez des questions à l'IA sur l'état de la plateforme, les commandes et les clients.", icon: Bot },
   { id: "campaigns",   label: "Campagnes",      desc: "Campagnes marketing bien designées avec segmentation, aperçu live et historique.", icon: Megaphone },
   { id: "announcements", label: "Annonces",     desc: "Bannière publique et mode maintenance côté client.", icon: Bell },
   { id: "team",        label: "Équipe",         desc: "Membres, rôles et permissions du back-office.", icon: Users },
@@ -45,10 +45,10 @@ const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
 ];
 
 const ROLE_TABS: Record<AppRole, TabId[]> = {
-  admin:        ["dashboard", "queue", "orders", "kyc", "accounting", "compliance", "treasury", "mailbox", "ai", "campaigns", "announcements", "team", "audit"],
-  operator:     ["queue", "orders", "mailbox", "ai"],
+  admin:        ["dashboard", "queue", "orders", "kyc", "accounting", "compliance", "treasury", "mailbox", "campaigns", "announcements", "team", "audit"],
+  operator:     ["queue", "orders", "mailbox"],
   kyc_reviewer: ["kyc", "mailbox"],
-  support:      ["queue", "orders", "mailbox", "ai"],
+  support:      ["queue", "orders", "mailbox"],
   marketing:    ["mailbox", "campaigns", "announcements", "accounting"],
 };
 
@@ -69,7 +69,6 @@ const ROLE_ICON: Record<AppRole, typeof BadgeCheck> = {
 };
 
 const AdminPortal = () => {
-  const navigate = useNavigate();
   const { roles } = useAuth();
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -228,7 +227,7 @@ const AdminPortal = () => {
                 return (
                   <button
                     key={id}
-                    onClick={() => { if (id === "ai") { navigate("/admin/ai"); return; } setTab(id); setSelected(null); }}
+                    onClick={() => { setTab(id); setSelected(null); }}
                     className={cn(
                       "flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-medium transition-colors",
                       on
@@ -294,6 +293,7 @@ const AdminPortal = () => {
           </>
         )}
       </div>
+      <AIFloatingChat />
     </div>
   );
 };

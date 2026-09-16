@@ -73,7 +73,7 @@ async function callClaudeMultiTurn(
     headers: {
       "content-type": "application/json",
       "x-api-key": apiKey,
-      "anthropic-version": "2024-06-01",
+      "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
       model: ANTHROPIC_MODEL,
@@ -148,7 +148,7 @@ async function callClaudeWithTools(
     headers: {
       "content-type": "application/json",
       "x-api-key": apiKey,
-      "anthropic-version": "2024-06-01",
+      "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify(body),
   });

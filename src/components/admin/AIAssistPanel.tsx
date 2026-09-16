@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, ArrowDown, Sparkles, TrendingUp, AlertTriangle, BarChart3, ArrowUp } from "lucide-react";
-import { contextChat, isAIError, type ChatMessage } from "@/lib/ai";
+import { Loader2, ArrowDown, Sparkles, TrendingUp, AlertTriangle, BarChart3, ArrowUp, Mail, Check, X } from "lucide-react";
+import { contextChat, executeAction, isAIError, type ChatMessage, type PendingAction } from "@/lib/ai";
 import { fetchPlatformContext } from "@/lib/aiContext";
 import type { PlatformContext } from "@/lib/ai";
 import { C, FONT } from "./adminTheme";
@@ -17,6 +17,9 @@ interface UIMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: number;
+  pendingAction?: PendingAction;
+  actionStatus?: "pending" | "executing" | "done" | "rejected" | "error";
+  actionError?: string;
 }
 
 function renderMarkdown(text: string): string {
@@ -49,6 +52,181 @@ function inlineFormat(s: string): string {
     .replace(/`(.+?)`/g, '<code>$1</code>');
 }
 
+const TOOL_LABELS: Record<string, { icon: typeof Mail; label: string }> = {
+  send_email: { icon: Mail, label: "Envoyer un email" },
+};
+
+function ActionCard({
+  action,
+  status,
+  error,
+  onConfirm,
+  onReject,
+}: {
+  action: PendingAction;
+  status: "pending" | "executing" | "done" | "rejected" | "error";
+  error?: string;
+  onConfirm: () => void;
+  onReject: () => void;
+}) {
+  const meta = TOOL_LABELS[action.tool] ?? { icon: Mail, label: action.tool };
+  const Icon = meta.icon;
+  const params = action.input as { to?: string; subject?: string; body?: string };
+
+  if (status === "done") {
+    return (
+      <div style={{
+        display: "flex", alignItems: "center", gap: 8,
+        padding: "10px 14px", borderRadius: 10,
+        background: "rgba(74, 222, 128, 0.08)",
+        border: "1px solid rgba(74, 222, 128, 0.2)",
+        fontSize: 13, fontFamily: FONT, color: "rgb(74, 222, 128)",
+        marginTop: 8,
+      }}>
+        <Check style={{ width: 14, height: 14, flexShrink: 0 }} strokeWidth={2} />
+        Email envoyé à {params.to}
+      </div>
+    );
+  }
+
+  if (status === "rejected") {
+    return (
+      <div style={{
+        display: "flex", alignItems: "center", gap: 8,
+        padding: "10px 14px", borderRadius: 10,
+        background: "rgba(255,255,255,0.03)",
+        border: `1px solid ${C.bds}`,
+        fontSize: 13, fontFamily: FONT, color: C.t3,
+        marginTop: 8,
+      }}>
+        <X style={{ width: 14, height: 14, flexShrink: 0 }} strokeWidth={2} />
+        Action annulée
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div style={{
+        padding: "10px 14px", borderRadius: 10,
+        background: "rgba(239, 68, 68, 0.08)",
+        border: "1px solid rgba(239, 68, 68, 0.2)",
+        fontSize: 13, fontFamily: FONT, color: "rgb(239, 68, 68)",
+        marginTop: 8,
+      }}>
+        Erreur : {error || "L'action a échoué."}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      marginTop: 10,
+      background: C.l1,
+      border: `1px solid ${C.bd}`,
+      borderRadius: 12,
+      overflow: "hidden",
+    }}>
+      <div style={{
+        padding: "12px 16px",
+        display: "flex", alignItems: "center", gap: 10,
+        borderBottom: `1px solid ${C.bds}`,
+      }}>
+        <span style={{
+          width: 28, height: 28, borderRadius: 8,
+          background: C.l3, display: "flex", alignItems: "center", justifyContent: "center",
+          flexShrink: 0,
+        }}>
+          <Icon style={{ width: 14, height: 14, color: C.t2 }} strokeWidth={1.7} />
+        </span>
+        <span style={{ fontSize: 13, fontWeight: 500, color: C.t1, fontFamily: FONT }}>
+          {meta.label}
+        </span>
+      </div>
+
+      <div style={{ padding: "12px 16px", fontSize: 12.5, fontFamily: FONT, color: C.t2 }}>
+        {params.to && (
+          <div style={{ marginBottom: 6 }}>
+            <span style={{ color: C.t3 }}>À : </span>
+            <span style={{ color: C.t1 }}>{params.to}</span>
+          </div>
+        )}
+        {params.subject && (
+          <div style={{ marginBottom: 6 }}>
+            <span style={{ color: C.t3 }}>Sujet : </span>
+            <span style={{ color: C.t1 }}>{params.subject}</span>
+          </div>
+        )}
+        {params.body && (
+          <div style={{
+            marginTop: 8, padding: "10px 12px",
+            background: "rgba(255,255,255,0.02)",
+            borderRadius: 8,
+            fontSize: 12, lineHeight: 1.6, color: C.t2,
+            maxHeight: 120, overflowY: "auto",
+            whiteSpace: "pre-wrap",
+          }}>
+            {params.body.length > 300 ? params.body.slice(0, 300) + "…" : params.body}
+          </div>
+        )}
+      </div>
+
+      <div style={{
+        padding: "10px 16px",
+        borderTop: `1px solid ${C.bds}`,
+        display: "flex", alignItems: "center", gap: 8,
+        justifyContent: "flex-end",
+      }}>
+        <button
+          type="button"
+          onClick={onReject}
+          disabled={status === "executing"}
+          style={{
+            height: 30, paddingLeft: 14, paddingRight: 14,
+            borderRadius: 8, fontSize: 12, fontFamily: FONT,
+            background: "transparent",
+            border: `1px solid ${C.bd}`,
+            color: C.t2, cursor: "pointer",
+            display: "flex", alignItems: "center", gap: 5,
+            transition: "all 0.15s",
+            opacity: status === "executing" ? 0.4 : 1,
+          }}
+          onMouseEnter={(e) => { if (status !== "executing") { e.currentTarget.style.borderColor = C.bdh; e.currentTarget.style.color = C.t1; } }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.bd; e.currentTarget.style.color = C.t2; }}
+        >
+          Annuler
+        </button>
+        <button
+          type="button"
+          onClick={onConfirm}
+          disabled={status === "executing"}
+          style={{
+            height: 30, paddingLeft: 14, paddingRight: 14,
+            borderRadius: 8, fontSize: 12, fontFamily: FONT, fontWeight: 500,
+            background: C.accent,
+            border: "none",
+            color: "#111", cursor: "pointer",
+            display: "flex", alignItems: "center", gap: 5,
+            transition: "all 0.15s",
+            opacity: status === "executing" ? 0.6 : 1,
+          }}
+          onMouseEnter={(e) => { if (status !== "executing") e.currentTarget.style.background = C.accentHover; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = C.accent; }}
+        >
+          {status === "executing" ? (
+            <>
+              <Loader2 style={{ width: 12, height: 12, animation: "spin 1.5s linear infinite" }} />
+              Envoi…
+            </>
+          ) : (
+            "Confirmer l'envoi"
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [input, setInput] = useState("");
@@ -58,6 +236,10 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
   const [showScroll, setShowScroll] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const hasPendingAction = messages.some(
+    (m) => m.pendingAction && (m.actionStatus === "pending" || m.actionStatus === "executing"),
+  );
 
   const refreshCtx = useCallback(() => {
     setCtxLoading(true);
@@ -85,7 +267,7 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
   };
 
   const send = async (text: string) => {
-    if (!text.trim() || loading || !ctx) return;
+    if (!text.trim() || loading || !ctx || hasPendingAction) return;
     const userMsg: UIMessage = { id: crypto.randomUUID(), role: "user", content: text.trim(), timestamp: Date.now() };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
@@ -110,7 +292,54 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
     setMessages((prev) => [...prev, {
       id: crypto.randomUUID(), role: "assistant",
       content: res.reply, timestamp: Date.now(),
+      pendingAction: res.pendingAction,
+      actionStatus: res.pendingAction ? "pending" : undefined,
     }]);
+  };
+
+  const confirmAction = async (msgId: string) => {
+    const msg = messages.find((m) => m.id === msgId);
+    if (!msg?.pendingAction || msg.actionStatus !== "pending") return;
+
+    setMessages((prev) =>
+      prev.map((m) => (m.id === msgId ? { ...m, actionStatus: "executing" as const } : m)),
+    );
+
+    const history: ChatMessage[] = messages
+      .filter((m) => m.id !== msgId)
+      .map((m) => ({ role: m.role, content: m.content }));
+
+    const freshCtx = await fetchPlatformContext();
+    setCtx(freshCtx);
+
+    const res = await executeAction({
+      action: msg.pendingAction,
+      messages: history,
+      context: freshCtx,
+    });
+
+    if (isAIError(res)) {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === msgId ? { ...m, actionStatus: "error" as const, actionError: res.error } : m)),
+      );
+      return;
+    }
+
+    setMessages((prev) => [
+      ...prev.map((m) =>
+        m.id === msgId ? { ...m, actionStatus: "done" as const } : m,
+      ),
+      {
+        id: crypto.randomUUID(), role: "assistant" as const,
+        content: res.reply, timestamp: Date.now(),
+      },
+    ]);
+  };
+
+  const cancelAction = (msgId: string) => {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === msgId ? { ...m, actionStatus: "rejected" as const } : m)),
+    );
   };
 
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); send(input); };
@@ -125,6 +354,7 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
   };
 
   const hasMessages = messages.length > 0;
+  const inputDisabled = loading || !ctx || hasPendingAction;
 
   const inputBar = (
     <div style={{
@@ -142,6 +372,7 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
           display: "flex", alignItems: "flex-end",
           padding: "6px 6px 6px 18px",
           transition: "border-color 0.15s",
+          opacity: hasPendingAction ? 0.5 : 1,
         }}
       >
         <textarea
@@ -149,8 +380,8 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
           value={input}
           onChange={(e) => { setInput(e.target.value); autoResize(e.target); }}
           onKeyDown={handleKeyDown}
-          placeholder="Posez une question…"
-          disabled={loading || !ctx}
+          placeholder={hasPendingAction ? "Action en attente de confirmation…" : "Posez une question…"}
+          disabled={inputDisabled}
           rows={1}
           style={{
             flex: 1, resize: "none", overflow: "hidden",
@@ -175,13 +406,13 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
         />
         <button
           type="submit"
-          disabled={loading || !input.trim() || !ctx}
+          disabled={inputDisabled || !input.trim()}
           style={{
             width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
-            background: input.trim() ? C.accent : C.l3,
+            background: input.trim() && !hasPendingAction ? C.accent : C.l3,
             border: "none",
-            color: input.trim() ? "#111" : C.t3,
-            cursor: input.trim() ? "pointer" : "default",
+            color: input.trim() && !hasPendingAction ? "#111" : C.t3,
+            cursor: input.trim() && !hasPendingAction ? "pointer" : "default",
             display: "flex", alignItems: "center", justifyContent: "center",
             transition: "all 0.15s",
           }}
@@ -200,7 +431,6 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
         height: fullPage ? undefined : "calc(100vh - 200px)",
         minHeight: 400,
       }}>
-        {/* Suggestions — centered in the available space */}
         <div style={{
           flex: 1, display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center",
@@ -266,7 +496,6 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
           </div>
         </div>
 
-        {/* Input bar — at the bottom */}
         <div style={{
           padding: "14px 0",
           paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))",
@@ -291,7 +520,6 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
       minHeight: 400,
       position: "relative",
     }}>
-      {/* Messages area — scrolls */}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
@@ -320,15 +548,28 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
                   </div>
                 </div>
               ) : (
-                <div
-                  className="ai-resp"
-                  style={{
-                    fontSize: 14, lineHeight: 1.7, fontFamily: FONT,
-                    color: C.t1, wordBreak: "break-word",
-                    paddingLeft: 2,
-                  }}
-                  dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }}
-                />
+                <>
+                  {m.content && (
+                    <div
+                      className="ai-resp"
+                      style={{
+                        fontSize: 14, lineHeight: 1.7, fontFamily: FONT,
+                        color: C.t1, wordBreak: "break-word",
+                        paddingLeft: 2,
+                      }}
+                      dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }}
+                    />
+                  )}
+                  {m.pendingAction && m.actionStatus && (
+                    <ActionCard
+                      action={m.pendingAction}
+                      status={m.actionStatus}
+                      error={m.actionError}
+                      onConfirm={() => confirmAction(m.id)}
+                      onReject={() => cancelAction(m.id)}
+                    />
+                  )}
+                </>
               )}
             </div>
           ))}
@@ -349,7 +590,6 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
         </div>
       </div>
 
-      {/* Scroll to bottom */}
       {showScroll && (
         <button
           type="button"
@@ -369,7 +609,6 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
         </button>
       )}
 
-      {/* Input bar — stays fixed, never scrolls */}
       <div style={{
         padding: "14px 0 0",
         paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))",

@@ -222,14 +222,49 @@ export interface ContextChatInput {
   context: PlatformContext;
 }
 
+export interface PendingAction {
+  toolUseId: string;
+  tool: string;
+  input: Record<string, unknown>;
+  assistantContent: unknown[];
+}
+
 export interface ContextChatResult {
   ok: true;
   reply: string;
   tokens: { in: number; out: number };
+  pendingAction?: PendingAction;
 }
 
 export async function contextChat(input: ContextChatInput): Promise<ContextChatResult | AICallError> {
   return invoke<ContextChatResult>({ agent: "context-chat", ...input });
+}
+
+// ────────────────────────────────────────────────────────────
+// Exécution / rejet d'actions IA
+// ────────────────────────────────────────────────────────────
+
+export interface ExecuteActionInput {
+  action: PendingAction;
+  messages: ChatMessage[];
+  context: PlatformContext;
+}
+
+export interface ExecuteActionResult {
+  ok: true;
+  reply: string;
+  actionResult: { success: boolean; message?: string; error?: string };
+  tokens: { in: number; out: number };
+}
+
+export async function executeAction(input: ExecuteActionInput): Promise<ExecuteActionResult | AICallError> {
+  return invoke<ExecuteActionResult>({ agent: "execute-action", ...input });
+}
+
+export async function rejectAction(input: {
+  action: PendingAction;
+}): Promise<{ ok: true; reply: string } | AICallError> {
+  return invoke<{ ok: true; reply: string }>({ agent: "reject-action", ...input });
 }
 
 export function isAIError<T extends { ok?: true }>(res: T | AICallError): res is AICallError {

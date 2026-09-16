@@ -102,6 +102,68 @@ async function callClaudeMultiTurn(
 }
 
 // ────────────────────────────────────────────────────────────
+// Appel Claude avec tools (function calling)
+// ────────────────────────────────────────────────────────────
+
+interface ClaudeContentBlock {
+  type: string;
+  text?: string;
+  id?: string;
+  name?: string;
+  input?: Record<string, unknown>;
+  // tool_result fields
+  tool_use_id?: string;
+  content?: string;
+  is_error?: boolean;
+}
+
+interface ClaudeWithToolsResult {
+  content: ClaudeContentBlock[];
+  stopReason: string;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+async function callClaudeWithTools(
+  apiKey: string,
+  system: string,
+  messages: Array<{ role: string; content: string | ClaudeContentBlock[] }>,
+  tools: unknown[],
+  maxTokens = 2048,
+): Promise<ClaudeWithToolsResult> {
+  const body: Record<string, unknown> = {
+    model: ANTHROPIC_MODEL,
+    max_tokens: maxTokens,
+    system,
+    messages,
+  };
+  if (tools.length > 0) body.tools = tools;
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Claude API ${res.status}: ${err.slice(0, 500)}`);
+  }
+
+  const data = await res.json();
+  return {
+    content: data.content ?? [],
+    stopReason: data.stop_reason ?? "end_turn",
+    inputTokens: data.usage?.input_tokens ?? 0,
+    outputTokens: data.usage?.output_tokens ?? 0,
+  };
+}
+
+// ────────────────────────────────────────────────────────────
 // Handlers d'agents
 // ────────────────────────────────────────────────────────────
 
@@ -391,12 +453,52 @@ async function draftCampaign(
 }
 
 // ────────────────────────────────────────────────────────────
+// Outils IA (function calling) — actions concrètes
+// ────────────────────────────────────────────────────────────
+
+const AI_TOOLS = [
+  {
+    name: "send_email",
+    description: "Envoie un email à un client Ooble. Utilise cet outil quand le staff demande d'envoyer un message, une relance ou une confirmation à un client. L'email sera présenté pour confirmation avant l'envoi effectif. Le corps doit être en français québécois professionnel, commencer par 'Bonjour [prénom],' et ne pas contenir de signature (elle est ajoutée automatiquement).",
+    input_schema: {
+      type: "object",
+      properties: {
+        to: { type: "string", description: "Adresse e-mail du destinataire (cherche dans les données de la plateforme)" },
+        subject: { type: "string", description: "Sujet de l'email, 40-70 caractères" },
+        body: { type: "string", description: "Corps de l'email en markdown simple. Utilise **gras** pour les montants/références. Commence par 'Bonjour [prénom],'. Pas de signature." },
+      },
+      required: ["to", "subject", "body"],
+    },
+  },
+];
+
+interface PendingAction {
+  toolUseId: string;
+  tool: string;
+  input: Record<string, unknown>;
+  assistantContent: ClaudeContentBlock[];
+}
+
+interface ActionResult {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
+// ────────────────────────────────────────────────────────────
 // Agent 4 — Assistant contextuel temps réel (chat)
 // ────────────────────────────────────────────────────────────
 
 const SYSTEM_CONTEXT_CHAT = `Tu es l'assistant IA du back-office Ooble — une plateforme canadienne d'échange USDT/CAD non-custodial réglementée par CANAFE.
 
 Tu assistes le staff en temps réel avec l'état actuel de la plateforme (commandes, KYC, messagerie, trésorerie, taux).
+
+Tu as des outils pour effectuer des actions concrètes. Quand le staff te demande de faire quelque chose (envoyer un email, etc.), utilise l'outil approprié. L'action sera présentée au staff pour confirmation avant exécution — tu n'as pas besoin de demander confirmation toi-même, utilise directement l'outil.
+
+Quand tu utilises un outil :
+- Explique en 1 phrase ce que tu fais AVANT d'appeler l'outil.
+- Utilise les données du contexte (email du client, montants, références) — ne demande pas au staff ce que tu peux trouver toi-même.
+- Pour les emails : ton Ooble (professionnel, chaleureux mais pas corporate), vocabulaire Ooble. Commence par « Bonjour [prénom], ». Pas de signature.
 
 Style de réponse — TRÈS IMPORTANT :
 - Écris comme un collègue compétent qui répond naturellement. Pas comme un rapport.
@@ -565,15 +667,157 @@ async function contextChat(
     messages: Array<{ role: "user" | "assistant"; content: string }>;
     context: PlatformContext;
   },
-): Promise<{ reply: string; call: ClaudeCallResult }> {
+): Promise<{ reply: string; call: ClaudeCallResult; pendingAction?: PendingAction }> {
   const contextBlock = platformContextToText(input.context);
   const systemWithContext = `${SYSTEM_CONTEXT_CHAT}\n\n${contextBlock}`;
-  const call = await callClaudeMultiTurn(apiKey, systemWithContext, input.messages, 2048);
-  return { reply: call.text, call };
+
+  const result = await callClaudeWithTools(apiKey, systemWithContext, input.messages, AI_TOOLS, 2048);
+
+  const textParts = result.content
+    .filter((b) => b.type === "text")
+    .map((b) => b.text ?? "")
+    .join("\n")
+    .trim();
+
+  const toolUse = result.content.find((b) => b.type === "tool_use");
+
+  const call: ClaudeCallResult = {
+    text: textParts,
+    inputTokens: result.inputTokens,
+    outputTokens: result.outputTokens,
+  };
+
+  if (toolUse && toolUse.name && toolUse.id) {
+    return {
+      reply: textParts,
+      call,
+      pendingAction: {
+        toolUseId: toolUse.id,
+        tool: toolUse.name,
+        input: toolUse.input ?? {},
+        assistantContent: result.content,
+      },
+    };
+  }
+
+  return { reply: textParts, call };
+}
+
+// ────────────────────────────────────────────────────────────
+// Exécution d'actions confirmées + helpers email
+// ────────────────────────────────────────────────────────────
+
+function markdownToSimpleHtml(md: string): string {
+  let html = md
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/`(.+?)`/g, "<code>$1</code>")
+    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" style="color:#000;text-decoration:underline;">$1</a>');
+
+  return html
+    .split("\n\n")
+    .map((block) => {
+      const trimmed = block.trim();
+      if (!trimmed) return "";
+      const lines = trimmed.split("\n");
+      const isList = lines.every((l) => /^\s*[-*]\s/.test(l) || l.trim() === "");
+      if (isList) {
+        const items = lines
+          .filter((l) => l.trim())
+          .map((l) => `<li style="margin:4px 0;font-size:15px;line-height:1.6;">${l.replace(/^\s*[-*]\s+/, "")}</li>`)
+          .join("");
+        return `<ul style="margin:8px 0;padding-left:20px;">${items}</ul>`;
+      }
+      return `<p style="margin:0 0 12px;font-size:15px;line-height:1.6;">${trimmed.replace(/\n/g, "<br/>")}</p>`;
+    })
+    .filter(Boolean)
+    .join("");
+}
+
+async function sendEmailViaEdge(
+  supabaseUrl: string,
+  serviceKey: string,
+  to: string,
+  subject: string,
+  bodyMd: string,
+): Promise<{ id?: string; error?: string }> {
+  const html = markdownToSimpleHtml(bodyMd);
+  const res = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${serviceKey}`,
+    },
+    body: JSON.stringify({ to, subject, html }),
+  });
+  const data = await res.json().catch(() => ({} as Record<string, unknown>));
+  if (!res.ok || (data as { error?: string }).error) {
+    return { error: (data as { error?: string }).error ?? `HTTP ${res.status}` };
+  }
+  return { id: (data as { id?: string }).id };
+}
+
+async function executeAction(
+  apiKey: string,
+  supabaseUrl: string,
+  serviceKey: string,
+  input: {
+    action: PendingAction;
+    messages: Array<{ role: "user" | "assistant"; content: string }>;
+    context: PlatformContext;
+  },
+): Promise<{ reply: string; call: ClaudeCallResult; actionResult: ActionResult }> {
+  let actionResult: ActionResult;
+
+  if (input.action.tool === "send_email") {
+    const params = input.action.input as { to: string; subject: string; body: string };
+    const emailRes = await sendEmailViaEdge(supabaseUrl, serviceKey, params.to, params.subject, params.body);
+    actionResult = emailRes.error
+      ? { success: false, error: emailRes.error }
+      : { success: true, message: `Email envoyé à ${params.to}` };
+  } else {
+    actionResult = { success: false, error: `Outil inconnu : ${input.action.tool}` };
+  }
+
+  const contextBlock = platformContextToText(input.context);
+  const systemWithContext = `${SYSTEM_CONTEXT_CHAT}\n\n${contextBlock}`;
+
+  const resumeMessages: Array<{ role: string; content: string | ClaudeContentBlock[] }> = [
+    ...input.messages,
+    { role: "assistant", content: input.action.assistantContent },
+    {
+      role: "user",
+      content: [{
+        type: "tool_result",
+        tool_use_id: input.action.toolUseId,
+        content: actionResult.success
+          ? (actionResult.message ?? "Action effectuée.")
+          : `Erreur : ${actionResult.error}`,
+      }] as unknown as ClaudeContentBlock[],
+    },
+  ];
+
+  const result = await callClaudeWithTools(apiKey, systemWithContext, resumeMessages, AI_TOOLS, 1024);
+
+  const reply = result.content
+    .filter((b) => b.type === "text")
+    .map((b) => b.text ?? "")
+    .join("\n")
+    .trim();
+
+  return {
+    reply: reply || (actionResult.success ? "Action effectuée." : "L'action a échoué."),
+    call: {
+      text: reply,
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+    },
+    actionResult,
+  };
 }
 
 interface Payload {
-  agent: "draft-mail" | "summarize-client" | "draft-campaign" | "context-chat";
+  agent: "draft-mail" | "summarize-client" | "draft-campaign" | "context-chat" | "execute-action" | "reject-action";
   // draft-mail / draft-campaign
   intention?: string;
   client?: ClientContext | null;
@@ -587,6 +831,8 @@ interface Payload {
   // context-chat + draft-mail (platform awareness)
   messages?: Array<{ role: "user" | "assistant"; content: string }>;
   context?: PlatformContext;
+  // execute-action / reject-action
+  action?: PendingAction;
 }
 
 Deno.serve(async (req) => {
@@ -675,12 +921,41 @@ Deno.serve(async (req) => {
       if (!payload.context) return json({ error: "Champ 'context' requis." }, 400);
       const lastMsg = payload.messages[payload.messages.length - 1];
       const inputPreview = preview(lastMsg?.content ?? "");
-      const { reply, call } = await contextChat(anthropicKey, {
+      const { reply, call, pendingAction } = await contextChat(anthropicKey, {
         messages: payload.messages,
         context: payload.context,
       });
       await logCall(admin, { agent: "context-chat", staffId: userId, inputPreview, call, startedAt });
-      return json({ ok: true, reply, tokens: { in: call.inputTokens, out: call.outputTokens } });
+      const response: Record<string, unknown> = {
+        ok: true,
+        reply,
+        tokens: { in: call.inputTokens, out: call.outputTokens },
+      };
+      if (pendingAction) response.pendingAction = pendingAction;
+      return json(response);
+    }
+
+    if (payload.agent === "execute-action") {
+      if (!payload.action) return json({ error: "Champ 'action' requis." }, 400);
+      if (!payload.messages || payload.messages.length === 0) return json({ error: "Champ 'messages' requis." }, 400);
+      if (!payload.context) return json({ error: "Champ 'context' requis." }, 400);
+      const inputPreview = preview(`Exécution : ${payload.action.tool} → ${JSON.stringify(payload.action.input).slice(0, 150)}`);
+      const result = await executeAction(anthropicKey, supabaseUrl, serviceKey, {
+        action: payload.action,
+        messages: payload.messages,
+        context: payload.context,
+      });
+      await logCall(admin, { agent: "execute-action", staffId: userId, inputPreview, call: result.call, startedAt });
+      return json({
+        ok: true,
+        reply: result.reply,
+        actionResult: result.actionResult,
+        tokens: { in: result.call.inputTokens, out: result.call.outputTokens },
+      });
+    }
+
+    if (payload.agent === "reject-action") {
+      return json({ ok: true, reply: "D'accord, l'action a été annulée." });
     }
 
     return json({ error: `Agent inconnu : ${payload.agent}` }, 400);

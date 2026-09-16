@@ -199,71 +199,79 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
         flex: fullPage ? 1 : undefined,
         height: fullPage ? undefined : "calc(100vh - 200px)",
         minHeight: 400,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "0 0 0",
-        gap: 32,
       }}>
-        <div style={{ textAlign: "center" }}>
-          <h2 style={{
-            fontSize: 26, fontWeight: 300, color: C.t1,
-            margin: 0, fontFamily: FONT, letterSpacing: "-0.02em",
-          }}>
-            Comment puis-je aider ?
-          </h2>
-          {ctxLoading && (
-            <p style={{
-              fontSize: 12, color: C.t3, margin: "12px 0 0",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              fontFamily: FONT,
-            }}>
-              <Loader2 style={{ width: 12, height: 12, animation: "spin 1.5s linear infinite" }} />
-              Connexion aux données…
-            </p>
-          )}
-        </div>
-
+        {/* Suggestions — centered in the available space */}
         <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 8,
-          width: "100%", maxWidth: 420,
+          flex: 1, display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
           padding: "0 20px",
+          gap: 32,
         }}>
-          {SUGGESTIONS.map((s, i) => {
-            const Icon = s.icon;
-            return (
-              <button
-                key={i}
-                onClick={() => send(s.text)}
-                disabled={loading || !ctx}
-                style={{
-                  background: C.l1,
-                  border: "none",
-                  borderRadius: 12,
-                  padding: "14px 16px",
-                  color: C.t2, fontSize: 13, fontFamily: FONT,
-                  cursor: "pointer", transition: "all 0.15s",
-                  display: "flex", alignItems: "center", gap: 10,
-                  textAlign: "left",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = C.l2;
-                  e.currentTarget.style.color = C.t1;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = C.l1;
-                  e.currentTarget.style.color = C.t2;
-                }}
-              >
-                <Icon style={{ width: 15, height: 15, opacity: 0.5, flexShrink: 0 }} strokeWidth={1.6} />
-                {s.text}
-              </button>
-            );
-          })}
+          <div style={{ textAlign: "center" }}>
+            <h2 style={{
+              fontSize: 26, fontWeight: 300, color: C.t1,
+              margin: 0, fontFamily: FONT, letterSpacing: "-0.02em",
+            }}>
+              Comment puis-je aider ?
+            </h2>
+            {ctxLoading && (
+              <p style={{
+                fontSize: 12, color: C.t3, margin: "12px 0 0",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                fontFamily: FONT,
+              }}>
+                <Loader2 style={{ width: 12, height: 12, animation: "spin 1.5s linear infinite" }} />
+                Connexion aux données…
+              </p>
+            )}
+          </div>
+
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 8,
+            width: "100%", maxWidth: 420,
+          }}>
+            {SUGGESTIONS.map((s, i) => {
+              const Icon = s.icon;
+              return (
+                <button
+                  key={i}
+                  onClick={() => send(s.text)}
+                  disabled={loading || !ctx}
+                  style={{
+                    background: C.l1,
+                    border: "none",
+                    borderRadius: 12,
+                    padding: "14px 16px",
+                    color: C.t2, fontSize: 13, fontFamily: FONT,
+                    cursor: "pointer", transition: "all 0.15s",
+                    display: "flex", alignItems: "center", gap: 10,
+                    textAlign: "left",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = C.l2;
+                    e.currentTarget.style.color = C.t1;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = C.l1;
+                    e.currentTarget.style.color = C.t2;
+                  }}
+                >
+                  <Icon style={{ width: 15, height: 15, opacity: 0.5, flexShrink: 0 }} strokeWidth={1.6} />
+                  {s.text}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div style={{ width: "100%", padding: "0 20px", maxWidth: 720 }}>
+        {/* Input bar — at the bottom */}
+        <div style={{
+          padding: `14px 0`,
+          paddingBottom: `max(24px, env(safe-area-inset-bottom, 12px))`,
+          flexShrink: 0,
+        }}>
           {inputBar}
         </div>
 

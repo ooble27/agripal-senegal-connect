@@ -129,7 +129,8 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
   return (
     <div style={{
       display: "flex", flexDirection: "column",
-      height: fullPage ? "calc(100vh - 70px)" : "calc(100vh - 200px)",
+      flex: fullPage ? 1 : undefined,
+      height: fullPage ? undefined : "calc(100vh - 200px)",
       minHeight: 400,
       position: "relative",
     }}>
@@ -146,7 +147,7 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
           <div style={{
             flex: 1, display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center",
-            padding: "0 20px",
+            padding: "0 20px 60px",
             gap: 40,
           }}>
             <div style={{ textAlign: "center" }}>
@@ -283,7 +284,7 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
 
       {/* Input bar — ChatGPT-style floating bar */}
       <div style={{
-        padding: "12px 0 4px",
+        padding: `12px 0 max(16px, env(safe-area-inset-bottom, 0px))`,
         display: "flex", justifyContent: "center",
       }}>
         <form

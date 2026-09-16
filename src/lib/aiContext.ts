@@ -40,7 +40,10 @@ export async function fetchPlatformContext(): Promise<PlatformContext> {
   todayStart.setHours(0, 0, 0, 0);
   const todayIso = todayStart.toISOString();
 
-  const [ordersRes, kycCountRes, kycDetailsRes, mailCountRes, threadsRes, rateRes, flagsRes, treasuryRes] = await Promise.all([
+  const [
+    ordersRes, kycCountRes, kycDetailsRes, mailCountRes, threadsRes, rateRes, flagsRes, treasuryRes,
+    profilesRes, blockchainTxRes, paymentConfRes, orderEventsRes, announcementsRes, maintenanceRes, treasuryMovRes, auditLogRes,
+  ] = await Promise.all([
     supabase
       .from("orders")
       .select("id, side, status, cad_amount, usdt_amount, created_at, network, wallet_address, profiles(full_name, email)")
@@ -83,6 +86,48 @@ export async function fetchPlatformContext(): Promise<PlatformContext> {
       .select("balance_usdt, treasury_addresses(network, label, active)")
       .order("recorded_at", { ascending: false })
       .limit(50),
+    // --- New queries ---
+    supabase
+      .from("profiles")
+      .select("full_name, email, account_type, kyc_status, phone, business_name, daily_limit_cad, created_at")
+      .order("created_at", { ascending: false })
+      .limit(30),
+    supabase
+      .from("blockchain_transactions")
+      .select("order_id, network, tx_hash, direction, usdt_amount, confirmations, confirmed, created_at")
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("payment_confirmations")
+      .select("order_id, amount_cad, method, reference, direction, confirmed_at")
+      .order("confirmed_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("order_events")
+      .select("order_id, previous_status, new_status, actor, note, created_at")
+      .order("created_at", { ascending: false })
+      .limit(30),
+    (supabase as any)
+      .from("announcements")
+      .select("kind, title_fr, body_fr, created_at")
+      .eq("active", true)
+      .order("created_at", { ascending: false })
+      .limit(10),
+    (supabase as any)
+      .from("maintenance_windows")
+      .select("title_fr, body_fr, starts_at, ends_at, active")
+      .order("starts_at", { ascending: false })
+      .limit(5),
+    (supabase as any)
+      .from("treasury_movements")
+      .select("amount_usdt, tx_hash, reason, notes, created_at, from_address:treasury_addresses!from_address_id(label, network), to_address:treasury_addresses!to_address_id(label, network)")
+      .order("created_at", { ascending: false })
+      .limit(15),
+    (supabase as any)
+      .from("admin_audit_log")
+      .select("actor_email, action, entity_kind, entity_id, created_at")
+      .order("created_at", { ascending: false })
+      .limit(20),
   ]);
 
   const orders = (ordersRes.data ?? []) as Array<{
@@ -280,6 +325,184 @@ export async function fetchPlatformContext(): Promise<PlatformContext> {
     addressCount: v.count,
   }));
 
+  // --- Client profiles ---
+  const profileRows = (profilesRes.data ?? []) as Array<{
+    full_name: string | null;
+    email: string | null;
+    account_type: string | null;
+    kyc_status: string | null;
+    phone: string | null;
+    business_name: string | null;
+    daily_limit_cad: number | null;
+    created_at: string;
+  }>;
+  const recentProfiles = profileRows.map((p) => ({
+    fullName: p.full_name?.trim() || "Client",
+    email: p.email ?? "",
+    accountType: p.account_type ?? "personal",
+    kycStatus: KYC_STATUS_LABEL[p.kyc_status ?? ""] ?? (p.kyc_status ?? "Inconnu"),
+    phone: p.phone ?? "",
+    businessName: p.business_name ?? "",
+    dailyLimitCad: Number(p.daily_limit_cad ?? 0),
+    createdAt: new Date(p.created_at).toLocaleString("fr-CA", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }),
+  }));
+
+  // --- Blockchain transactions ---
+  const btxRows = (blockchainTxRes.data ?? []) as Array<{
+    order_id: string;
+    network: string | null;
+    tx_hash: string;
+    direction: string;
+    usdt_amount: number;
+    confirmations: number;
+    confirmed: boolean;
+    created_at: string;
+  }>;
+  const recentBlockchainTx = btxRows.map((tx) => ({
+    orderRef: orderRef(tx.order_id),
+    network: tx.network ?? "",
+    txHash: tx.tx_hash,
+    direction: tx.direction,
+    usdtAmount: Number(tx.usdt_amount),
+    confirmations: tx.confirmations,
+    confirmed: tx.confirmed,
+    createdAt: new Date(tx.created_at).toLocaleString("fr-CA", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  }));
+
+  // --- Payment confirmations ---
+  const pcRows = (paymentConfRes.data ?? []) as Array<{
+    order_id: string;
+    amount_cad: number;
+    method: string;
+    reference: string;
+    direction: string;
+    confirmed_at: string;
+  }>;
+  const recentPaymentConfirmations = pcRows.map((pc) => ({
+    orderRef: orderRef(pc.order_id),
+    amountCad: Number(pc.amount_cad),
+    method: pc.method ?? "",
+    reference: pc.reference ?? "",
+    direction: pc.direction ?? "",
+    confirmedAt: new Date(pc.confirmed_at).toLocaleString("fr-CA", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  }));
+
+  // --- Order events ---
+  const oeRows = (orderEventsRes.data ?? []) as Array<{
+    order_id: string;
+    previous_status: string | null;
+    new_status: string;
+    actor: string | null;
+    note: string | null;
+    created_at: string;
+  }>;
+  const recentOrderEvents = oeRows.map((ev) => ({
+    orderRef: orderRef(ev.order_id),
+    previousStatus: DB_STATUS_LABEL[ev.previous_status ?? ""] ?? (ev.previous_status ?? ""),
+    newStatus: DB_STATUS_LABEL[ev.new_status] ?? ev.new_status,
+    actor: ev.actor ?? "Système",
+    note: ev.note ?? "",
+    createdAt: new Date(ev.created_at).toLocaleString("fr-CA", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  }));
+
+  // --- Active announcements ---
+  const annRows = (announcementsRes.data ?? []) as Array<{
+    kind: string;
+    title_fr: string;
+    body_fr: string;
+    created_at: string;
+  }>;
+  const activeAnnouncements = annRows.map((a) => ({
+    kind: a.kind,
+    titleFr: a.title_fr,
+    bodyFr: a.body_fr,
+    createdAt: new Date(a.created_at).toLocaleString("fr-CA", {
+      day: "numeric",
+      month: "short",
+    }),
+  }));
+
+  // --- Maintenance windows ---
+  const mwRows = (maintenanceRes.data ?? []) as Array<{
+    title_fr: string;
+    body_fr: string;
+    starts_at: string;
+    ends_at: string;
+    active: boolean;
+  }>;
+  const maintenanceWindows = mwRows.map((mw) => ({
+    titleFr: mw.title_fr,
+    bodyFr: mw.body_fr,
+    startsAt: new Date(mw.starts_at).toLocaleString("fr-CA"),
+    endsAt: new Date(mw.ends_at).toLocaleString("fr-CA"),
+    active: mw.active,
+  }));
+
+  // --- Treasury movements ---
+  const tmRows = (treasuryMovRes.data ?? []) as Array<{
+    amount_usdt: number;
+    tx_hash: string | null;
+    reason: string | null;
+    notes: string | null;
+    created_at: string;
+    from_address: { label: string; network: string } | null;
+    to_address: { label: string; network: string } | null;
+  }>;
+  const recentTreasuryMovements = tmRows.map((tm) => ({
+    fromLabel: tm.from_address ? `${tm.from_address.label} (${tm.from_address.network})` : "Externe",
+    toLabel: tm.to_address ? `${tm.to_address.label} (${tm.to_address.network})` : "Externe",
+    amountUsdt: Number(tm.amount_usdt),
+    txHash: tm.tx_hash ?? "",
+    reason: tm.reason ?? "",
+    notes: tm.notes ?? "",
+    createdAt: new Date(tm.created_at).toLocaleString("fr-CA", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  }));
+
+  // --- Admin audit log ---
+  const alRows = (auditLogRes.data ?? []) as Array<{
+    actor_email: string | null;
+    action: string;
+    entity_kind: string | null;
+    entity_id: string | null;
+    created_at: string;
+  }>;
+  const recentAuditLog = alRows.map((al) => ({
+    actorEmail: al.actor_email ?? "Système",
+    action: al.action,
+    entityKind: al.entity_kind ?? "",
+    entityId: al.entity_id ?? "",
+    createdAt: new Date(al.created_at).toLocaleString("fr-CA", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  }));
+
   return {
     pendingOrders,
     inProgressOrders,
@@ -297,5 +520,13 @@ export async function fetchPlatformContext(): Promise<PlatformContext> {
     recentThreads,
     complianceFlags,
     treasuryBalances,
+    recentProfiles,
+    recentBlockchainTx,
+    recentPaymentConfirmations,
+    recentOrderEvents,
+    activeAnnouncements,
+    maintenanceWindows,
+    recentTreasuryMovements,
+    recentAuditLog,
   };
 }

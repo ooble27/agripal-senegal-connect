@@ -210,6 +210,71 @@ export interface PlatformContext {
     totalUsdt: number;
     addressCount: number;
   }>;
+  recentProfiles?: Array<{
+    fullName: string;
+    email: string;
+    accountType: string;
+    kycStatus: string;
+    phone: string;
+    businessName: string;
+    dailyLimitCad: number;
+    createdAt: string;
+  }>;
+  recentBlockchainTx?: Array<{
+    orderRef: string;
+    network: string;
+    txHash: string;
+    direction: string;
+    usdtAmount: number;
+    confirmations: number;
+    confirmed: boolean;
+    createdAt: string;
+  }>;
+  recentPaymentConfirmations?: Array<{
+    orderRef: string;
+    amountCad: number;
+    method: string;
+    reference: string;
+    direction: string;
+    confirmedAt: string;
+  }>;
+  recentOrderEvents?: Array<{
+    orderRef: string;
+    previousStatus: string;
+    newStatus: string;
+    actor: string;
+    note: string;
+    createdAt: string;
+  }>;
+  activeAnnouncements?: Array<{
+    kind: string;
+    titleFr: string;
+    bodyFr: string;
+    createdAt: string;
+  }>;
+  maintenanceWindows?: Array<{
+    titleFr: string;
+    bodyFr: string;
+    startsAt: string;
+    endsAt: string;
+    active: boolean;
+  }>;
+  recentTreasuryMovements?: Array<{
+    fromLabel: string;
+    toLabel: string;
+    amountUsdt: number;
+    txHash: string;
+    reason: string;
+    notes: string;
+    createdAt: string;
+  }>;
+  recentAuditLog?: Array<{
+    actorEmail: string;
+    action: string;
+    entityKind: string;
+    entityId: string;
+    createdAt: string;
+  }>;
 }
 
 export interface ChatMessage {

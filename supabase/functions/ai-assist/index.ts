@@ -761,6 +761,71 @@ interface PlatformContext {
     totalUsdt: number;
     addressCount: number;
   }>;
+  recentProfiles?: Array<{
+    fullName: string;
+    email: string;
+    accountType: string;
+    kycStatus: string;
+    phone: string;
+    businessName: string;
+    dailyLimitCad: number;
+    createdAt: string;
+  }>;
+  recentBlockchainTx?: Array<{
+    orderRef: string;
+    network: string;
+    txHash: string;
+    direction: string;
+    usdtAmount: number;
+    confirmations: number;
+    confirmed: boolean;
+    createdAt: string;
+  }>;
+  recentPaymentConfirmations?: Array<{
+    orderRef: string;
+    amountCad: number;
+    method: string;
+    reference: string;
+    direction: string;
+    confirmedAt: string;
+  }>;
+  recentOrderEvents?: Array<{
+    orderRef: string;
+    previousStatus: string;
+    newStatus: string;
+    actor: string;
+    note: string;
+    createdAt: string;
+  }>;
+  activeAnnouncements?: Array<{
+    kind: string;
+    titleFr: string;
+    bodyFr: string;
+    createdAt: string;
+  }>;
+  maintenanceWindows?: Array<{
+    titleFr: string;
+    bodyFr: string;
+    startsAt: string;
+    endsAt: string;
+    active: boolean;
+  }>;
+  recentTreasuryMovements?: Array<{
+    fromLabel: string;
+    toLabel: string;
+    amountUsdt: number;
+    txHash: string;
+    reason: string;
+    notes: string;
+    createdAt: string;
+  }>;
+  recentAuditLog?: Array<{
+    actorEmail: string;
+    action: string;
+    entityKind: string;
+    entityId: string;
+    createdAt: string;
+  }>;
 }
 
 function platformContextToText(ctx: PlatformContext): string {
@@ -848,6 +913,71 @@ function platformContextToText(ctx: PlatformContext): string {
   if (ctx.alerts.length > 0) {
     lines.push("\nALERTES OPÉRATIONNELLES :");
     for (const a of ctx.alerts) lines.push(`⚠ ${a}`);
+  }
+
+  if (ctx.recentProfiles && ctx.recentProfiles.length > 0) {
+    lines.push(`\nCLIENTS INSCRITS (${ctx.recentProfiles.length} derniers) :`);
+    for (const p of ctx.recentProfiles) {
+      const biz = p.businessName ? ` · ${p.businessName}` : "";
+      const phone = p.phone ? ` · ${p.phone}` : "";
+      const limit = p.dailyLimitCad > 0 ? ` · limite ${nf.format(p.dailyLimitCad)} $/jour` : "";
+      lines.push(`- ${p.fullName} (${p.email}) · ${p.accountType} · KYC: ${p.kycStatus}${biz}${phone}${limit} · inscrit le ${p.createdAt}`);
+    }
+  }
+
+  if (ctx.recentBlockchainTx && ctx.recentBlockchainTx.length > 0) {
+    lines.push(`\nTRANSACTIONS BLOCKCHAIN RÉCENTES (${ctx.recentBlockchainTx.length}) :`);
+    for (const tx of ctx.recentBlockchainTx) {
+      const status = tx.confirmed ? `✓ confirmée (${tx.confirmations})` : `en attente (${tx.confirmations} conf.)`;
+      lines.push(`- ${tx.orderRef} · ${tx.direction} · ${nf.format(tx.usdtAmount)} USDT · ${tx.network} · ${status} · TX: ${tx.txHash.slice(0, 16)}… · ${tx.createdAt}`);
+    }
+  }
+
+  if (ctx.recentPaymentConfirmations && ctx.recentPaymentConfirmations.length > 0) {
+    lines.push(`\nCONFIRMATIONS DE PAIEMENT RÉCENTES (${ctx.recentPaymentConfirmations.length}) :`);
+    for (const pc of ctx.recentPaymentConfirmations) {
+      lines.push(`- ${pc.orderRef} · ${nf.format(pc.amountCad)} CAD · ${pc.method} · réf: ${pc.reference} · ${pc.direction} · ${pc.confirmedAt}`);
+    }
+  }
+
+  if (ctx.recentOrderEvents && ctx.recentOrderEvents.length > 0) {
+    lines.push(`\nHISTORIQUE D'ÉVÉNEMENTS COMMANDES (${ctx.recentOrderEvents.length} derniers) :`);
+    for (const ev of ctx.recentOrderEvents) {
+      const note = ev.note ? ` — "${ev.note}"` : "";
+      lines.push(`- ${ev.orderRef} · ${ev.previousStatus || "—"} → ${ev.newStatus} · par ${ev.actor}${note} · ${ev.createdAt}`);
+    }
+  }
+
+  if (ctx.activeAnnouncements && ctx.activeAnnouncements.length > 0) {
+    lines.push(`\nANNONCES ACTIVES (${ctx.activeAnnouncements.length}) :`);
+    for (const a of ctx.activeAnnouncements) {
+      lines.push(`- [${a.kind.toUpperCase()}] ${a.titleFr} — ${a.bodyFr} · ${a.createdAt}`);
+    }
+  }
+
+  if (ctx.maintenanceWindows && ctx.maintenanceWindows.length > 0) {
+    lines.push(`\nFENÊTRES DE MAINTENANCE :`);
+    for (const mw of ctx.maintenanceWindows) {
+      const status = mw.active ? "ACTIVE" : "planifiée";
+      lines.push(`- ${mw.titleFr} · ${status} · du ${mw.startsAt} au ${mw.endsAt} — ${mw.bodyFr}`);
+    }
+  }
+
+  if (ctx.recentTreasuryMovements && ctx.recentTreasuryMovements.length > 0) {
+    lines.push(`\nMOUVEMENTS TRÉSORERIE RÉCENTS (${ctx.recentTreasuryMovements.length}) :`);
+    for (const tm of ctx.recentTreasuryMovements) {
+      const txInfo = tm.txHash ? ` · TX: ${tm.txHash.slice(0, 16)}…` : "";
+      const notes = tm.notes ? ` — ${tm.notes}` : "";
+      lines.push(`- ${tm.fromLabel} → ${tm.toLabel} · ${nf.format(tm.amountUsdt)} USDT · ${tm.reason}${txInfo}${notes} · ${tm.createdAt}`);
+    }
+  }
+
+  if (ctx.recentAuditLog && ctx.recentAuditLog.length > 0) {
+    lines.push(`\nJOURNAL D'AUDIT ADMIN (${ctx.recentAuditLog.length} dernières actions) :`);
+    for (const al of ctx.recentAuditLog) {
+      const entity = al.entityKind ? ` · ${al.entityKind} ${al.entityId.slice(0, 8)}` : "";
+      lines.push(`- ${al.actorEmail} · ${al.action}${entity} · ${al.createdAt}`);
+    }
   }
 
   return lines.join("\n");

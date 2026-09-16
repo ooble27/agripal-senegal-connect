@@ -130,6 +130,7 @@ async function callClaudeWithTools(
   messages: Array<{ role: string; content: string | ClaudeContentBlock[] }>,
   tools: unknown[],
   maxTokens = 2048,
+  toolChoice?: { type: "auto" | "any" } | { type: "tool"; name: string },
 ): Promise<ClaudeWithToolsResult> {
   const body: Record<string, unknown> = {
     model: ANTHROPIC_MODEL,
@@ -137,7 +138,10 @@ async function callClaudeWithTools(
     system,
     messages,
   };
-  if (tools.length > 0) body.tools = tools;
+  if (tools.length > 0) {
+    body.tools = tools;
+    if (toolChoice) body.tool_choice = toolChoice;
+  }
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -849,6 +853,28 @@ function platformContextToText(ctx: PlatformContext): string {
   return lines.join("\n");
 }
 
+function detectActionIntent(messages: Array<{ role: string; content: string }>): boolean {
+  const lastUserMsg = messages.filter((m) => m.role === "user").pop()?.content ?? "";
+  const lm = lastUserMsg.toLowerCase();
+
+  const wantsEmail =
+    (/\benvoi[ers]?\b/.test(lm) && /\b(mail|email|courriel|message)\b/.test(lm)) ||
+    (/\benvoi[ers]?\b/.test(lm) && /@/.test(lm)) ||
+    (/\b(écri[st]|rédige)\w*\b/.test(lm) && /\b(mail|email|courriel)\b/.test(lm)) ||
+    /\bdis[\s-]?(lui|leur|à)\b/.test(lm) ||
+    (/\bmail\b/.test(lm) && /\b(pour|avec|dire|informer|prévenir|relancer|confirmer)\b/.test(lm));
+
+  const wantsOrderAction =
+    (/\b(annule|complète|termine|rembourse|rouvr)\w*\b/.test(lm) &&
+      /\b(commande|ordre|OOB-)/i.test(lastUserMsg)) ||
+    /\bprends?\s+(en\s+)?charge\b/.test(lm) ||
+    /\bassign/i.test(lm) ||
+    /\blibère\b/.test(lm) ||
+    (/\bmarqu\w*\b/.test(lm) && /\b(reçu|payé|terminé|complété)\b/.test(lm));
+
+  return wantsEmail || wantsOrderAction;
+}
+
 async function contextChat(
   apiKey: string,
   input: {
@@ -859,7 +885,11 @@ async function contextChat(
   const contextBlock = platformContextToText(input.context);
   const systemWithContext = `${SYSTEM_CONTEXT_CHAT}\n\n${contextBlock}`;
 
-  const result = await callClaudeWithTools(apiKey, systemWithContext, input.messages, AI_TOOLS, 2048);
+  const forceTools = detectActionIntent(input.messages);
+  const result = await callClaudeWithTools(
+    apiKey, systemWithContext, input.messages, AI_TOOLS, 2048,
+    forceTools ? { type: "any" } : undefined,
+  );
 
   const textParts = result.content
     .filter((b) => b.type === "text")

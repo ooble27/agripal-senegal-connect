@@ -201,7 +201,7 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
         minHeight: 400,
         justifyContent: "center",
         alignItems: "center",
-        padding: "0 0 40px",
+        padding: "0 0 0",
         gap: 32,
       }}>
         <div style={{ textAlign: "center" }}>

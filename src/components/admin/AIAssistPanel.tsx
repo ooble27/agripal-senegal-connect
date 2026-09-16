@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Send, Loader2, ArrowDown, Sparkles, TrendingUp, AlertTriangle, BarChart3, ArrowUp } from "lucide-react";
+import { Loader2, ArrowDown, Sparkles, TrendingUp, AlertTriangle, BarChart3, ArrowUp } from "lucide-react";
 import { contextChat, isAIError, type ChatMessage } from "@/lib/ai";
 import { fetchPlatformContext } from "@/lib/aiContext";
 import type { PlatformContext } from "@/lib/ai";
@@ -126,6 +126,155 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
 
   const hasMessages = messages.length > 0;
 
+  const inputBar = (
+    <div style={{
+      width: "100%", maxWidth: 680,
+      margin: "0 auto",
+    }}>
+      <form
+        onSubmit={handleSubmit}
+        className="ai-input-form"
+        style={{
+          width: "100%",
+          background: C.l1,
+          borderRadius: 24,
+          border: `1px solid ${C.bds}`,
+          display: "flex", alignItems: "flex-end",
+          padding: "6px 6px 6px 18px",
+          transition: "border-color 0.15s",
+        }}
+      >
+        <textarea
+          ref={textareaRef}
+          value={input}
+          onChange={(e) => { setInput(e.target.value); autoResize(e.target); }}
+          onKeyDown={handleKeyDown}
+          placeholder="Posez une question…"
+          disabled={loading || !ctx}
+          rows={1}
+          style={{
+            flex: 1, resize: "none", overflow: "hidden",
+            background: "transparent",
+            border: "none",
+            padding: "8px 0",
+            fontSize: 16,
+            fontFamily: FONT,
+            color: C.t1, outline: "none",
+            boxSizing: "border-box",
+            lineHeight: 1.5,
+            maxHeight: 160,
+          }}
+          onFocus={(e) => {
+            const form = e.currentTarget.closest(".ai-input-form") as HTMLElement | null;
+            if (form) form.style.borderColor = C.bd;
+          }}
+          onBlur={(e) => {
+            const form = e.currentTarget.closest(".ai-input-form") as HTMLElement | null;
+            if (form) form.style.borderColor = C.bds;
+          }}
+        />
+        <button
+          type="submit"
+          disabled={loading || !input.trim() || !ctx}
+          style={{
+            width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+            background: input.trim() ? C.accent : C.l3,
+            border: "none",
+            color: input.trim() ? "#111" : C.t3,
+            cursor: input.trim() ? "pointer" : "default",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.15s",
+          }}
+        >
+          <ArrowUp style={{ width: 18, height: 18 }} strokeWidth={2.2} />
+        </button>
+      </form>
+    </div>
+  );
+
+  if (!hasMessages) {
+    return (
+      <div style={{
+        display: "flex", flexDirection: "column",
+        flex: fullPage ? 1 : undefined,
+        height: fullPage ? undefined : "calc(100vh - 200px)",
+        minHeight: 400,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: "0 0 40px",
+        gap: 32,
+      }}>
+        <div style={{ textAlign: "center" }}>
+          <h2 style={{
+            fontSize: 26, fontWeight: 300, color: C.t1,
+            margin: 0, fontFamily: FONT, letterSpacing: "-0.02em",
+          }}>
+            Comment puis-je aider ?
+          </h2>
+          {ctxLoading && (
+            <p style={{
+              fontSize: 12, color: C.t3, margin: "12px 0 0",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              fontFamily: FONT,
+            }}>
+              <Loader2 style={{ width: 12, height: 12, animation: "spin 1.5s linear infinite" }} />
+              Connexion aux données…
+            </p>
+          )}
+        </div>
+
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 8,
+          width: "100%", maxWidth: 420,
+          padding: "0 20px",
+        }}>
+          {SUGGESTIONS.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <button
+                key={i}
+                onClick={() => send(s.text)}
+                disabled={loading || !ctx}
+                style={{
+                  background: C.l1,
+                  border: "none",
+                  borderRadius: 12,
+                  padding: "14px 16px",
+                  color: C.t2, fontSize: 13, fontFamily: FONT,
+                  cursor: "pointer", transition: "all 0.15s",
+                  display: "flex", alignItems: "center", gap: 10,
+                  textAlign: "left",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = C.l2;
+                  e.currentTarget.style.color = C.t1;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = C.l1;
+                  e.currentTarget.style.color = C.t2;
+                }}
+              >
+                <Icon style={{ width: 15, height: 15, opacity: 0.5, flexShrink: 0 }} strokeWidth={1.6} />
+                {s.text}
+              </button>
+            );
+          })}
+        </div>
+
+        <div style={{ width: "100%", padding: "0 20px", maxWidth: 720 }}>
+          {inputBar}
+        </div>
+
+        <style>{`
+          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          .ai-input-form textarea::placeholder { color: ${C.t3}; }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       display: "flex", flexDirection: "column",
@@ -134,132 +283,62 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
       minHeight: 400,
       position: "relative",
     }}>
-      {/* Messages area */}
+      {/* Messages area — scrolls */}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
         style={{
           flex: 1, overflowY: "auto", overflowX: "hidden",
-          display: "flex", flexDirection: "column",
         }}
       >
-        {!hasMessages ? (
-          <div style={{
-            flex: 1, display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center",
-            padding: "0 20px 60px",
-            gap: 40,
-          }}>
-            <div style={{ textAlign: "center" }}>
-              <h2 style={{
-                fontSize: 26, fontWeight: 300, color: C.t1,
-                margin: 0, fontFamily: FONT, letterSpacing: "-0.02em",
-              }}>
-                Comment puis-je aider ?
-              </h2>
-              {ctxLoading && (
-                <p style={{
-                  fontSize: 12, color: C.t3, margin: "12px 0 0",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  fontFamily: FONT,
-                }}>
-                  <Loader2 style={{ width: 12, height: 12, animation: "spin 1.5s linear infinite" }} />
-                  Connexion aux données…
-                </p>
+        <div style={{
+          display: "flex", flexDirection: "column", gap: 0,
+          maxWidth: 680, width: "100%", margin: "0 auto",
+          padding: "24px 0 16px",
+        }}>
+          {messages.map((m) => (
+            <div key={m.id} style={{ padding: "12px 4px" }}>
+              {m.role === "user" ? (
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <div style={{
+                    maxWidth: "85%",
+                    background: C.l2,
+                    borderRadius: "20px 20px 4px 20px",
+                    padding: "12px 18px",
+                    fontSize: 14, lineHeight: 1.6, fontFamily: FONT,
+                    color: C.t1, wordBreak: "break-word",
+                  }}>
+                    {m.content}
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="ai-resp"
+                  style={{
+                    fontSize: 14, lineHeight: 1.7, fontFamily: FONT,
+                    color: C.t1, wordBreak: "break-word",
+                    paddingLeft: 2,
+                  }}
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }}
+                />
               )}
             </div>
+          ))}
 
+          {loading && (
             <div style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 8,
-              width: "100%", maxWidth: 420,
+              padding: "12px 4px",
+              display: "flex", alignItems: "center", gap: 8,
+              fontSize: 13, color: C.t3, fontFamily: FONT,
             }}>
-              {SUGGESTIONS.map((s, i) => {
-                const Icon = s.icon;
-                return (
-                  <button
-                    key={i}
-                    onClick={() => send(s.text)}
-                    disabled={loading || !ctx}
-                    style={{
-                      background: C.l1,
-                      border: "none",
-                      borderRadius: 12,
-                      padding: "14px 16px",
-                      color: C.t2, fontSize: 13, fontFamily: FONT,
-                      cursor: "pointer", transition: "all 0.15s",
-                      display: "flex", alignItems: "center", gap: 10,
-                      textAlign: "left",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = C.l2;
-                      e.currentTarget.style.color = C.t1;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = C.l1;
-                      e.currentTarget.style.color = C.t2;
-                    }}
-                  >
-                    <Icon style={{ width: 15, height: 15, opacity: 0.5, flexShrink: 0 }} strokeWidth={1.6} />
-                    {s.text}
-                  </button>
-                );
-              })}
+              <span style={{ display: "inline-flex", gap: 4, alignItems: "center" }}>
+                <span className="ai-dot" style={{ animationDelay: "0ms" }} />
+                <span className="ai-dot" style={{ animationDelay: "150ms" }} />
+                <span className="ai-dot" style={{ animationDelay: "300ms" }} />
+              </span>
             </div>
-          </div>
-        ) : (
-          <div style={{
-            display: "flex", flexDirection: "column", gap: 0,
-            maxWidth: 680, width: "100%", margin: "0 auto",
-            padding: "24px 0 16px",
-          }}>
-            {messages.map((m) => (
-              <div key={m.id} style={{ padding: "12px 4px" }}>
-                {m.role === "user" ? (
-                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <div style={{
-                      maxWidth: "85%",
-                      background: C.l2,
-                      borderRadius: "20px 20px 4px 20px",
-                      padding: "12px 18px",
-                      fontSize: 14, lineHeight: 1.6, fontFamily: FONT,
-                      color: C.t1, wordBreak: "break-word",
-                    }}>
-                      {m.content}
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    className="ai-resp"
-                    style={{
-                      fontSize: 14, lineHeight: 1.7, fontFamily: FONT,
-                      color: C.t1, wordBreak: "break-word",
-                      paddingLeft: 2,
-                    }}
-                    dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }}
-                  />
-                )}
-              </div>
-            ))}
-
-            {loading && (
-              <div style={{
-                padding: "12px 4px",
-                display: "flex", alignItems: "center", gap: 8,
-                fontSize: 13, color: C.t3, fontFamily: FONT,
-              }}>
-                <span style={{
-                  display: "inline-flex", gap: 4, alignItems: "center",
-                }}>
-                  <span className="ai-dot" style={{ animationDelay: "0ms" }} />
-                  <span className="ai-dot" style={{ animationDelay: "150ms" }} />
-                  <span className="ai-dot" style={{ animationDelay: "300ms" }} />
-                </span>
-              </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Scroll to bottom */}
@@ -269,7 +348,7 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
           onClick={scrollToBottom}
           style={{
             position: "absolute",
-            bottom: 80, left: "50%", transform: "translateX(-50%)",
+            bottom: 90, left: "50%", transform: "translateX(-50%)",
             width: 32, height: 32, borderRadius: "50%",
             background: C.l3, border: `1px solid ${C.bd}`,
             color: C.t2, cursor: "pointer",
@@ -282,75 +361,13 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
         </button>
       )}
 
-      {/* Input bar — fixed at bottom, never scrolls */}
+      {/* Input bar — stays fixed, never scrolls */}
       <div style={{
-        padding: `14px 0 max(24px, env(safe-area-inset-bottom, 12px))`,
-        display: "flex", justifyContent: "center",
+        padding: "14px 0 0",
+        paddingBottom: `max(24px, env(safe-area-inset-bottom, 12px))`,
         flexShrink: 0,
       }}>
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            width: "100%", maxWidth: 680,
-            background: C.l1,
-            borderRadius: 24,
-            border: `1px solid ${C.bds}`,
-            display: "flex", alignItems: "flex-end",
-            padding: "6px 6px 6px 18px",
-            transition: "border-color 0.15s",
-            position: "relative",
-          }}
-          onFocus={() => {
-            const form = document.getElementById("ai-form");
-            if (form) form.style.borderColor = C.bd;
-          }}
-          id="ai-form"
-        >
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => { setInput(e.target.value); autoResize(e.target); }}
-            onKeyDown={handleKeyDown}
-            placeholder="Posez une question…"
-            disabled={loading || !ctx}
-            rows={1}
-            style={{
-              flex: 1, resize: "none", overflow: "hidden",
-              background: "transparent",
-              border: "none",
-              padding: "8px 0",
-              fontSize: 16,
-              fontFamily: FONT,
-              color: C.t1, outline: "none",
-              boxSizing: "border-box",
-              lineHeight: 1.5,
-              maxHeight: 160,
-            }}
-            onFocus={() => {
-              const form = document.getElementById("ai-form");
-              if (form) form.style.borderColor = C.bd;
-            }}
-            onBlur={() => {
-              const form = document.getElementById("ai-form");
-              if (form) form.style.borderColor = C.bds;
-            }}
-          />
-          <button
-            type="submit"
-            disabled={loading || !input.trim() || !ctx}
-            style={{
-              width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
-              background: input.trim() ? C.accent : C.l3,
-              border: "none",
-              color: input.trim() ? "#111" : C.t3,
-              cursor: input.trim() ? "pointer" : "default",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "all 0.15s",
-            }}
-          >
-            <ArrowUp style={{ width: 18, height: 18 }} strokeWidth={2.2} />
-          </button>
-        </form>
+        {inputBar}
       </div>
 
       <style>{`
@@ -379,7 +396,7 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
           font-size: 0.9em;
           font-family: monospace;
         }
-        #ai-form textarea::placeholder { color: ${C.t3}; }
+        .ai-input-form textarea::placeholder { color: ${C.t3}; }
       `}</style>
     </div>
   );

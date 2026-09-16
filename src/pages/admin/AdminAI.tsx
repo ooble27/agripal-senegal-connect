@@ -1,6 +1,6 @@
 import { useLayoutEffect } from "react";
 import { Link } from "react-router-dom";
-import { X } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import AIAssistPanel from "@/components/admin/AIAssistPanel";
 import { C, FONT } from "@/components/admin/adminTheme";
 
@@ -30,26 +30,25 @@ const AdminAI = () => {
       display: "flex", flexDirection: "column",
       overflow: "hidden",
     }}>
-      {/* Close button — top right */}
+      {/* Back button — top left */}
       <div style={{
-        paddingTop: "max(12px, env(safe-area-inset-top, 0px))",
-        paddingBottom: 4,
+        paddingTop: "max(14px, env(safe-area-inset-top, 0px))",
+        paddingBottom: 6,
         paddingLeft: 20, paddingRight: 20,
-        display: "flex", justifyContent: "flex-end",
       }}>
         <Link
           to="/admin"
-          aria-label="Fermer"
+          aria-label="Retour"
           style={{
-            width: 36, height: 36, borderRadius: 10,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: C.t3, textDecoration: "none", transition: "all 0.15s",
-            background: "transparent",
+            width: 38, height: 38, borderRadius: 10,
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            color: C.t2, textDecoration: "none", transition: "all 0.15s",
+            background: C.l1, border: `1px solid ${C.bds}`,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = C.t1; e.currentTarget.style.background = C.l2; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = C.t3; e.currentTarget.style.background = "transparent"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = C.t1; e.currentTarget.style.borderColor = C.bd; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = C.t2; e.currentTarget.style.borderColor = C.bds; }}
         >
-          <X style={{ width: 20, height: 20 }} strokeWidth={1.8} />
+          <ArrowLeft style={{ width: 18, height: 18 }} strokeWidth={1.8} />
         </Link>
       </div>
 
@@ -58,7 +57,6 @@ const AdminAI = () => {
         flex: 1, display: "flex", flexDirection: "column",
         maxWidth: 780, width: "100%", margin: "0 auto",
         padding: "0 20px",
-        paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))",
         minHeight: 0,
       }}>
         <AIAssistPanel fullPage />

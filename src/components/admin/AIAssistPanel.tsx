@@ -282,10 +282,11 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
         </button>
       )}
 
-      {/* Input bar — ChatGPT-style floating bar */}
+      {/* Input bar — fixed at bottom, never scrolls */}
       <div style={{
-        padding: `12px 0 max(16px, env(safe-area-inset-bottom, 0px))`,
+        padding: `14px 0 max(24px, env(safe-area-inset-bottom, 12px))`,
         display: "flex", justifyContent: "center",
+        flexShrink: 0,
       }}>
         <form
           onSubmit={handleSubmit}

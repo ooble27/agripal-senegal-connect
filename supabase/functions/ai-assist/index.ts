@@ -470,6 +470,45 @@ const AI_TOOLS = [
       required: ["to", "subject", "body"],
     },
   },
+  {
+    name: "update_order_status",
+    description: "Change le statut d'une commande Ooble. Utilise cet outil quand le staff demande de marquer un paiement reçu, compléter, annuler, rembourser ou rouvrir une commande. L'action sera présentée pour confirmation.",
+    input_schema: {
+      type: "object",
+      properties: {
+        orderRef: { type: "string", description: "Référence de la commande (ex: OOB-A1B2C3D4), visible dans les données de la plateforme" },
+        action: {
+          type: "string",
+          enum: ["recu", "termine", "annule", "rembourse", "rouvert"],
+          description: "recu=paiement reçu, termine=complétée, annule=annulée, rembourse=remboursée, rouvert=rouvrir",
+        },
+        note: { type: "string", description: "Note optionnelle pour l'historique" },
+      },
+      required: ["orderRef", "action"],
+    },
+  },
+  {
+    name: "assign_order",
+    description: "Prendre une commande en charge (l'assigner à l'opérateur courant, statut → En cours). Utilise quand le staff dit 'prends cette commande', 'je m'en occupe', 'assigne-moi'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        orderRef: { type: "string", description: "Référence de la commande (ex: OOB-A1B2C3D4)" },
+      },
+      required: ["orderRef"],
+    },
+  },
+  {
+    name: "release_order",
+    description: "Libérer une commande assignée et la remettre en file d'attente. Utilise quand le staff dit 'libère', 'remets en attente', 'je ne m'en occupe plus'.",
+    input_schema: {
+      type: "object",
+      properties: {
+        orderRef: { type: "string", description: "Référence de la commande (ex: OOB-A1B2C3D4)" },
+      },
+      required: ["orderRef"],
+    },
+  },
 ];
 
 interface PendingAction {
@@ -486,6 +525,153 @@ interface ActionResult {
 }
 
 // ────────────────────────────────────────────────────────────
+// Helpers ordres — résolution par ref + transitions
+// ────────────────────────────────────────────────────────────
+
+async function resolveOrderByRef(
+  admin: SupabaseClient,
+  ref: string,
+): Promise<{ id: string; status: string; side: string; assigned_to: string | null; cad_amount: number; usdt_amount: number; user_id: string } | null> {
+  const prefix = ref.replace(/^OOB-/i, "").toLowerCase();
+  if (prefix.length < 4) return null;
+  const { data } = await admin
+    .from("orders")
+    .select("id, status, side, assigned_to, cad_amount, usdt_amount, user_id")
+    .ilike("id", `${prefix}%`)
+    .limit(1)
+    .maybeSingle();
+  return data as { id: string; status: string; side: string; assigned_to: string | null; cad_amount: number; usdt_amount: number; user_id: string } | null;
+}
+
+const ACTION_TO_DB_STATUS: Record<string, string> = {
+  recu: "payment_received",
+  termine: "completed",
+  annule: "cancelled",
+  rembourse: "refunded",
+  rouvert: "awaiting_payment",
+};
+
+const VALID_FROM: Record<string, string[]> = {
+  recu: ["created", "awaiting_payment", "settling"],
+  termine: ["payment_received", "settling"],
+  annule: ["created", "awaiting_payment", "payment_received", "settling"],
+  rembourse: ["payment_received", "settling", "completed"],
+  rouvert: ["completed", "cancelled", "expired", "refunded"],
+};
+
+const ORDER_ACTION_LABELS: Record<string, string> = {
+  recu: "Paiement reçu",
+  termine: "Terminée",
+  annule: "Annulée",
+  rembourse: "Remboursée",
+  rouvert: "Rouverte",
+};
+
+function orderRefDisplay(id: string): string {
+  return `OOB-${id.slice(0, 8).toUpperCase()}`;
+}
+
+async function executeOrderStatusChange(
+  admin: SupabaseClient,
+  staffId: string,
+  orderRef: string,
+  action: string,
+  note?: string,
+): Promise<ActionResult> {
+  const order = await resolveOrderByRef(admin, orderRef);
+  if (!order) return { success: false, error: `Commande ${orderRef} introuvable.` };
+
+  const validFrom = VALID_FROM[action];
+  if (!validFrom || !validFrom.includes(order.status)) {
+    return { success: false, error: `Impossible : statut actuel « ${order.status} » ne permet pas l'action « ${ORDER_ACTION_LABELS[action] ?? action} ».` };
+  }
+
+  const newStatus = ACTION_TO_DB_STATUS[action];
+  const update: Record<string, unknown> = { status: newStatus };
+  if (action === "rouvert") {
+    update.assigned_to = null;
+    update.assigned_at = null;
+  }
+
+  const { error } = await admin.from("orders").update(update).eq("id", order.id);
+  if (error) return { success: false, error: `Erreur DB : ${error.message}` };
+
+  await admin.from("order_events").insert({
+    order_id: order.id,
+    previous_status: order.status,
+    new_status: newStatus,
+    actor: staffId,
+    note: note ?? `Via assistant IA — ${ORDER_ACTION_LABELS[action]}`,
+  });
+
+  const ref = orderRefDisplay(order.id);
+  return { success: true, message: `Commande ${ref} → ${ORDER_ACTION_LABELS[action]}` };
+}
+
+async function executeAssignOrder(
+  admin: SupabaseClient,
+  staffId: string,
+  orderRef: string,
+): Promise<ActionResult> {
+  const order = await resolveOrderByRef(admin, orderRef);
+  if (!order) return { success: false, error: `Commande ${orderRef} introuvable.` };
+
+  const assignable = ["created", "awaiting_payment", "payment_received"];
+  if (!assignable.includes(order.status)) {
+    return { success: false, error: `Impossible de prendre en charge : statut actuel « ${order.status} ».` };
+  }
+
+  const { error } = await admin.from("orders").update({
+    status: "settling",
+    assigned_to: staffId,
+    assigned_at: new Date().toISOString(),
+  }).eq("id", order.id);
+  if (error) return { success: false, error: `Erreur DB : ${error.message}` };
+
+  await admin.from("order_events").insert({
+    order_id: order.id,
+    previous_status: order.status,
+    new_status: "settling",
+    actor: staffId,
+    note: "Prise en charge via assistant IA",
+  });
+
+  const ref = orderRefDisplay(order.id);
+  return { success: true, message: `Commande ${ref} prise en charge` };
+}
+
+async function executeReleaseOrder(
+  admin: SupabaseClient,
+  staffId: string,
+  orderRef: string,
+): Promise<ActionResult> {
+  const order = await resolveOrderByRef(admin, orderRef);
+  if (!order) return { success: false, error: `Commande ${orderRef} introuvable.` };
+
+  if (order.status !== "settling") {
+    return { success: false, error: `La commande n'est pas en cours de traitement (statut : « ${order.status} »).` };
+  }
+
+  const { error } = await admin.from("orders").update({
+    status: "awaiting_payment",
+    assigned_to: null,
+    assigned_at: null,
+  }).eq("id", order.id);
+  if (error) return { success: false, error: `Erreur DB : ${error.message}` };
+
+  await admin.from("order_events").insert({
+    order_id: order.id,
+    previous_status: order.status,
+    new_status: "awaiting_payment",
+    actor: staffId,
+    note: "Libérée via assistant IA",
+  });
+
+  const ref = orderRefDisplay(order.id);
+  return { success: true, message: `Commande ${ref} libérée` };
+}
+
+// ────────────────────────────────────────────────────────────
 // Agent 4 — Assistant contextuel temps réel (chat)
 // ────────────────────────────────────────────────────────────
 
@@ -499,6 +685,7 @@ Quand tu utilises un outil :
 - Explique en 1 phrase ce que tu fais AVANT d'appeler l'outil.
 - Utilise les données du contexte (email du client, montants, références) — ne demande pas au staff ce que tu peux trouver toi-même.
 - Pour les emails : ton Ooble (professionnel, chaleureux mais pas corporate), vocabulaire Ooble. Commence par « Bonjour [prénom], ». Pas de signature.
+- Pour les commandes : utilise la référence OOB-XXXXXXXX visible dans les commandes récentes. Ne demande pas la référence si tu la vois dans le contexte.
 
 Style de réponse — TRÈS IMPORTANT :
 - Écris comme un collègue compétent qui répond naturellement. Pas comme un rapport.
@@ -761,6 +948,8 @@ async function executeAction(
   apiKey: string,
   supabaseUrl: string,
   serviceKey: string,
+  admin: SupabaseClient,
+  staffId: string,
   input: {
     action: PendingAction;
     messages: Array<{ role: "user" | "assistant"; content: string }>;
@@ -775,6 +964,15 @@ async function executeAction(
     actionResult = emailRes.error
       ? { success: false, error: emailRes.error }
       : { success: true, message: `Email envoyé à ${params.to}` };
+  } else if (input.action.tool === "update_order_status") {
+    const params = input.action.input as { orderRef: string; action: string; note?: string };
+    actionResult = await executeOrderStatusChange(admin, staffId, params.orderRef, params.action, params.note);
+  } else if (input.action.tool === "assign_order") {
+    const params = input.action.input as { orderRef: string };
+    actionResult = await executeAssignOrder(admin, staffId, params.orderRef);
+  } else if (input.action.tool === "release_order") {
+    const params = input.action.input as { orderRef: string };
+    actionResult = await executeReleaseOrder(admin, staffId, params.orderRef);
   } else {
     actionResult = { success: false, error: `Outil inconnu : ${input.action.tool}` };
   }
@@ -940,7 +1138,7 @@ Deno.serve(async (req) => {
       if (!payload.messages || payload.messages.length === 0) return json({ error: "Champ 'messages' requis." }, 400);
       if (!payload.context) return json({ error: "Champ 'context' requis." }, 400);
       const inputPreview = preview(`Exécution : ${payload.action.tool} → ${JSON.stringify(payload.action.input).slice(0, 150)}`);
-      const result = await executeAction(anthropicKey, supabaseUrl, serviceKey, {
+      const result = await executeAction(anthropicKey, supabaseUrl, serviceKey, admin, userId, {
         action: payload.action,
         messages: payload.messages,
         context: payload.context,

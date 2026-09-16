@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, ArrowDown, Sparkles, TrendingUp, AlertTriangle, BarChart3, ArrowUp, Mail, Check, X } from "lucide-react";
+import { Loader2, ArrowDown, Sparkles, TrendingUp, AlertTriangle, BarChart3, ArrowUp, Mail, Check, X, Package } from "lucide-react";
 import { contextChat, executeAction, isAIError, type ChatMessage, type PendingAction } from "@/lib/ai";
 import { fetchPlatformContext } from "@/lib/aiContext";
 import type { PlatformContext } from "@/lib/ai";
@@ -52,9 +52,84 @@ function inlineFormat(s: string): string {
     .replace(/`(.+?)`/g, '<code>$1</code>');
 }
 
-const TOOL_LABELS: Record<string, { icon: typeof Mail; label: string }> = {
-  send_email: { icon: Mail, label: "Envoyer un email" },
+const ORDER_ACTION_LABELS: Record<string, string> = {
+  recu: "Paiement reçu",
+  termine: "Terminée",
+  annule: "Annulée",
+  rembourse: "Remboursée",
+  rouvert: "Rouverte",
 };
+
+const TOOL_LABELS: Record<string, { icon: typeof Mail; label: string; confirmLabel: string; executingLabel: string }> = {
+  send_email: { icon: Mail, label: "Envoyer un email", confirmLabel: "Confirmer l'envoi", executingLabel: "Envoi…" },
+  update_order_status: { icon: Package, label: "Modifier le statut", confirmLabel: "Confirmer", executingLabel: "Modification…" },
+  assign_order: { icon: Package, label: "Prendre en charge", confirmLabel: "Confirmer", executingLabel: "Assignation…" },
+  release_order: { icon: Package, label: "Libérer la commande", confirmLabel: "Confirmer", executingLabel: "Libération…" },
+};
+
+function doneText(action: PendingAction): string {
+  const p = action.input as Record<string, string>;
+  if (action.tool === "send_email") return `Email envoyé à ${p.to}`;
+  if (action.tool === "update_order_status") return `${p.orderRef} → ${ORDER_ACTION_LABELS[p.action] ?? "Mis à jour"}`;
+  if (action.tool === "assign_order") return `${p.orderRef} prise en charge`;
+  if (action.tool === "release_order") return `${p.orderRef} libérée`;
+  return "Action effectuée";
+}
+
+function ActionCardBody({ action }: { action: PendingAction }) {
+  const p = action.input as Record<string, string>;
+
+  if (action.tool === "send_email") {
+    return (
+      <div style={{ padding: "12px 16px", fontSize: 12.5, fontFamily: FONT, color: C.t2 }}>
+        {p.to && (
+          <div style={{ marginBottom: 6 }}>
+            <span style={{ color: C.t3 }}>À : </span>
+            <span style={{ color: C.t1 }}>{p.to}</span>
+          </div>
+        )}
+        {p.subject && (
+          <div style={{ marginBottom: 6 }}>
+            <span style={{ color: C.t3 }}>Sujet : </span>
+            <span style={{ color: C.t1 }}>{p.subject}</span>
+          </div>
+        )}
+        {p.body && (
+          <div style={{
+            marginTop: 8, padding: "10px 12px",
+            background: "rgba(255,255,255,0.02)",
+            borderRadius: 8,
+            fontSize: 12, lineHeight: 1.6, color: C.t2,
+            maxHeight: 120, overflowY: "auto",
+            whiteSpace: "pre-wrap",
+          }}>
+            {p.body.length > 300 ? p.body.slice(0, 300) + "…" : p.body}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: "12px 16px", fontSize: 12.5, fontFamily: FONT, color: C.t2 }}>
+      {p.orderRef && (
+        <div style={{ marginBottom: 6 }}>
+          <span style={{ color: C.t3 }}>Commande : </span>
+          <span style={{ color: C.t1, fontWeight: 500, fontFamily: "monospace", letterSpacing: "0.03em" }}>{p.orderRef}</span>
+        </div>
+      )}
+      {action.tool === "update_order_status" && p.action && (
+        <div style={{ marginBottom: 6 }}>
+          <span style={{ color: C.t3 }}>Action : </span>
+          <span style={{ color: C.t1 }}>{ORDER_ACTION_LABELS[p.action] ?? p.action}</span>
+        </div>
+      )}
+      {p.note && (
+        <div style={{ marginTop: 4, fontSize: 12, color: C.t3 }}>{p.note}</div>
+      )}
+    </div>
+  );
+}
 
 function ActionCard({
   action,
@@ -69,9 +144,8 @@ function ActionCard({
   onConfirm: () => void;
   onReject: () => void;
 }) {
-  const meta = TOOL_LABELS[action.tool] ?? { icon: Mail, label: action.tool };
+  const meta = TOOL_LABELS[action.tool] ?? { icon: Package, label: action.tool, confirmLabel: "Confirmer", executingLabel: "Exécution…" };
   const Icon = meta.icon;
-  const params = action.input as { to?: string; subject?: string; body?: string };
 
   if (status === "done") {
     return (
@@ -84,7 +158,7 @@ function ActionCard({
         marginTop: 8,
       }}>
         <Check style={{ width: 14, height: 14, flexShrink: 0 }} strokeWidth={2} />
-        Email envoyé à {params.to}
+        {doneText(action)}
       </div>
     );
   }
@@ -144,32 +218,7 @@ function ActionCard({
         </span>
       </div>
 
-      <div style={{ padding: "12px 16px", fontSize: 12.5, fontFamily: FONT, color: C.t2 }}>
-        {params.to && (
-          <div style={{ marginBottom: 6 }}>
-            <span style={{ color: C.t3 }}>À : </span>
-            <span style={{ color: C.t1 }}>{params.to}</span>
-          </div>
-        )}
-        {params.subject && (
-          <div style={{ marginBottom: 6 }}>
-            <span style={{ color: C.t3 }}>Sujet : </span>
-            <span style={{ color: C.t1 }}>{params.subject}</span>
-          </div>
-        )}
-        {params.body && (
-          <div style={{
-            marginTop: 8, padding: "10px 12px",
-            background: "rgba(255,255,255,0.02)",
-            borderRadius: 8,
-            fontSize: 12, lineHeight: 1.6, color: C.t2,
-            maxHeight: 120, overflowY: "auto",
-            whiteSpace: "pre-wrap",
-          }}>
-            {params.body.length > 300 ? params.body.slice(0, 300) + "…" : params.body}
-          </div>
-        )}
-      </div>
+      <ActionCardBody action={action} />
 
       <div style={{
         padding: "10px 16px",
@@ -216,10 +265,10 @@ function ActionCard({
           {status === "executing" ? (
             <>
               <Loader2 style={{ width: 12, height: 12, animation: "spin 1.5s linear infinite" }} />
-              Envoi…
+              {meta.executingLabel}
             </>
           ) : (
-            "Confirmer l'envoi"
+            meta.confirmLabel
           )}
         </button>
       </div>

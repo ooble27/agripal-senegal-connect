@@ -268,8 +268,8 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
 
         {/* Input bar — at the bottom */}
         <div style={{
-          padding: `14px 0`,
-          paddingBottom: `max(24px, env(safe-area-inset-bottom, 12px))`,
+          padding: "14px 0",
+          paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))",
           flexShrink: 0,
         }}>
           {inputBar}
@@ -372,7 +372,7 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
       {/* Input bar — stays fixed, never scrolls */}
       <div style={{
         padding: "14px 0 0",
-        paddingBottom: `max(24px, env(safe-area-inset-bottom, 12px))`,
+        paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))",
         flexShrink: 0,
       }}>
         {inputBar}

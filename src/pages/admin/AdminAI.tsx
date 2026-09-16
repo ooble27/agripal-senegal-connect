@@ -12,35 +12,38 @@ const AdminAI = () => {
     const prevBodyBg = body.style.backgroundColor;
     html.style.backgroundColor = C.bg;
     body.style.backgroundColor = C.bg;
+    body.style.overflow = "hidden";
     const meta = document.querySelector('meta[name="theme-color"]');
     const prevTheme = meta?.getAttribute("content") ?? "";
     meta?.setAttribute("content", C.bg);
     return () => {
       html.style.backgroundColor = prevHtmlBg;
       body.style.backgroundColor = prevBodyBg;
+      body.style.overflow = "";
       if (meta) meta.setAttribute("content", prevTheme);
     };
   }, []);
 
   return (
-    <div style={{
+    <div className="ai-page" style={{
       background: C.bg, color: C.t1,
-      height: "100vh",
       fontFamily: FONT,
       display: "flex", flexDirection: "column",
       overflow: "hidden",
+      position: "fixed", inset: 0,
     }}>
       {/* Back button — top left */}
       <div style={{
-        paddingTop: "max(14px, env(safe-area-inset-top, 0px))",
-        paddingBottom: 6,
-        paddingLeft: 20, paddingRight: 20,
+        paddingTop: "max(10px, env(safe-area-inset-top, 0px))",
+        paddingBottom: 4,
+        paddingLeft: 16, paddingRight: 16,
+        flexShrink: 0,
       }}>
         <Link
           to="/admin"
           aria-label="Retour"
           style={{
-            width: 38, height: 38, borderRadius: 10,
+            width: 36, height: 36, borderRadius: 10,
             display: "inline-flex", alignItems: "center", justifyContent: "center",
             color: C.t2, textDecoration: "none", transition: "all 0.15s",
             background: C.l1, border: `1px solid ${C.bds}`,

@@ -1,48 +1,32 @@
 import { useState, useRef, useEffect } from "react";
 import { X } from "lucide-react";
 
-const OobleMascot = ({ size = 24, light = false }: { size?: number; light?: boolean }) => (
-  <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-    <defs>
-      <radialGradient id="ob-body" cx="0.4" cy="0.35" r="0.65">
-        <stop offset="0%" stopColor={light ? "#666" : "#e0e0e0"} />
-        <stop offset="100%" stopColor={light ? "#333" : "#a0a0a0"} />
-      </radialGradient>
-      <radialGradient id="ob-glow" cx="0.5" cy="0.5" r="0.5">
-        <stop offset="0%" stopColor={light ? "#555" : "#fff"} stopOpacity="0.25" />
-        <stop offset="100%" stopColor={light ? "#555" : "#fff"} stopOpacity="0" />
-      </radialGradient>
-    </defs>
-    {/* Soft glow behind */}
-    <ellipse cx="32" cy="34" rx="22" ry="20" fill="url(#ob-glow)" />
-    {/* Body — organic blob shape */}
-    <path
-      d="M16 28c0-10 5.5-18 16-18s16 8 16 18c0 11-6 20-16 20S16 39 16 28z"
-      fill="url(#ob-body)"
-    />
-    {/* Highlight on top */}
-    <ellipse cx="28" cy="16" rx="7" ry="3" fill={light ? "#777" : "#fff"} opacity="0.3" />
-    {/* Left eye */}
-    <ellipse cx="25" cy="27" rx="4.5" ry="5.5" fill={light ? "#111" : "#1a1a1a"} />
-    <ellipse cx="26" cy="25.5" rx="2" ry="2.2" fill={light ? "#eee" : "#fff"} />
-    <circle cx="24" cy="29" r="0.9" fill={light ? "#eee" : "#fff"} opacity="0.5" />
-    {/* Right eye */}
-    <ellipse cx="39" cy="27" rx="4.5" ry="5.5" fill={light ? "#111" : "#1a1a1a"} />
-    <ellipse cx="40" cy="25.5" rx="2" ry="2.2" fill={light ? "#eee" : "#fff"} />
-    <circle cx="38" cy="29" r="0.9" fill={light ? "#eee" : "#fff"} opacity="0.5" />
-    {/* Smile */}
-    <path
-      d="M26 35q6 5.5 12 0"
-      stroke={light ? "#111" : "#1a1a1a"}
-      strokeWidth="2"
-      strokeLinecap="round"
-      fill="none"
-    />
-    {/* Blush cheeks */}
-    <ellipse cx="21" cy="33" rx="3" ry="2" fill={light ? "#c06060" : "#ff9090"} opacity="0.25" />
-    <ellipse cx="43" cy="33" rx="3" ry="2" fill={light ? "#c06060" : "#ff9090"} opacity="0.25" />
-  </svg>
-);
+const OobleMascot = ({ size = 24, dark = false }: { size?: number; dark?: boolean }) => {
+  const fill = dark ? "#111" : "currentColor";
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+      {/* Ear tufts */}
+      <path d="M12 16L8 4l10 8z" fill={fill} opacity="0.85" />
+      <path d="M36 16l4-12-10 8z" fill={fill} opacity="0.85" />
+      {/* Head */}
+      <ellipse cx="24" cy="27" rx="16" ry="17" fill={fill} />
+      {/* Left eye ring */}
+      <circle cx="18" cy="25" r="7" fill={dark ? "#fff" : "#1a1a1a"} />
+      <circle cx="18" cy="25" r="5" fill={dark ? "#111" : "#fff"} />
+      {/* Left pupil */}
+      <circle cx="19" cy="25" r="2.5" fill={dark ? "#fff" : "#1a1a1a"} />
+      <circle cx="17.5" cy="23.8" r="1" fill={dark ? "#111" : "#fff"} />
+      {/* Right eye ring */}
+      <circle cx="30" cy="25" r="7" fill={dark ? "#fff" : "#1a1a1a"} />
+      <circle cx="30" cy="25" r="5" fill={dark ? "#111" : "#fff"} />
+      {/* Right pupil */}
+      <circle cx="31" cy="25" r="2.5" fill={dark ? "#fff" : "#1a1a1a"} />
+      <circle cx="29.5" cy="23.8" r="1" fill={dark ? "#111" : "#fff"} />
+      {/* Beak */}
+      <path d="M22 30l2 3.5 2-3.5z" fill={dark ? "#f5a623" : "#f5a623"} />
+    </svg>
+  );
+};
 import AIAssistPanel from "./AIAssistPanel";
 import { C, FONT } from "./adminTheme";
 
@@ -155,7 +139,7 @@ const AIFloatingChat = () => {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          aria-label="Assistant IA"
+          aria-label="oOble"
           style={{
             position: "fixed",
             bottom: "calc(20px + env(safe-area-inset-bottom, 0px))",
@@ -174,7 +158,7 @@ const AIFloatingChat = () => {
             zIndex: 101,
           }}
         >
-          <OobleMascot size={34} light />
+          <OobleMascot size={34} dark />
         </button>
       )}
     </>

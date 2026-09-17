@@ -2,28 +2,20 @@ import { useState, useRef, useEffect } from "react";
 import { X } from "lucide-react";
 
 const OobleMascot = ({ size = 24, dark = false }: { size?: number; dark?: boolean }) => {
-  const fill = dark ? "#111" : "currentColor";
+  const body = dark ? "#111" : "currentColor";
+  const eye = dark ? "#fff" : "#fff";
+  const pupil = dark ? "#111" : "#1a1a1a";
+  const accent = "#f5a623";
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
-      {/* Ear tufts */}
-      <path d="M12 16L8 4l10 8z" fill={fill} opacity="0.85" />
-      <path d="M36 16l4-12-10 8z" fill={fill} opacity="0.85" />
-      {/* Head */}
-      <ellipse cx="24" cy="27" rx="16" ry="17" fill={fill} />
-      {/* Left eye ring */}
-      <circle cx="18" cy="25" r="7" fill={dark ? "#fff" : "#1a1a1a"} />
-      <circle cx="18" cy="25" r="5" fill={dark ? "#111" : "#fff"} />
-      {/* Left pupil */}
-      <circle cx="19" cy="25" r="2.5" fill={dark ? "#fff" : "#1a1a1a"} />
-      <circle cx="17.5" cy="23.8" r="1" fill={dark ? "#111" : "#fff"} />
-      {/* Right eye ring */}
-      <circle cx="30" cy="25" r="7" fill={dark ? "#fff" : "#1a1a1a"} />
-      <circle cx="30" cy="25" r="5" fill={dark ? "#111" : "#fff"} />
-      {/* Right pupil */}
-      <circle cx="31" cy="25" r="2.5" fill={dark ? "#fff" : "#1a1a1a"} />
-      <circle cx="29.5" cy="23.8" r="1" fill={dark ? "#111" : "#fff"} />
-      {/* Beak */}
-      <path d="M22 30l2 3.5 2-3.5z" fill={dark ? "#f5a623" : "#f5a623"} />
+      <rect x="4" y="4" width="40" height="40" rx="14" fill={body} />
+      <circle cx="17" cy="20" r="4.5" fill={eye} />
+      <circle cx="18" cy="20.5" r="2.2" fill={pupil} />
+      <circle cx="16.5" cy="19" r="0.9" fill={eye} />
+      <circle cx="31" cy="20" r="4.5" fill={eye} />
+      <circle cx="32" cy="20.5" r="2.2" fill={pupil} />
+      <circle cx="30.5" cy="19" r="0.9" fill={eye} />
+      <path d="M16 31q8 6 16 0" stroke={accent} strokeWidth="2.5" fill="none" strokeLinecap="round" />
     </svg>
   );
 };

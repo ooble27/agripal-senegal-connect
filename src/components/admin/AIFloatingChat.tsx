@@ -1,5 +1,15 @@
 import { useState, useRef, useEffect } from "react";
-import { Sparkles, X } from "lucide-react";
+import { X } from "lucide-react";
+
+const OobleMascot = ({ size = 24 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="16" r="13" fill="currentColor" opacity="0.15" />
+    <circle cx="16" cy="16" r="13" stroke="currentColor" strokeWidth="2" />
+    <circle cx="12" cy="14" r="2.2" fill="currentColor" />
+    <circle cx="20" cy="14" r="2.2" fill="currentColor" />
+    <path d="M11 20c1.5 2.5 4 3.5 5 3.5s3.5-1 5-3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
 import AIAssistPanel from "./AIAssistPanel";
 import { C, FONT } from "./adminTheme";
 
@@ -58,7 +68,7 @@ const AIFloatingChat = () => {
               display: "flex", alignItems: "center", justifyContent: "center",
               color: C.t2,
             }}>
-              <Sparkles style={{ width: 16, height: 16 }} strokeWidth={1.8} />
+              <OobleMascot size={18} />
             </span>
             <span style={{ fontSize: 14, fontWeight: 400, color: C.t1 }}>
               oOble
@@ -131,7 +141,7 @@ const AIFloatingChat = () => {
             zIndex: 101,
           }}
         >
-          <Sparkles style={{ width: 24, height: 24 }} strokeWidth={1.8} />
+          <OobleMascot size={28} />
         </button>
       )}
     </>

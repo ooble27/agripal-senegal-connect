@@ -23,19 +23,18 @@ const AIFloatingChat = () => {
         ref={panelRef}
         style={{
           position: "fixed",
-          bottom: 0,
-          right: 0,
-          width: "100%",
+          bottom: 16,
+          right: 16,
+          width: "calc(100% - 32px)",
           maxWidth: 440,
-          height: "calc(100dvh - 60px)",
+          height: "calc(100dvh - 100px)",
           maxHeight: 700,
+          borderRadius: 20,
           zIndex: 100,
           display: "flex",
           flexDirection: "column",
           background: C.bg,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          boxShadow: "0 -4px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06)",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06)",
           transform: open ? "translateY(0)" : "translateY(100%)",
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
@@ -109,36 +108,32 @@ const AIFloatingChat = () => {
         />
       )}
 
-      {/* Floating bubble */}
-      <button
-        onClick={() => setOpen((p) => !p)}
-        aria-label="Assistant IA"
-        style={{
-          position: "fixed",
-          bottom: "calc(20px + env(safe-area-inset-bottom, 0px))",
-          right: 20,
-          width: 56,
-          height: 56,
-          borderRadius: "50%",
-          background: open ? C.l3 : C.accent,
-          border: "none",
-          color: open ? C.t2 : "#111",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
-          zIndex: 101,
-          transition: "all 0.25s cubic-bezier(0.32, 0.72, 0, 1)",
-          transform: open ? "scale(0.9)" : "scale(1)",
-        }}
-      >
-        {open ? (
-          <X style={{ width: 22, height: 22 }} strokeWidth={2} />
-        ) : (
+      {/* Floating bubble — hidden when panel is open */}
+      {!open && (
+        <button
+          onClick={() => setOpen(true)}
+          aria-label="Assistant IA"
+          style={{
+            position: "fixed",
+            bottom: "calc(20px + env(safe-area-inset-bottom, 0px))",
+            right: 20,
+            width: 56,
+            height: 56,
+            borderRadius: "50%",
+            background: C.accent,
+            border: "none",
+            color: "#111",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+            zIndex: 101,
+          }}
+        >
           <Bot style={{ width: 24, height: 24 }} strokeWidth={1.8} />
-        )}
-      </button>
+        </button>
+      )}
     </>
   );
 };

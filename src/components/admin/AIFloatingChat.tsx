@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Bot, X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 import AIAssistPanel from "./AIAssistPanel";
 import { C, FONT } from "./adminTheme";
 
@@ -58,10 +58,10 @@ const AIFloatingChat = () => {
               display: "flex", alignItems: "center", justifyContent: "center",
               color: C.t2,
             }}>
-              <Bot style={{ width: 16, height: 16 }} strokeWidth={1.8} />
+              <Sparkles style={{ width: 16, height: 16 }} strokeWidth={1.8} />
             </span>
             <span style={{ fontSize: 14, fontWeight: 400, color: C.t1 }}>
-              Assistant IA
+              oOble
             </span>
           </div>
           <button
@@ -131,7 +131,7 @@ const AIFloatingChat = () => {
             zIndex: 101,
           }}
         >
-          <Bot style={{ width: 24, height: 24 }} strokeWidth={1.8} />
+          <Sparkles style={{ width: 24, height: 24 }} strokeWidth={1.8} />
         </button>
       )}
     </>

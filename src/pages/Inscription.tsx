@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Logo from "@/components/Logo";
@@ -17,8 +18,12 @@ const GoogleIcon = () => (
 
 const Inscription = () => {
   const navigate = useNavigate();
-  const { signInWithGoogle } = useAuth();
+  const { user, signInWithGoogle } = useAuth();
   const t = useT();
+
+  useEffect(() => {
+    if (user) navigate("/app", { replace: true });
+  }, [user, navigate]);
 
   return (
     <div className="ink-neutral app-type flex min-h-screen flex-col bg-background tracking-[-0.015em]">

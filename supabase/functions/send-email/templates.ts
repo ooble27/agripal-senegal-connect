@@ -85,16 +85,6 @@ export const TEMPLATES: Record<string, string> = {
     primaryButton("{{orderUrl}}", "Voir le reçu"),
   ),
 
-  "password-changed": template(
-    eyebrow("Sécurité / Security") +
-    heading("Mot de passe modifié") +
-    lead("Votre mot de passe Ooble a été modifié avec succès. Si vous n'êtes pas à l'origine de ce changement, contactez-nous immédiatement.") +
-    `<hr style="border:0;border-top:1px solid #ececea;margin:20px 0;" />` +
-    heading("Password changed") +
-    lead("Your Ooble password has been successfully changed. If you did not make this change, contact us immediately.") +
-    primaryButton("{{loginUrl}}", "Se connecter / Sign in"),
-  ),
-
   newsletter: template(
     eyebrow("{{eyebrow}}") +
     heading("{{headline}}") +
@@ -110,6 +100,5 @@ export const SUBJECTS: Record<string, string> = {
   "order-sell":       "Votre ordre de vente Ooble ({{ref}})",
   "payment-received": "Paiement reçu, on traite votre commande ({{ref}})",
   "order-completed":  "Transaction terminée ({{ref}})",
-  "password-changed": "Mot de passe modifié / Password changed",
   newsletter:         "{{subjectLine}}",
 };

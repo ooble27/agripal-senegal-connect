@@ -50,13 +50,6 @@ const Reinitialiser = () => {
     }
     if (user?.email) {
       await supabase.auth.signInWithPassword({ email: user.email, password }).catch(() => {});
-      supabase.functions.invoke("send-email", {
-        body: {
-          to: user.email,
-          template: "password-changed",
-          vars: { loginUrl: `${window.location.origin}/connexion` },
-        },
-      }).catch(() => {});
     }
     setBusy(false);
     setDone(true);

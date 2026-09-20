@@ -136,13 +136,6 @@ const Connexion = () => {
         return;
       }
       await supabase.auth.signInWithPassword({ email: email.trim(), password: newPassword }).catch(() => {});
-      supabase.functions.invoke("send-email", {
-        body: {
-          to: email.trim(),
-          template: "password-changed",
-          vars: { loginUrl: `${window.location.origin}/connexion` },
-        },
-      }).catch(() => {});
       setForgotStep("done");
       setTimeout(() => navigate("/app", { replace: true }), 1400);
     } finally {

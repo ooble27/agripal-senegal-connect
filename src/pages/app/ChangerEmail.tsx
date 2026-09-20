@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Mail } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -35,19 +35,23 @@ const ChangerEmail = () => {
   if (sent) {
     return (
       <AppShell header={header}>
-        <div className="overflow-hidden rounded-2xl border border-border bg-card p-6 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <Check className="h-6 w-6 text-primary" strokeWidth={2.2} />
+        <div className="text-center">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-foreground text-background">
+            <Check className="h-6 w-6" strokeWidth={2.2} />
+          </span>
+          <p className="mt-6 text-[15px] leading-relaxed text-muted-foreground">
+            {t("acct.emailSent")}
+          </p>
+          <div className="mt-6 flex justify-end">
+            <Button
+              variant="appSolid"
+              shape="rounded"
+              className="px-6"
+              onClick={() => navigate("/app/compte")}
+            >
+              {t("misc.back")} <ArrowRight className="h-4 w-4" />
+            </Button>
           </div>
-          <p className="text-sm text-muted-foreground">{t("acct.emailSent")}</p>
-          <Button
-            variant="appSolid"
-            shape="rounded"
-            className="mt-6"
-            onClick={() => navigate("/app/compte")}
-          >
-            {t("misc.back")}
-          </Button>
         </div>
       </AppShell>
     );
@@ -69,32 +73,47 @@ const ChangerEmail = () => {
             setSent(true);
           }
         }}
-        className="overflow-hidden rounded-2xl border border-border bg-card p-5"
       >
-        <label className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-          {t("acct.emailNew")}
-        </label>
-        <input
-          type="email"
-          required
-          autoFocus
-          value={newEmail}
-          onChange={(e) => setNewEmail(e.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/50 focus:border-foreground/30 no-zoom"
-          placeholder="nom@exemple.com"
-        />
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
+          <div className="px-4 py-3 transition-colors focus-within:bg-primary/[0.03]">
+            <div className="flex items-center gap-2">
+              <Mail className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" strokeWidth={1.6} />
+              <span className="text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground/60">
+                {t("acct.emailNew")}
+              </span>
+            </div>
+            <div className="mt-1">
+              <input
+                type="email"
+                required
+                autoFocus
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                className="w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground/30 no-zoom"
+                placeholder="nom@exemple.com"
+              />
+            </div>
+          </div>
+        </div>
+
         {error && (
-          <p className="mt-2 text-[13px] text-destructive">{error}</p>
+          <p className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
+            {error}
+          </p>
         )}
-        <Button
-          type="submit"
-          variant="appSolid"
-          shape="rounded"
-          className="mt-4 w-full"
-          disabled={saving || !newEmail.trim()}
-        >
-          {saving ? t("acct.emailSaving") : t("acct.emailSave")}
-        </Button>
+
+        <div className="mt-5 flex justify-end">
+          <Button
+            type="submit"
+            variant="appSolid"
+            shape="rounded"
+            className="px-6"
+            disabled={saving || !newEmail.trim()}
+          >
+            {saving ? t("acct.emailSaving") : t("acct.emailSave")}
+            {!saving && <ArrowRight className="h-4 w-4" />}
+          </Button>
+        </div>
       </form>
     </AppShell>
   );

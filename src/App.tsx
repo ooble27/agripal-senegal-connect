@@ -37,7 +37,12 @@ function RecoveryRedirect() {
       navigate("/reinitialiser", { replace: true });
     }
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" && window.location.pathname !== "/reinitialiser" && window.location.pathname !== "/connexion") {
+      if (
+        event === "PASSWORD_RECOVERY" &&
+        window.location.pathname !== "/reinitialiser" &&
+        window.location.pathname !== "/connexion" &&
+        !window.location.pathname.startsWith("/app")
+      ) {
         navigate("/reinitialiser", { replace: true });
       }
     });

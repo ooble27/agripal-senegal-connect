@@ -66,6 +66,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     supabase.auth.getSession().then(({ data }) => {
       setUser(toUser(data.session));
       setLoading(false);
+    }).catch(() => {
+      setUser(null);
+      setLoading(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(toUser(session));
@@ -106,6 +109,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isStaff: roles.length > 0,
       rolesLoading,
       signIn: async (email, password) => {
+        await supabase.auth.signOut().catch(() => {});
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         return error ? { error: error.message } : {};
       },

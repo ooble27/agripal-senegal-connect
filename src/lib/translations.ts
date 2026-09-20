@@ -213,8 +213,8 @@ const dict = {
     en: "Your first buy or sell will appear here.",
   },
   "dash.tradingSuspended": {
-    fr: "Les transactions sont temporairement suspendues.",
-    en: "Trading is temporarily suspended.",
+    fr: "La plateforme sera bientôt opérationnelle.",
+    en: "The platform will be operational soon.",
   },
 
   // ── Compte (My Account) ──

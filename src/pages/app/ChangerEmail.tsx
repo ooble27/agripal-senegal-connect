@@ -75,7 +75,7 @@ const ChangerEmail = () => {
         }}
       >
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          <div className="px-4 py-3 transition-colors focus-within:bg-primary/[0.03]">
+          <div className="px-4 py-3 transition-colors focus-within:bg-secondary/50">
             <div className="flex items-center gap-2">
               <Mail className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" strokeWidth={1.6} />
               <span className="text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground/60">

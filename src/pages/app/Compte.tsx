@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, ShieldCheck, LayoutGrid, ChevronRight, MessageSquare, Building2, Globe, MapPin, Phone, Hash, Mail } from "lucide-react";
+import { LogOut, ShieldCheck, LayoutGrid, ChevronRight, MessageSquare, Building2, Globe, MapPin, Phone, Hash, Mail, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import AppShell from "@/components/app/AppShell";
 import CopyRow from "@/components/app/CopyRow";
@@ -43,8 +43,6 @@ const Compte = () => {
     navigate("/connexion", { replace: true });
   };
 
-  const initial = user?.name?.charAt(0).toUpperCase() ?? "O";
-
   return (
     <AppShell
       header={
@@ -57,8 +55,8 @@ const Compte = () => {
       {/* ─── Profile card ─── */}
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         <div className="flex items-center gap-4 p-5">
-          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-deep font-display text-2xl font-bold text-white shadow-sm">
-            {initial}
+          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-muted-foreground shadow-sm">
+            <User className="h-7 w-7" strokeWidth={1.6} />
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate font-display text-xl font-bold tracking-tight">{user?.name}</p>

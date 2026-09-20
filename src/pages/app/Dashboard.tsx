@@ -132,7 +132,7 @@ const Dashboard = () => {
               aria-disabled={!(TRADING_ENABLED || isStaff)}
               tabIndex={(TRADING_ENABLED || isStaff) ? undefined : -1}
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground/70">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground/60">
                 <Coins className="h-5 w-5" strokeWidth={1.6} />
               </span>
               <span className="text-[15px] font-medium">{t("dash.buy")}</span>
@@ -148,7 +148,7 @@ const Dashboard = () => {
               aria-disabled={!(TRADING_ENABLED || isStaff)}
               tabIndex={(TRADING_ENABLED || isStaff) ? undefined : -1}
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground/70">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground/60">
                 <HandCoins className="h-5 w-5" strokeWidth={1.6} />
               </span>
               <span className="text-[15px] font-medium">{t("dash.sell")}</span>

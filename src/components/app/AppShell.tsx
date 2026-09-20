@@ -25,7 +25,7 @@ function useAppScope() {
         return m;
       })();
     const previous = meta.getAttribute("content");
-    const sync = () => meta.setAttribute("content", html.classList.contains("dark") ? "#171717" : "#fafafa");
+    const sync = () => meta.setAttribute("content", html.classList.contains("dark") ? "#171717" : "#ffffff");
     sync();
 
     // La bascule clair/sombre change la classe de <html> : on resynchronise.
@@ -85,7 +85,7 @@ const AppShell = ({ children, header, backTo, wide, center, className }: AppShel
           <Link
             to="/app/compte"
             aria-label={lang === "en" ? "My account" : "Mon compte"}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground/70 transition-all hover:text-foreground active:scale-95"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground/55 transition-all hover:text-foreground active:scale-95"
           >
             <User className="h-5 w-5" strokeWidth={1.8} />
           </Link>

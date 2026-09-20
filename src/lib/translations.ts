@@ -665,6 +665,15 @@ const dict = {
 
 export type TKey = keyof typeof dict;
 
+// Résilient : si une clé disparaît du dictionnaire (typo, oubli après un
+// renommage, clé ajoutée dans un composant mais pas dans dict), on renvoie
+// la clé brute au lieu de crasher `dict[key][lang]` avec « undefined is not
+// an object ». La console signale la clé manquante pour la corriger vite.
 export function t(key: TKey, lang: Lang): string {
-  return dict[key][lang];
+  const entry = (dict as Record<string, Record<Lang, string>>)[key];
+  if (!entry) {
+    if (typeof console !== "undefined") console.warn("[i18n] clé manquante:", key);
+    return key;
+  }
+  return entry[lang] ?? entry.fr ?? key;
 }

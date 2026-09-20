@@ -64,7 +64,6 @@ const BottomNav = () => {
               <Icon
                 size={20}
                 strokeWidth={isActive ? 2.2 : 1.8}
-                fill={isActive ? "currentColor" : "none"}
                 className="shrink-0 text-foreground transition-colors duration-200"
               />
               <span

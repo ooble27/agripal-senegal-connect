@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, KeyRound, Lock, Mail } from "lucide-react";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/app/ThemeToggle";
 import { LangPill } from "@/components/app/LangToggle";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type Mode = "login" | "forgot";
+type ForgotStep = "email" | "otp" | "newpw" | "done";
 
 const Field = ({
   label,
@@ -47,7 +49,7 @@ const Field = ({
 
 const Connexion = () => {
   const navigate = useNavigate();
-  const { signIn, sendPasswordReset } = useAuth();
+  const { signIn } = useAuth();
   const t = useT();
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
@@ -56,6 +58,11 @@ const Connexion = () => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
+  const [forgotStep, setForgotStep] = useState<ForgotStep>("email");
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   const isForgot = mode === "forgot";
 
@@ -72,20 +79,81 @@ const Connexion = () => {
     setError(null);
     setNotice(null);
     setShowPassword(false);
+    setForgotStep("email");
+    setOtp("");
+    setNewPassword("");
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const sendOtpCode = async () => {
     setError(null);
     setNotice(null);
     setBusy(true);
     try {
-      if (isForgot) {
-        const res = await sendPasswordReset(email);
-        if (res.error) return setError(traduireErreur(res.error));
-        setNotice(t("login.resetSent"));
+      const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/reinitialiser`,
+      });
+      if (err) {
+        setError(traduireErreur(err.message));
         return;
       }
+      setNotice(t("login.resetSent"));
+      setForgotStep("otp");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verifyOtpCode = async () => {
+    setError(null);
+    setBusy(true);
+    try {
+      const { error: err } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: otp.trim(),
+        type: "recovery",
+      });
+      if (err) {
+        setError(t("login.badOtp"));
+        return;
+      }
+      setForgotStep("newpw");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveNewPassword = async () => {
+    if (newPassword.length < 6) {
+      setError(t("reg.errPasswordShort"));
+      return;
+    }
+    setError(null);
+    setBusy(true);
+    try {
+      const { error: err } = await supabase.auth.updateUser({ password: newPassword });
+      if (err) {
+        setError(err.message);
+        return;
+      }
+      setForgotStep("done");
+      setTimeout(() => navigate("/app", { replace: true }), 1400);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isForgot) {
+      if (forgotStep === "email") return sendOtpCode();
+      if (forgotStep === "otp") return verifyOtpCode();
+      if (forgotStep === "newpw") return saveNewPassword();
+      return;
+    }
+    setError(null);
+    setNotice(null);
+    setBusy(true);
+    try {
       const res = await signIn(email, password);
       if (res.error) return setError(traduireErreur(res.error));
       navigate("/app", { replace: true });
@@ -94,8 +162,23 @@ const Connexion = () => {
     }
   };
 
-  const title = isForgot ? t("login.forgotTitle") : t("login.title");
-  const subtitle = isForgot ? t("login.forgotSub") : t("login.sub");
+  const title = isForgot
+    ? forgotStep === "done"
+      ? t("reset.changed")
+      : forgotStep === "newpw"
+        ? t("reset.title")
+        : t("login.forgotTitle")
+    : t("login.title");
+
+  const subtitle = isForgot
+    ? forgotStep === "done"
+      ? t("reset.redirecting")
+      : forgotStep === "newpw"
+        ? t("reset.sub")
+        : forgotStep === "otp"
+          ? t("login.resetSent")
+          : t("login.forgotSub")
+    : t("login.sub");
 
   return (
     <div className="ink-neutral app-type flex min-h-screen flex-col bg-background tracking-[-0.015em]">
@@ -109,7 +192,7 @@ const Connexion = () => {
 
       <main className="flex flex-1 items-center justify-center px-6 py-10">
         <div className="w-full max-w-[440px]">
-          {isForgot && (
+          {isForgot && forgotStep !== "done" && (
             <button
               type="button"
               onClick={() => switchMode("login")}
@@ -119,97 +202,186 @@ const Connexion = () => {
             </button>
           )}
 
-          <h1 className="font-display text-[2rem] leading-[1.05] tracking-[-0.04em] sm:text-[2.4rem]">
-            {title}
-          </h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">{subtitle}</p>
+          {forgotStep === "done" ? (
+            <div className="text-center">
+              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-foreground text-background">
+                <Check className="h-6 w-6" strokeWidth={2.2} />
+              </span>
+              <h1 className="mt-6 font-display text-[1.8rem] tracking-[-0.03em]">{title}</h1>
+              <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">{subtitle}</p>
+            </div>
+          ) : (
+            <>
+              <h1 className="font-display text-[2rem] leading-[1.05] tracking-[-0.04em] sm:text-[2.4rem]">
+                {title}
+              </h1>
+              <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">{subtitle}</p>
 
-          <form onSubmit={submit} className="mt-8">
-            <div className="overflow-hidden rounded-2xl border border-border bg-card">
-              <Field
-                label={t("login.email")}
-                icon={Mail}
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                last={isForgot}
-              />
+              <form onSubmit={submit} className="mt-8">
+                <div className="overflow-hidden rounded-2xl border border-border bg-card">
+                  {/* Login mode: email + password */}
+                  {!isForgot && (
+                    <>
+                      <Field
+                        label={t("login.email")}
+                        icon={Mail}
+                        type="email"
+                        autoComplete="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                      <Field
+                        label={t("login.password")}
+                        icon={Lock}
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="current-password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        last
+                        trailing={
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword((v) => !v)}
+                            aria-label={showPassword ? t("misc.hidePw") : t("misc.showPw")}
+                            className="shrink-0 text-muted-foreground/50 transition-colors hover:text-foreground"
+                          >
+                            {showPassword ? <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.6} /> : <Eye className="h-[18px] w-[18px]" strokeWidth={1.6} />}
+                          </button>
+                        }
+                      />
+                    </>
+                  )}
 
-              {!isForgot && (
-                <Field
-                  label={t("login.password")}
-                  icon={Lock}
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  last
-                  trailing={
+                  {/* Forgot step 1: email */}
+                  {isForgot && forgotStep === "email" && (
+                    <Field
+                      label={t("login.email")}
+                      icon={Mail}
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      last
+                    />
+                  )}
+
+                  {/* Forgot step 2: OTP code */}
+                  {isForgot && forgotStep === "otp" && (
+                    <Field
+                      label={t("login.otpLabel")}
+                      icon={KeyRound}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]{6}"
+                      maxLength={6}
+                      autoComplete="one-time-code"
+                      placeholder={t("login.otpPlaceholder")}
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      required
+                      last
+                    />
+                  )}
+
+                  {/* Forgot step 3: new password */}
+                  {isForgot && forgotStep === "newpw" && (
+                    <Field
+                      label={t("login.newPwLabel")}
+                      icon={Lock}
+                      type={showNewPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      last
+                      trailing={
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword((v) => !v)}
+                          aria-label={showNewPassword ? t("misc.hidePw") : t("misc.showPw")}
+                          className="shrink-0 text-muted-foreground/50 transition-colors hover:text-foreground"
+                        >
+                          {showNewPassword ? <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.6} /> : <Eye className="h-[18px] w-[18px]" strokeWidth={1.6} />}
+                        </button>
+                      }
+                    />
+                  )}
+                </div>
+
+                {mode === "login" && (
+                  <div className="mt-2 flex justify-end">
                     <button
                       type="button"
-                      onClick={() => setShowPassword((v) => !v)}
-                      aria-label={showPassword ? t("misc.hidePw") : t("misc.showPw")}
-                      className="shrink-0 text-muted-foreground/50 transition-colors hover:text-foreground"
+                      onClick={() => switchMode("forgot")}
+                      className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
                     >
-                      {showPassword ? <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.6} /> : <Eye className="h-[18px] w-[18px]" strokeWidth={1.6} />}
+                      {t("login.forgot")}
                     </button>
-                  }
-                />
+                  </div>
+                )}
+
+                {isForgot && forgotStep === "otp" && (
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => { setOtp(""); sendOtpCode(); }}
+                      className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {t("login.resendCode")}
+                    </button>
+                  </div>
+                )}
+
+                {error && (
+                  <p className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
+                    {error}
+                  </p>
+                )}
+                {notice && forgotStep === "email" && (
+                  <p className="mt-3 rounded-xl border border-primary/20 bg-primary/[0.04] px-4 py-3 text-[14px] leading-relaxed text-foreground">
+                    {notice}
+                  </p>
+                )}
+
+                <div className="mt-5 flex justify-end">
+                  <Button type="submit" variant="appSolid" shape="rounded" size="default" className="px-6" disabled={busy}>
+                    {busy
+                      ? t("misc.wait")
+                      : isForgot
+                        ? forgotStep === "otp"
+                          ? t("login.verifyCode")
+                          : forgotStep === "newpw"
+                            ? t("login.savePw")
+                            : t("login.sendLink")
+                        : t("login.submit")}
+                    {!busy && <ArrowRight className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </form>
+
+              {!isForgot && (
+                <p className="mt-6 text-center text-sm text-muted-foreground">
+                  {t("login.newUser")}{" "}
+                  <Link
+                    to="/inscription"
+                    className="text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground"
+                  >
+                    {t("login.createAccount")}
+                  </Link>
+                </p>
               )}
-            </div>
 
-            {mode === "login" && (
-              <div className="mt-2 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => switchMode("forgot")}
-                  className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  {t("login.forgot")}
-                </button>
-              </div>
-            )}
-
-            {error && (
-              <p className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
-                {error}
+              <p className="mt-8 text-center text-xs leading-relaxed text-muted-foreground">
+                {t("login.ncNote")}{" "}
+                <Link to="/" className="underline hover:text-foreground">
+                  {t("login.backHome")}
+                </Link>
               </p>
-            )}
-            {notice && (
-              <p className="mt-3 rounded-xl border border-primary/20 bg-primary/[0.04] px-4 py-3 text-[14px] leading-relaxed text-foreground">
-                {notice}
-              </p>
-            )}
-
-            <div className="mt-5 flex justify-end">
-              <Button type="submit" variant="appSolid" shape="rounded" size="default" className="px-6" disabled={busy}>
-                {busy ? t("misc.wait") : isForgot ? t("login.sendLink") : t("login.submit")}
-                {!busy && <ArrowRight className="h-4 w-4" />}
-              </Button>
-            </div>
-          </form>
-
-          {!isForgot && (
-            <p className="mt-6 text-center text-sm text-muted-foreground">
-              {t("login.newUser")}{" "}
-              <Link
-                to="/inscription"
-                className="text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground"
-              >
-                {t("login.createAccount")}
-              </Link>
-            </p>
+            </>
           )}
-
-          <p className="mt-8 text-center text-xs leading-relaxed text-muted-foreground">
-            {t("login.ncNote")}{" "}
-            <Link to="/" className="underline hover:text-foreground">
-              {t("login.backHome")}
-            </Link>
-          </p>
         </div>
       </main>
     </div>

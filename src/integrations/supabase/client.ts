@@ -20,5 +20,5 @@ const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) |
 export const isSupabaseConfigured = Boolean(url && anonKey && !url.includes("VOTRE-PROJET"));
 
 export const supabase: SupabaseClient<Database> = createClient<Database>(url, anonKey, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" },
 });

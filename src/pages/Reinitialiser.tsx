@@ -25,6 +25,9 @@ const Reinitialiser = () => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
     });
+    if (window.location.hash.includes("type=recovery")) {
+      setReady(true);
+    }
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) setReady(true);
     });

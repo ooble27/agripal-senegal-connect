@@ -241,6 +241,16 @@ const dict = {
   },
   "acct.question": { fr: "Question", en: "Question" },
   "acct.answer": { fr: "Réponse", en: "Answer" },
+  "acct.email": { fr: "Adresse e-mail", en: "Email address" },
+  "acct.emailChange": { fr: "Changer l'e-mail", en: "Change email" },
+  "acct.emailNew": { fr: "Nouvel e-mail", en: "New email" },
+  "acct.emailSave": { fr: "Confirmer", en: "Confirm" },
+  "acct.emailSaving": { fr: "Envoi…", en: "Sending…" },
+  "acct.emailSent": {
+    fr: "Un lien de confirmation a été envoyé à votre nouvelle adresse. Vérifiez votre boîte de réception.",
+    en: "A confirmation link has been sent to your new address. Check your inbox.",
+  },
+  "acct.emailCancel": { fr: "Annuler", en: "Cancel" },
 
   // ── KYC statuses ──
   "kyc.notStarted": { fr: "À faire", en: "Not started" },

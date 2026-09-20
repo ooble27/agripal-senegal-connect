@@ -34,6 +34,8 @@ interface AuthContextValue {
   sendPasswordReset: (email: string) => Promise<{ error?: string }>;
   /** Définit un nouveau mot de passe (après clic sur le lien de réinitialisation). */
   updatePassword: (password: string) => Promise<{ error?: string }>;
+  /** Change l'adresse e-mail (envoie un lien de confirmation au nouvel e-mail). */
+  updateEmail: (email: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -151,6 +153,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       },
       updatePassword: async (password) => {
         const { error } = await supabase.auth.updateUser({ password });
+        return error ? { error: error.message } : {};
+      },
+      updateEmail: async (email) => {
+        const { error } = await supabase.auth.updateUser({
+          email: email.trim(),
+        });
         return error ? { error: error.message } : {};
       },
       signOut: async () => {

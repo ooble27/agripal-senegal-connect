@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, ShieldCheck, LayoutGrid, ChevronRight, MessageSquare, Building2, Globe, MapPin, Phone, Hash } from "lucide-react";
+import { LogOut, ShieldCheck, LayoutGrid, ChevronRight, MessageSquare, Building2, Globe, MapPin, Phone, Hash, Mail, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import AppShell from "@/components/app/AppShell";
 import CopyRow from "@/components/app/CopyRow";
@@ -29,10 +29,15 @@ const KYC_TONE: Record<KycDbStatus, string> = {
 
 const Compte = () => {
   const navigate = useNavigate();
-  const { user, signOut, isStaff } = useAuth();
+  const { user, signOut, updateEmail, isStaff } = useAuth();
   const t = useT();
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [kyc, setKyc] = useState<KycDbStatus | null>(null);
+  const [emailEditing, setEmailEditing] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailError, setEmailError] = useState("");
 
   useEffect(() => {
     getMyProfile().then(setProfile);
@@ -101,6 +106,86 @@ const Compte = () => {
                 <span className="text-sm">{profile.businessPhone}</span>
               </div>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* ─── Email change ─── */}
+      <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-card">
+        <div className="flex items-center gap-3 px-5 py-4">
+          <Mail className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />
+          <div className="min-w-0 flex-1">
+            <span className="text-sm font-medium">{t("acct.email")}</span>
+            <p className="truncate text-[13px] text-muted-foreground">{user?.email}</p>
+          </div>
+          {!emailEditing && !emailSent && (
+            <button
+              type="button"
+              onClick={() => { setEmailEditing(true); setNewEmail(""); setEmailError(""); }}
+              className="text-[13px] font-medium text-foreground underline underline-offset-2 transition-opacity hover:opacity-70"
+            >
+              {t("acct.emailChange")}
+            </button>
+          )}
+        </div>
+        {emailEditing && !emailSent && (
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (!newEmail.trim() || newEmail.trim() === user?.email) return;
+              setEmailSaving(true);
+              setEmailError("");
+              const res = await updateEmail(newEmail);
+              setEmailSaving(false);
+              if (res.error) {
+                setEmailError(res.error);
+              } else {
+                setEmailSent(true);
+              }
+            }}
+            className="border-t border-border px-5 pb-4 pt-3"
+          >
+            <label className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+              {t("acct.emailNew")}
+            </label>
+            <input
+              type="email"
+              required
+              autoFocus
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              className="mt-1.5 w-full rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/50 focus:border-foreground/30 no-zoom"
+              placeholder="nom@exemple.com"
+            />
+            {emailError && (
+              <p className="mt-2 text-[13px] text-destructive">{emailError}</p>
+            )}
+            <div className="mt-3 flex items-center gap-2">
+              <Button
+                type="submit"
+                variant="appSolid"
+                shape="rounded"
+                size="sm"
+                disabled={emailSaving || !newEmail.trim()}
+              >
+                {emailSaving ? t("acct.emailSaving") : t("acct.emailSave")}
+              </Button>
+              <Button
+                type="button"
+                variant="appOutline"
+                shape="rounded"
+                size="sm"
+                onClick={() => { setEmailEditing(false); setEmailError(""); }}
+              >
+                {t("acct.emailCancel")}
+              </Button>
+            </div>
+          </form>
+        )}
+        {emailSent && (
+          <div className="flex items-start gap-3 border-t border-border px-5 pb-4 pt-3">
+            <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" strokeWidth={2.2} />
+            <p className="text-[13px] text-muted-foreground">{t("acct.emailSent")}</p>
           </div>
         )}
       </div>

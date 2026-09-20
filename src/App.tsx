@@ -11,6 +11,7 @@ import InscriptionIndividuel from "./pages/InscriptionIndividuel";
 import InscriptionEntreprise from "./pages/InscriptionEntreprise";
 import Reinitialiser from "./pages/Reinitialiser";
 import Conditions from "./pages/Conditions";
+import PolitiqueConfidentialite from "./pages/PolitiqueConfidentialite";
 import Dashboard from "./pages/app/Dashboard";
 import AppAcheter from "./pages/app/AppAcheter";
 import AppVendre from "./pages/app/AppVendre";
@@ -71,6 +72,7 @@ const App = () => (
         <Route path="/inscription/entreprise" element={<InscriptionEntreprise />} />
         <Route path="/reinitialiser" element={<Reinitialiser />} />
         <Route path="/conditions-utilisation" element={<Conditions />} />
+        <Route path="/politique-confidentialite" element={<PolitiqueConfidentialite />} />
 
         {/* App connectée */}
         <Route path="/app" element={<RequireAuth><Dashboard /></RequireAuth>} />

@@ -22,6 +22,7 @@ const Footer = () => {
         { label: t("nav.contact"), to: "/contact" },
         { label: t("nav.login"), to: "/connexion" },
         { label: t("footer.terms"), to: "/conditions-utilisation" },
+        { label: t("footer.privacy"), to: "/politique-confidentialite" },
       ],
     },
   ];

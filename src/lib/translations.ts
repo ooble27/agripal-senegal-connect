@@ -16,6 +16,7 @@ const dict = {
   "footer.product": { fr: "Produit", en: "Product" },
   "footer.resources": { fr: "Ressources", en: "Resources" },
   "footer.terms": { fr: "Conditions d'utilisation", en: "Terms of use" },
+  "footer.privacy": { fr: "Confidentialité", en: "Privacy" },
   "footer.desc": {
     fr: "Achetez et vendez des USDT en dollars canadiens, réglés par Interac e-Transfer. Non-custodial : vos fonds ne dorment jamais chez nous.",
     en: "Buy and sell USDT in Canadian dollars, settled via Interac e-Transfer. Non-custodial: your funds never sit with us.",

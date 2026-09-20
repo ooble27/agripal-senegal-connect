@@ -26,6 +26,7 @@ import RequireAuth from "./components/app/RequireAuth";
 import RequireStaff from "./components/app/RequireStaff";
 import NotFound from "./pages/NotFound";
 import GlobalNotice from "./components/GlobalNotice";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { AuthProvider } from "./lib/auth";
 
 const queryClient = new QueryClient();
@@ -52,12 +53,13 @@ function RecoveryRedirect() {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <BrowserRouter>
-        <RecoveryRedirect />
-        <GlobalNotice />
-        <Routes>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BrowserRouter>
+          <RecoveryRedirect />
+          <GlobalNotice />
+          <Routes>
         {/* Site public */}
         <Route path="/" element={<Index />} />
         <Route path="/faq" element={<FAQ />} />
@@ -84,11 +86,12 @@ const App = () => (
         <Route path="/admin" element={<RequireStaff><AdminPortal /></RequireStaff>} />
         <Route path="/admin/ai" element={<RequireStaff><AdminAI /></RequireStaff>} />
 
-        <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
-  </QueryClientProvider>
+          <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

@@ -275,12 +275,12 @@ const Connexion = () => {
                       icon={KeyRound}
                       type="text"
                       inputMode="numeric"
-                      pattern="[0-9]{6}"
-                      maxLength={6}
+                      pattern="[0-9]{8}"
+                      maxLength={8}
                       autoComplete="one-time-code"
                       placeholder={t("login.otpPlaceholder")}
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 8))}
                       required
                       last
                     />

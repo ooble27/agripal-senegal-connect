@@ -119,7 +119,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isStaff: roles.length > 0,
       rolesLoading,
       signIn: async (email, password) => {
-        await supabase.auth.signOut().catch(() => {});
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         return error ? { error: error.message } : {};
       },

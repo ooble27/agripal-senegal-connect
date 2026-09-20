@@ -12,7 +12,7 @@ import { useT } from "@/lib/i18n";
 
 const Reinitialiser = () => {
   const navigate = useNavigate();
-  const { updatePassword } = useAuth();
+  const { updatePassword, user } = useAuth();
   const t = useT();
   const [ready, setReady] = useState(false);
   const [password, setPassword] = useState("");
@@ -43,11 +43,22 @@ const Reinitialiser = () => {
     setBusy(true);
     setError(null);
     const res = await updatePassword(password);
-    setBusy(false);
     if (res.error) {
+      setBusy(false);
       setError(t("reset.expired"));
       return;
     }
+    if (user?.email) {
+      await supabase.auth.signInWithPassword({ email: user.email, password }).catch(() => {});
+      supabase.functions.invoke("send-email", {
+        body: {
+          to: user.email,
+          template: "password-changed",
+          vars: { loginUrl: `${window.location.origin}/connexion` },
+        },
+      }).catch(() => {});
+    }
+    setBusy(false);
     setDone(true);
     setTimeout(() => navigate("/app", { replace: true }), 1400);
   };

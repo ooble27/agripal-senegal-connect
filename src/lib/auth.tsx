@@ -63,18 +63,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Session initiale + abonnement aux changements (connexion, déconnexion,
     // rafraîchissement de jeton, confirmation d'e-mail…).
+    // Filet de sécurité : si Supabase se bloque (session corrompue, réseau
+    // instable), on force `loading` à false après 4 s pour ne jamais laisser
+    // l'utilisateur sur un écran de chargement infini.
+    const safety = setTimeout(() => setLoading(false), 4000);
     supabase.auth.getSession().then(({ data }) => {
+      clearTimeout(safety);
       setUser(toUser(data.session));
       setLoading(false);
     }).catch(() => {
+      clearTimeout(safety);
       setUser(null);
       setLoading(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      clearTimeout(safety);
       setUser(toUser(session));
       setLoading(false);
     });
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      clearTimeout(safety);
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   // Charge les rôles d'équipe de l'utilisateur connecté (RLS : chacun voit les

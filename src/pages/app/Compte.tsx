@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, ShieldCheck, LayoutGrid, ChevronRight, MessageSquare, Building2, Globe, MapPin, Phone, Hash, Mail, Check } from "lucide-react";
+import { LogOut, ShieldCheck, LayoutGrid, ChevronRight, MessageSquare, Building2, Globe, MapPin, Phone, Hash, Mail, Check, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import AppShell from "@/components/app/AppShell";
 import CopyRow from "@/components/app/CopyRow";
@@ -118,7 +118,7 @@ const Compte = () => {
             <span className="text-sm font-medium">{t("acct.email")}</span>
             <p className="truncate text-[13px] text-muted-foreground">{user?.email}</p>
           </div>
-          {!emailEditing && !emailSent && (
+          {!emailSent && (
             <button
               type="button"
               onClick={() => { setEmailEditing(true); setNewEmail(""); setEmailError(""); }}
@@ -127,68 +127,92 @@ const Compte = () => {
               {t("acct.emailChange")}
             </button>
           )}
+          {emailSent && (
+            <span className="flex items-center gap-1.5 text-[13px] font-medium text-primary">
+              <Check className="h-3.5 w-3.5" strokeWidth={2.2} />
+              {t("acct.emailSave")}
+            </span>
+          )}
         </div>
-        {emailEditing && !emailSent && (
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              if (!newEmail.trim() || newEmail.trim() === user?.email) return;
-              setEmailSaving(true);
-              setEmailError("");
-              const res = await updateEmail(newEmail);
-              setEmailSaving(false);
-              if (res.error) {
-                setEmailError(res.error);
-              } else {
-                setEmailSent(true);
-              }
-            }}
-            className="border-t border-border px-5 pb-4 pt-3"
-          >
-            <label className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-              {t("acct.emailNew")}
-            </label>
-            <input
-              type="email"
-              required
-              autoFocus
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/50 focus:border-foreground/30 no-zoom"
-              placeholder="nom@exemple.com"
-            />
-            {emailError && (
-              <p className="mt-2 text-[13px] text-destructive">{emailError}</p>
-            )}
-            <div className="mt-3 flex items-center gap-2">
-              <Button
-                type="submit"
-                variant="appSolid"
-                shape="rounded"
-                size="sm"
-                disabled={emailSaving || !newEmail.trim()}
-              >
-                {emailSaving ? t("acct.emailSaving") : t("acct.emailSave")}
-              </Button>
-              <Button
-                type="button"
-                variant="appOutline"
-                shape="rounded"
-                size="sm"
-                onClick={() => { setEmailEditing(false); setEmailError(""); }}
-              >
-                {t("acct.emailCancel")}
-              </Button>
-            </div>
-          </form>
-        )}
-        {emailSent && (
-          <div className="flex items-start gap-3 border-t border-border px-5 pb-4 pt-3">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" strokeWidth={2.2} />
-            <p className="text-[13px] text-muted-foreground">{t("acct.emailSent")}</p>
-          </div>
-        )}
       </div>
+
+      {/* ─── Email change modal ─── */}
+      {emailEditing && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+          onClick={(e) => { if (e.target === e.currentTarget) { setEmailEditing(false); setEmailError(""); } }}
+        >
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="relative w-full max-w-[400px] mx-4 mb-6 sm:mb-0 rounded-2xl border border-border bg-card shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-200">
+            <div className="flex items-center justify-between px-5 pt-5 pb-1">
+              <h2 className="font-display text-lg font-semibold">{t("acct.emailChange")}</h2>
+              <button
+                type="button"
+                onClick={() => { setEmailEditing(false); setEmailError(""); }}
+                className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-secondary"
+              >
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
+            <p className="px-5 pb-3 text-[13px] text-muted-foreground">{user?.email}</p>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!newEmail.trim() || newEmail.trim() === user?.email) return;
+                setEmailSaving(true);
+                setEmailError("");
+                const res = await updateEmail(newEmail);
+                setEmailSaving(false);
+                if (res.error) {
+                  setEmailError(res.error);
+                } else {
+                  setEmailSent(true);
+                  setEmailEditing(false);
+                }
+              }}
+              className="border-t border-border px-5 pb-5 pt-4"
+            >
+              <label className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                {t("acct.emailNew")}
+              </label>
+              <input
+                type="email"
+                required
+                autoFocus
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                className="mt-1.5 w-full rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm outline-none placeholder:text-muted-foreground/50 focus:border-foreground/30 no-zoom"
+                placeholder="nom@exemple.com"
+              />
+              {emailError && (
+                <p className="mt-2 text-[13px] text-destructive">{emailError}</p>
+              )}
+              <div className="mt-4 flex items-center gap-2">
+                <Button
+                  type="submit"
+                  variant="appSolid"
+                  shape="rounded"
+                  size="sm"
+                  className="flex-1"
+                  disabled={emailSaving || !newEmail.trim()}
+                >
+                  {emailSaving ? t("acct.emailSaving") : t("acct.emailSave")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="appOutline"
+                  shape="rounded"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => { setEmailEditing(false); setEmailError(""); }}
+                >
+                  {t("acct.emailCancel")}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ─── Interac e-Transfer ─── */}
       {profile?.interacQuestion && (

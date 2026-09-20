@@ -8,6 +8,8 @@
  */
 export const OOBLE_INTERAC_EMAIL = "oobletechnologiesinc@gmail.com";
 
+export const OOBLE_SUPPORT_EMAIL = "support@ooble.ca";
+
 /**
  * Kill switch — mettre à `false` pour bloquer toute création d'ordre
  * (achat et vente). Les comptes, le KYC et la navigation restent actifs.

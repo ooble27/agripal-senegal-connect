@@ -36,6 +36,8 @@ interface AuthContextValue {
   updatePassword: (password: string) => Promise<{ error?: string }>;
   /** Change l'adresse e-mail (envoie un lien de confirmation au nouvel e-mail). */
   updateEmail: (email: string) => Promise<{ error?: string }>;
+  /** Connexion via Google OAuth. */
+  signInWithGoogle: () => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -158,6 +160,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       updateEmail: async (email) => {
         const { error } = await supabase.auth.updateUser({
           email: email.trim(),
+        });
+        return error ? { error: error.message } : {};
+      },
+      signInWithGoogle: async () => {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: `${window.location.origin}/app`,
+          },
         });
         return error ? { error: error.message } : {};
       },

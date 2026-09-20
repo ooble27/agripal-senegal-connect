@@ -298,6 +298,8 @@ const dict = {
   "login.errInvalid": { fr: "E-mail ou mot de passe incorrect.", en: "Incorrect email or password." },
   "login.errNotConfirmed": { fr: "Adresse e-mail non confirmée — vérifiez votre boîte mail.", en: "Email not confirmed — check your inbox." },
   "login.errBadEmail": { fr: "Adresse e-mail invalide.", en: "Invalid email address." },
+  "login.google": { fr: "Continuer avec Google", en: "Continue with Google" },
+  "login.or": { fr: "ou", en: "or" },
 
   // ── Inscription ──
   "reg.title": { fr: "Créez votre compte", en: "Create your account" },

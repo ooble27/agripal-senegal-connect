@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Coins, HandCoins } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -10,6 +10,7 @@ import InteracFlowArt from "@/components/InteracFlowArt";
 import { Button } from "@/components/ui/button";
 import { InteracLogo } from "@/components/marks";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import type { TKey } from "@/lib/translations";
 
@@ -47,8 +48,14 @@ const Soft = ({ children }: { children: React.ReactNode }) => (
 );
 
 const Index = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const t = useT();
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (user) navigate("/app", { replace: true });
+  }, [user, navigate]);
 
   const networks = [
     { id: "trx", tick: "TRC20", name: "Tron", note: t("net.trx") },

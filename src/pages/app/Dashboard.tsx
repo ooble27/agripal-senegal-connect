@@ -156,13 +156,13 @@ const Dashboard = () => {
           </div>
           {!TRADING_ENABLED && !isStaff && (
             <p className="text-center text-[12px] text-muted-foreground/70">
-              Les transactions sont temporairement suspendues.
+             {t("dash.tradingSuspended")}
             </p>
           )}
 
           <div>
             <p className="mb-2.5 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-              Recevez sur 6 réseaux
+              {t("dash.networks")}
             </p>
             <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden">
               {NETWORKS.map((n) => (

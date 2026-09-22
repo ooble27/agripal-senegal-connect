@@ -1,75 +1,106 @@
 /**
- * Vocabulaire visuel du back-office Ooble — thème sombre monochrome
- * inspiré du back-office Terex. Zéro couleur d'accent : tout est
- * en niveaux de gris, avec le blanc pur comme unique surbrillance.
+ * Vocabulaire visuel du back-office Ooble — monochrome, clair ou sombre.
  *
- * Utilisé partout dans `src/components/admin/*` et `src/pages/admin/*` pour
- * garder une cohérence visuelle stricte : mêmes cartes, mêmes textes, mêmes
- * transitions. Les composants qui l'importent partent d'un socle homogène ;
- * ils n'ont plus qu'à composer la structure.
+ * Toutes les couleurs sont des références CSS var(--a-*) : les composants
+ * les utilisent dans des inline styles, et les valeurs effectives changent
+ * automatiquement selon le thème (classe `dark` sur <html>).
+ *
+ * AdminPortal injecte `ADMIN_THEME_CSS` dans le <head> au montage.
  */
 
-/** Palette — 100 % monochrome. */
+// ── Palettes brutes ──────────────────────────────────────────
+
+const DARK = {
+  bg:             "#1a1a1a",
+  l1:             "#212121",
+  l2:             "#282828",
+  l3:             "#303030",
+  l4:             "#383838",
+  bds:            "#2a2a2a",
+  bd:             "#383838",
+  bdh:            "#484848",
+  accent:         "#ffffff",
+  accentSoft:     "rgba(255,255,255,0.08)",
+  accentBd:       "rgba(255,255,255,0.20)",
+  accentHover:    "#e8e8e8",
+  t1:             "#f0f0f0",
+  t2:             "#888888",
+  t3:             "#565656",
+  inputBg:        "rgba(255,255,255,0.03)",
+  rowHover:       "rgba(255,255,255,0.015)",
+  btnPrimaryText: "#111111",
+  heroGrad:       "linear-gradient(135deg, #1e1e1e 0%, #181818 60%, #1a1a1a 100%)",
+  heroShadow:     "0 4px 32px rgba(0,0,0,0.45)",
+};
+
+const LIGHT = {
+  bg:             "#f5f5f3",
+  l1:             "#ffffff",
+  l2:             "#f0f0ee",
+  l3:             "#e8e8e5",
+  l4:             "#ddddd9",
+  bds:            "#e8e8e5",
+  bd:             "#d4d4d0",
+  bdh:            "#b8b8b4",
+  accent:         "#111111",
+  accentSoft:     "rgba(0,0,0,0.04)",
+  accentBd:       "rgba(0,0,0,0.12)",
+  accentHover:    "#333333",
+  t1:             "#111111",
+  t2:             "#666666",
+  t3:             "#999999",
+  inputBg:        "rgba(0,0,0,0.02)",
+  rowHover:       "rgba(0,0,0,0.02)",
+  btnPrimaryText: "#ffffff",
+  heroGrad:       "linear-gradient(135deg, #fafafa 0%, #f5f5f3 60%, #f0f0ee 100%)",
+  heroShadow:     "0 4px 24px rgba(0,0,0,0.06)",
+};
+
+/** Raw bg values for html/body (CSS vars aren't available on ancestors). */
+export const ADMIN_BG = { dark: DARK.bg, light: LIGHT.bg } as const;
+
+// ── CSS to inject ────────────────────────────────────────────
+
+function vars(palette: typeof DARK): string {
+  return Object.entries(palette).map(([k, v]) => `--a-${k}:${v}`).join(";");
+}
+
+export const ADMIN_THEME_CSS = `
+.admin-scope{${vars(DARK)}}
+:root:not(.dark) .admin-scope{${vars(LIGHT)}}
+`;
+
+// ── Token references (CSS vars) ──────────────────────────────
+
+/** Palette — all values are CSS var() references resolved at render time. */
 export const C = {
-  /** Fond principal de l'écran. */
-  bg:   "#1a1a1a",
-  /** Fond des cartes. */
-  l1:   "#212121",
-  /** Fond au-dessus (survol, sous-carte). */
-  l2:   "#282828",
-  /** Fond boutons, chip, icon-box. */
-  l3:   "#303030",
-  /** Fond boutons hover. */
-  l4:   "#383838",
-
-  /** Séparateurs internes (très subtils). */
-  bds:  "#2a2a2a",
-  /** Bordures cartes / boutons. */
-  bd:   "#383838",
-  /** Bordures au survol. */
-  bdh:  "#484848",
-
-  /** Accent unique — blanc pur. Jamais de couleur. */
-  accent:      "#ffffff",
-  accentSoft:  "rgba(255,255,255,0.08)",
-  accentBd:    "rgba(255,255,255,0.20)",
-  accentHover: "#e8e8e8",
-
-  /** Texte primaire (titres, valeurs). */
-  t1:   "#f0f0f0",
-  /** Texte secondaire (labels de contenu, valeurs discrètes). */
-  t2:   "#888888",
-  /** Texte tertiaire (labels de section, méta). */
-  t3:   "#565656",
+  bg:          "var(--a-bg)",
+  l1:          "var(--a-l1)",
+  l2:          "var(--a-l2)",
+  l3:          "var(--a-l3)",
+  l4:          "var(--a-l4)",
+  bds:         "var(--a-bds)",
+  bd:          "var(--a-bd)",
+  bdh:         "var(--a-bdh)",
+  accent:      "var(--a-accent)",
+  accentSoft:  "var(--a-accentSoft)",
+  accentBd:    "var(--a-accentBd)",
+  accentHover: "var(--a-accentHover)",
+  t1:          "var(--a-t1)",
+  t2:          "var(--a-t2)",
+  t3:          "var(--a-t3)",
 } as const;
 
-/**
- * Familles de police — Poppins partout, exactement comme le reste de la
- * plateforme Ooble.
- *
- * IMPORTANT : ne jamais introduire une police qui n'est pas chargée dans
- * `index.html` (seule Poppins l'est). Les chiffres n'utilisent PAS de police
- * monospace : la plateforme les rend en Poppins Light avec `tabular-nums`,
- * ce qui aligne les colonnes sans changer de famille.
- */
-export const FONT = "'Poppins', system-ui, sans-serif";
+// ── Typography ───────────────────────────────────────────────
 
-/**
- * Alias conservé pour les chiffres : même famille que le reste, avec
- * `fontVariantNumeric: "tabular-nums"` appliqué via `numeric` ci-dessous.
- */
+export const FONT = "'Poppins', system-ui, sans-serif";
 export const MONO = FONT;
 
-/** À étaler sur tout élément affichant des chiffres alignés. */
 export const numeric: React.CSSProperties = {
   fontFamily: FONT,
   fontVariantNumeric: "tabular-nums",
 };
 
-/**
- * Grand nombre de héro — calqué sur `font-display text-[34px] font-light
- * tracking-tight` utilisé dans l'app connectée.
- */
 export function heroNumber(size = 40): React.CSSProperties {
   return {
     fontFamily: FONT,
@@ -83,7 +114,6 @@ export function heroNumber(size = 40): React.CSSProperties {
   };
 }
 
-/** Unité accolée à un grand nombre (CAD, USDT, « entrées »…). */
 export const heroUnit: React.CSSProperties = {
   color: C.t3,
   fontSize: 15,
@@ -92,7 +122,8 @@ export const heroUnit: React.CSSProperties = {
   letterSpacing: 0,
 };
 
-/** Carte standard. */
+// ── Card styles ──────────────────────────────────────────────
+
 export const card: React.CSSProperties = {
   background: C.l1,
   border: `1px solid ${C.bds}`,
@@ -100,20 +131,14 @@ export const card: React.CSSProperties = {
   overflow: "hidden",
 };
 
-/** Carte héro (dégradé subtil, ombre profonde). */
 export const heroCard: React.CSSProperties = {
-  background: "linear-gradient(135deg, #1e1e1e 0%, #181818 60%, #1a1a1a 100%)",
+  background: "var(--a-heroGrad)",
   border: `1px solid ${C.bds}`,
   borderRadius: 16,
   padding: "30px 28px 26px",
-  boxShadow: "0 4px 32px rgba(0,0,0,0.45)",
+  boxShadow: "var(--a-heroShadow)",
 };
 
-/**
- * Label de section uppercase — calqué sur
- * `text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground`
- * de l'app connectée.
- */
 export const sH: React.CSSProperties = {
   color: C.t3,
   fontSize: 11,
@@ -124,13 +149,11 @@ export const sH: React.CSSProperties = {
   fontFamily: FONT,
 };
 
-/** Padding interne standard pour l'en-tête d'une carte. */
 export const cardHeader: React.CSSProperties = {
   padding: "14px 20px",
   borderBottom: `1px solid ${C.bds}`,
 };
 
-/** Ligne dans une liste au sein d'une carte (sépare toutes les lignes sauf la dernière). */
 export function rowStyle(isLast: boolean): React.CSSProperties {
   return {
     padding: "11px 20px",
@@ -138,7 +161,8 @@ export function rowStyle(isLast: boolean): React.CSSProperties {
   };
 }
 
-/** Bouton primaire — plein blanc. */
+// ── Buttons ──────────────────────────────────────────────────
+
 export const btnPrimary: React.CSSProperties = {
   height: 36,
   paddingLeft: 18,
@@ -146,7 +170,7 @@ export const btnPrimary: React.CSSProperties = {
   background: C.accent,
   border: "none",
   borderRadius: 9,
-  color: "#111",
+  color: "var(--a-btnPrimaryText)",
   fontSize: 12,
   fontWeight: 400,
   cursor: "pointer",
@@ -158,7 +182,6 @@ export const btnPrimary: React.CSSProperties = {
   transition: "background 0.15s",
 };
 
-/** Bouton secondaire — contour, bord + texte deviennent blancs au survol. */
 export const btnGhost: React.CSSProperties = {
   height: 36,
   paddingLeft: 16,
@@ -178,10 +201,9 @@ export const btnGhost: React.CSSProperties = {
   transition: "all 0.15s",
 };
 
-/** Input / select / textarea unifiés. */
 export const inputStyle: React.CSSProperties = {
   width: "100%",
-  background: "rgba(255,255,255,0.03)",
+  background: "var(--a-inputBg)",
   border: `1px solid ${C.bd}`,
   borderRadius: 9,
   padding: "9px 12px",
@@ -193,7 +215,6 @@ export const inputStyle: React.CSSProperties = {
   transition: "border-color 0.15s",
 };
 
-/** Attache un effet de survol conforme au ghost button à un handler. */
 export function ghostHoverIn(el: HTMLElement) {
   el.style.borderColor = C.accentBd;
   el.style.color = C.accent;
@@ -203,18 +224,11 @@ export function ghostHoverOut(el: HTMLElement) {
   el.style.color = C.t2;
 }
 
-/** Effet de survol pour bouton primaire. */
 export function primaryHoverIn(el: HTMLElement) { el.style.background = C.accentHover; }
 export function primaryHoverOut(el: HTMLElement) { el.style.background = C.accent; }
 
-// ────────────────────────────────────────────────────────────
-// Textures « liste dans une carte » — inspiré directement de Terex
-// ────────────────────────────────────────────────────────────
+// ── List rows ────────────────────────────────────────────────
 
-/**
- * Style d'une ligne dans une liste au sein d'une carte.
- * Applique padding, séparateur du bas (sauf dernière) et transitions.
- */
 export function listRowStyle(isLast: boolean): React.CSSProperties {
   return {
     padding: "14px 18px",
@@ -226,11 +240,9 @@ export function listRowStyle(isLast: boolean): React.CSSProperties {
   };
 }
 
-/** Survol très subtil sur une ligne (imperceptible mais présent). */
-export function listRowHoverIn(el: HTMLElement) { el.style.background = "rgba(255,255,255,0.015)"; }
+export function listRowHoverIn(el: HTMLElement) { el.style.background = "var(--a-rowHover)"; }
 export function listRowHoverOut(el: HTMLElement) { el.style.background = "transparent"; }
 
-/** Avatar / icon-box rond utilisé à gauche d'une ligne (34px). */
 export const avatarCircle: React.CSSProperties = {
   width: 34,
   height: 34,
@@ -247,7 +259,6 @@ export const avatarCircle: React.CSSProperties = {
   fontWeight: 400,
 };
 
-/** Bouton d'action carré (26-28px), à droite d'une ligne. */
 export const iconButton: React.CSSProperties = {
   width: 28,
   height: 28,
@@ -272,7 +283,6 @@ export function iconButtonHoverOut(el: HTMLElement) {
   el.style.color = C.t3;
 }
 
-/** Petite pastille 26px pour sélecteurs internes (période, filtre, paire). */
 export function pillSmall(on: boolean): React.CSSProperties {
   return {
     height: 26,
@@ -294,7 +304,6 @@ export function pillSmall(on: boolean): React.CSSProperties {
   };
 }
 
-/** Chip d'action dans l'en-tête d'une carte (« Nouvelle », « + Ajouter »…). */
 export const chipAction: React.CSSProperties = {
   height: 26,
   paddingLeft: 10,
@@ -313,7 +322,6 @@ export const chipAction: React.CSSProperties = {
   transition: "opacity 0.15s",
 };
 
-/** En-tête de carte avec titre et action (une ligne flex). */
 export const cardHeaderRow: React.CSSProperties = {
   padding: "14px 18px",
   borderBottom: `1px solid ${C.bds}`,
@@ -322,7 +330,6 @@ export const cardHeaderRow: React.CSSProperties = {
   justifyContent: "space-between",
 };
 
-/** Titre principal d'une carte (13/600 blanc). */
 export const cardTitle: React.CSSProperties = {
   color: C.t1,
   fontSize: 13,
@@ -331,7 +338,6 @@ export const cardTitle: React.CSSProperties = {
   fontFamily: FONT,
 };
 
-/** Sous-titre discret sous un titre de carte (10px, t3). */
 export const cardSubtitle: React.CSSProperties = {
   color: C.t3,
   fontSize: 10,

@@ -25,7 +25,8 @@ import TreasuryPanel from "@/components/admin/TreasuryPanel";
 import MailboxPanel from "@/components/admin/MailboxPanel";
 import CampaignsPanel from "@/components/admin/CampaignsPanel";
 import AIFloatingChat from "@/components/admin/AIFloatingChat";
-import { C, FONT } from "@/components/admin/adminTheme";
+import { C, FONT, ADMIN_THEME_CSS, ADMIN_BG } from "@/components/admin/adminTheme";
+import ThemeToggle from "@/components/app/ThemeToggle";
 
 type TabId = "dashboard" | "queue" | "orders" | "kyc" | "accounting" | "compliance" | "treasury" | "mailbox" | "campaigns" | "announcements" | "team" | "audit";
 
@@ -97,12 +98,29 @@ const AdminPortal = () => {
     const body = document.body;
     const prevHtmlBg = html.style.backgroundColor;
     const prevBodyBg = body.style.backgroundColor;
-    html.style.backgroundColor = C.bg;
-    body.style.backgroundColor = C.bg;
+
+    const style = document.createElement("style");
+    style.textContent = ADMIN_THEME_CSS;
+    document.head.appendChild(style);
+
     const meta = document.querySelector('meta[name="theme-color"]');
     const prevTheme = meta?.getAttribute("content") ?? "";
-    meta?.setAttribute("content", C.bg);
+
+    const sync = () => {
+      const isDark = html.classList.contains("dark");
+      const bg = isDark ? ADMIN_BG.dark : ADMIN_BG.light;
+      html.style.backgroundColor = bg;
+      body.style.backgroundColor = bg;
+      meta?.setAttribute("content", bg);
+    };
+    sync();
+
+    const obs = new MutationObserver(sync);
+    obs.observe(html, { attributes: true, attributeFilter: ["class"] });
+
     return () => {
+      obs.disconnect();
+      document.head.removeChild(style);
       html.style.backgroundColor = prevHtmlBg;
       body.style.backgroundColor = prevBodyBg;
       if (meta) meta.setAttribute("content", prevTheme);
@@ -193,6 +211,7 @@ const AdminPortal = () => {
               Pilotez la plateforme Ooble
             </p>
           </div>
+          <ThemeToggle />
           <span
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
@@ -228,12 +247,13 @@ const AdminPortal = () => {
                   <button
                     key={id}
                     onClick={() => { setTab(id); setSelected(null); }}
-                    className={cn(
-                      "flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-medium transition-colors",
-                      on
-                        ? "border-white bg-white text-[#111]"
-                        : "border-[#2a2a2a] bg-[#212121] text-[#888] hover:bg-[#282828] hover:text-[#f0f0f0]",
-                    )}
+                    className="flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2.5 text-[13px] font-medium transition-colors"
+                    style={on
+                      ? { borderColor: C.accent, background: C.accent, color: "var(--a-btnPrimaryText)" }
+                      : { borderColor: C.bds, background: C.l1, color: C.t2 }
+                    }
+                    onMouseEnter={(e) => { if (!on) { e.currentTarget.style.background = C.l2; e.currentTarget.style.color = C.t1; } }}
+                    onMouseLeave={(e) => { if (!on) { e.currentTarget.style.background = C.l1; e.currentTarget.style.color = C.t2; } }}
                   >
                     <Icon className="h-4 w-4" strokeWidth={on ? 2 : 1.7} />
                     {label}

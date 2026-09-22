@@ -143,9 +143,9 @@ function renderFooter(year: number): string {
         </div>` : ""}
         <div class="row links" style="padding-top:0">
           <a href="${COMPANY.website}">Site</a>
-          <a href="${COMPANY.website}/aide">Aide</a>
-          <a href="${COMPANY.website}/confidentialite">Confidentialité</a>
-          <a href="${COMPANY.website}/conditions">Conditions</a>
+          <a href="${COMPANY.website}/faq">Aide</a>
+          <a href="${COMPANY.website}/politique-confidentialite">Confidentialité</a>
+          <a href="${COMPANY.website}/conditions-utilisation">Conditions</a>
         </div>
         <div class="row fine">
           Vous recevez cet e-mail parce que vous avez un compte sur Ooble.

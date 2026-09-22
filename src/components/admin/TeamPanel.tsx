@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { UserPlus, Users, UserRound, ScanFace, Megaphone, Headphones, BadgeCheck, ArrowLeft, ShieldCheck } from "lucide-react";
+import { UserPlus, Users, UserRound, ScanFace, Megaphone, Headphones, BadgeCheck, ArrowLeft, ShieldCheck, ChevronDown, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TEAM_ROLES, type TeamRole } from "@/lib/adminOrders";
-import { fetchTeam, setMemberRole, addRoleByEmail, type LiveTeamMember } from "@/lib/adminTeam";
+import { fetchTeam, setMemberRole, removeMember, addRoleByEmail, type LiveTeamMember } from "@/lib/adminTeam";
 import { cn } from "@/lib/utils";
 import AdminHero from "./AdminHero";
 
@@ -26,6 +26,8 @@ const TeamPanel = () => {
   const [inviteRole, setInviteRole] = useState<TeamRole>("Opérateur");
   const [inviteBusy, setInviteBusy] = useState(false);
   const [inviteMsg, setInviteMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTeam().then((m) => { setMembers(m); setLoading(false); });
@@ -33,7 +35,15 @@ const TeamPanel = () => {
 
   const setRole = (userId: string, role: TeamRole) => {
     setMembers((prev) => prev.map((m) => (m.userId === userId ? { ...m, role } : m)));
+    setEditingId(null);
     setMemberRole(userId, role).then((res) => { if (res.error) fetchTeam().then(setMembers); });
+  };
+
+  const handleRemove = (userId: string) => {
+    setMembers((prev) => prev.filter((m) => m.userId !== userId));
+    setConfirmRemove(null);
+    setEditingId(null);
+    removeMember(userId).then((res) => { if (res.error) fetchTeam().then(setMembers); });
   };
 
   const invite = async () => {
@@ -163,6 +173,8 @@ const TeamPanel = () => {
       <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
         {members.map((m) => {
           const RIcon = ROLE_ICONS[m.role] ?? Users;
+          const isEditing = editingId === m.userId;
+          const isConfirming = confirmRemove === m.userId;
           return (
             <div key={m.userId} className="px-4 py-3.5">
               <div className="flex items-center gap-3">
@@ -173,12 +185,78 @@ const TeamPanel = () => {
                   <p className="truncate text-[13px] font-medium">{m.name}</p>
                   <p className="truncate text-[12px] text-muted-foreground">{m.email}</p>
                 </div>
-                <span className="flex shrink-0 items-center gap-1.5 rounded-xl border border-border bg-secondary/50 px-2.5 py-1.5 text-[12px] font-medium text-muted-foreground">
+                <button
+                  onClick={() => setEditingId(isEditing ? null : m.userId)}
+                  className={cn(
+                    "flex shrink-0 items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[12px] font-medium transition-colors",
+                    isEditing
+                      ? "border-foreground/20 bg-secondary text-foreground"
+                      : "border-border bg-secondary/50 text-muted-foreground hover:border-foreground/20 hover:text-foreground",
+                  )}
+                >
                   <RIcon className="h-3.5 w-3.5" strokeWidth={1.7} />
                   {m.role}
-                </span>
+                  <ChevronDown className={cn("h-3 w-3 transition-transform", isEditing && "rotate-180")} />
+                </button>
               </div>
-              <p className="mt-2 pl-12 text-[12px] text-muted-foreground">{roleDesc(m.role)}</p>
+
+              {isEditing && (
+                <div className="mt-3 pl-12">
+                  <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Changer le rôle</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {TEAM_ROLES.map((r) => {
+                      const Icon = ROLE_ICONS[r.role];
+                      const on = m.role === r.role;
+                      return (
+                        <button
+                          key={r.role}
+                          onClick={() => { if (!on) setRole(m.userId, r.role); }}
+                          className={cn(
+                            "flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] font-medium transition-colors",
+                            on
+                              ? "border-foreground bg-foreground text-background"
+                              : "border-border bg-card text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
+                          )}
+                        >
+                          <Icon className="h-3.5 w-3.5" strokeWidth={on ? 2 : 1.7} />
+                          {r.role}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    {isConfirming ? (
+                      <>
+                        <span className="text-[12px] text-destructive">Retirer de l'équipe ?</span>
+                        <button
+                          onClick={() => handleRemove(m.userId)}
+                          className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-[12px] font-medium text-destructive transition-colors hover:bg-destructive/20"
+                        >
+                          Confirmer
+                        </button>
+                        <button
+                          onClick={() => setConfirmRemove(null)}
+                          className="rounded-lg border border-border px-3 py-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmRemove(m.userId)}
+                        className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:border-destructive/30 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Retirer
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {!isEditing && (
+                <p className="mt-2 pl-12 text-[12px] text-muted-foreground">{roleDesc(m.role)}</p>
+              )}
             </div>
           );
         })}

@@ -4,7 +4,7 @@ import { Handshake, Check } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import CopyRow from "@/components/app/CopyRow";
 import { Button } from "@/components/ui/button";
-import { T, useT } from "@/lib/i18n";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { TKey } from "@/lib/translations";
 
@@ -40,33 +40,33 @@ const AppOTC = () => {
 
   if (sent) {
     return (
-      <AppShell backTo="/app" header={<div><h1 className="font-display text-[22px] font-semibold tracking-tight"><T en="Request sent">Demande envoyée</T></h1><p className="mt-1 text-[13px] text-muted-foreground"><T en="Our desk will reply shortly">Notre desk vous répond sous peu</T></p></div>}>
+      <AppShell backTo="/app" header={<div><h1 className="font-display text-[22px] font-semibold tracking-tight">{t("otcApp.sentTitle")}</h1><p className="mt-1 text-[13px] text-muted-foreground">{t("otcApp.sentSub")}</p></div>}>
         <div className="rounded-[16px] border border-border bg-card p-6">
           <div className="flex flex-col items-center text-center">
             <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-secondary text-foreground">
               <Check className="h-7 w-7" strokeWidth={2.4} />
             </span>
-            <p className="mt-4 font-display text-lg font-semibold"><T en="Thank you!">Merci !</T></p>
+            <p className="mt-4 font-display text-lg font-semibold">{t("otcApp.thanks")}</p>
             <p className="mt-1 text-[13px] text-muted-foreground">
-              <T en="An OTC desk member will contact you at">Un membre du desk OTC vous contacte à</T>{" "}
+              {t("otcApp.contactAt")}{" "}
               <span className="font-semibold text-foreground">{email}</span>{" "}
-              <T en="with a firm quote.">avec une cotation ferme.</T>
+              {t("otcApp.contactAt2")}
             </p>
           </div>
           <dl className="mt-6 divide-y divide-border border-t border-border text-sm">
-            <div className="flex justify-between py-3"><dt className="text-muted-foreground"><T en="Side">Sens</T></dt><dd className="font-medium">{side === "buy" ? t("otcApp.buyOf") : t("otcApp.sellOf")}</dd></div>
-            <div className="flex justify-between py-3"><dt className="text-muted-foreground"><T en="Volume">Volume</T></dt><dd className="font-semibold">{nf.format(value)} USDT</dd></div>
+            <div className="flex justify-between py-3"><dt className="text-muted-foreground">{t("otcApp.sideLabel")}</dt><dd className="font-medium">{side === "buy" ? t("otcApp.buyOf") : t("otcApp.sellOf")}</dd></div>
+            <div className="flex justify-between py-3"><dt className="text-muted-foreground">{t("otcApp.volume")}</dt><dd className="font-semibold">{nf.format(value)} USDT</dd></div>
           </dl>
         </div>
 
-        <p className="mb-2 mt-5 px-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground"><T en="Your reference">Votre référence</T></p>
+        <p className="mb-2 mt-5 px-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{t("otcApp.yourRef")}</p>
         <div className="overflow-hidden rounded-[16px] border border-border bg-card">
           <CopyRow label={t("otcApp.requestRef")} value={ref} mono />
         </div>
 
         <div className="mt-6 flex justify-end">
           <Button variant="appPrimary" shape="soft" className="h-auto px-[22px] py-[13px] text-sm" asChild>
-            <Link to="/app"><Check className="h-[17px] w-[17px]" strokeWidth={2} /> <T en="Done">Terminé</T></Link>
+            <Link to="/app"><Check className="h-[17px] w-[17px]" strokeWidth={2} /> {t("otcApp.done")}</Link>
           </Button>
         </div>
       </AppShell>
@@ -78,14 +78,14 @@ const AppOTC = () => {
       backTo="/app"
       header={
         <div>
-          <h1 className="font-display text-[22px] font-semibold tracking-tight"><T en="OTC Desk">Desk OTC</T></h1>
-          <p className="mt-1 text-[13px] text-muted-foreground"><T en="Custom quotes for large volumes">Cotation sur mesure pour les gros volumes</T></p>
+          <h1 className="font-display text-[22px] font-semibold tracking-tight">{t("otcApp.title")}</h1>
+          <p className="mt-1 text-[13px] text-muted-foreground">{t("otcApp.sub")}</p>
         </div>
       }
     >
       <div className="space-y-4 rounded-[16px] border border-border bg-card p-5">
         <div>
-          <Label><T en="Direction">Sens de l'opération</T></Label>
+          <Label>{t("otcApp.direction")}</Label>
           <div className="flex rounded-[10px] border border-border bg-secondary/60 p-0.5">
             {([
               { key: "buy" as Side, labelKey: "otcApp.buyLabel" as TKey },
@@ -107,7 +107,7 @@ const AppOTC = () => {
         </div>
 
         <div>
-          <Label><T en="Desired amount">Montant souhaité</T></Label>
+          <Label>{t("otcApp.desiredAmount")}</Label>
           <div className="relative">
             <input
               inputMode="numeric"
@@ -121,7 +121,7 @@ const AppOTC = () => {
         </div>
 
         <div>
-          <Label><T en="USDT address">Adresse USDT</T></Label>
+          <Label>{t("otcApp.usdtAddress")}</Label>
           <input
             type="text"
             spellCheck={false}
@@ -134,7 +134,7 @@ const AppOTC = () => {
         </div>
 
         <div>
-          <Label><T en="Intended use of funds">Usage prévu des fonds</T></Label>
+          <Label>{t("otcApp.usage")}</Label>
           <select value={usage} onChange={(e) => setUsage(e.target.value)} className={cn(fieldClass, !usage && "text-muted-foreground/60")}>
             <option value="" disabled>{t("otcApp.select")}</option>
             {USAGE_KEYS.map((k) => <option key={k} value={k}>{t(k)}</option>)}
@@ -142,7 +142,7 @@ const AppOTC = () => {
         </div>
 
         <div>
-          <Label><T en="Source of funds">Provenance des fonds</T></Label>
+          <Label>{t("otcApp.source")}</Label>
           <select value={source} onChange={(e) => setSource(e.target.value)} className={cn(fieldClass, !source && "text-muted-foreground/60")}>
             <option value="" disabled>{t("otcApp.select")}</option>
             {SOURCE_KEYS.map((k) => <option key={k} value={k}>{t(k)}</option>)}
@@ -150,7 +150,7 @@ const AppOTC = () => {
         </div>
 
         <div>
-          <Label><T en="Contact email">E-mail de contact</T></Label>
+          <Label>{t("otcApp.contactEmail")}</Label>
           <input
             type="email"
             spellCheck={false}
@@ -164,14 +164,12 @@ const AppOTC = () => {
       </div>
 
       <p className="mt-3 px-1 text-xs text-muted-foreground">
-        <T en="Information required for compliance (source of funds verification).">
-          Informations demandées pour la conformité (vérification de la provenance des fonds).
-        </T>
+        {t("otcApp.compliance")}
       </p>
 
       <div className="mt-5 flex justify-end">
         <Button variant="appPrimary" shape="soft" className="h-auto gap-2 px-[22px] py-[13px] text-sm" disabled={!valid} onClick={() => setSent(true)}>
-          <Handshake className="h-[17px] w-[17px]" strokeWidth={2} /> <T en="Request a quote">Demander un devis</T>
+          <Handshake className="h-[17px] w-[17px]" strokeWidth={2} /> {t("otcApp.requestQuote")}
         </Button>
       </div>
     </AppShell>

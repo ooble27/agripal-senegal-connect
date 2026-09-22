@@ -667,6 +667,16 @@ const dict = {
   "reset.openFromLink": { fr: "Ouvrez cette page depuis le lien reçu par courriel. Si vous y êtes déjà,", en: "Open this page from the link sent to your email. If you're already here," },
   "reset.requestLink": { fr: "redemandez un lien", en: "request a new link" },
 
+  // ── Trading suspended ──
+  "trade.suspended": {
+    fr: "Les transactions sont temporairement suspendues. La création de compte et la vérification KYC restent disponibles.",
+    en: "Trading is temporarily suspended. Account creation and KYC verification remain available.",
+  },
+  "trade.backToDash": { fr: "Retour au tableau de bord", en: "Back to dashboard" },
+
+  // ── Sell extras ──
+  "sell.emailPh": { fr: "vous@exemple.ca", en: "you@example.ca" },
+
   // ── Misc ──
   "misc.back": { fr: "Retour", en: "Back" },
   "misc.next": { fr: "Suivant", en: "Next" },

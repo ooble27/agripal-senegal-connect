@@ -68,17 +68,14 @@ const AppVendre = () => {
             {t("sell.title")}
           </h1>
           <p className="mt-2 max-w-xs text-[14px] leading-relaxed text-muted-foreground">
-            Les transactions sont temporairement suspendues. La création de compte et la vérification KYC restent disponibles.
-          </p>
-          <p className="mt-1 text-[12px] text-muted-foreground/60">
-            Trading is temporarily suspended. Account creation and KYC verification remain available.
+            {t("trade.suspended")}
           </p>
           <Link
             to="/app"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-secondary px-5 py-2.5 text-[13px] font-medium text-foreground transition-colors hover:bg-secondary/70"
           >
             <ArrowLeft className="h-4 w-4" />
-            Retour au tableau de bord
+            {t("trade.backToDash")}
           </Link>
         </div>
       </AppShell>
@@ -238,7 +235,7 @@ const AppVendre = () => {
               type="email"
               spellCheck={false}
               autoCapitalize="none"
-              placeholder="vous@exemple.ca"
+              placeholder={t("sell.emailPh")}
               value={email}
               onChange={(e) => setEmail(e.target.value.trim())}
               className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground/60"

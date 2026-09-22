@@ -112,7 +112,7 @@ const RiskScoreCard = ({ profile }: { profile: ClientProfile }) => {
           transition: "background 0.12s, color 0.12s",
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = "rgba(255,255,255,0.015)";
+          e.currentTarget.style.background = "var(--a-hover1)";
           e.currentTarget.style.color = C.t1;
         }}
         onMouseLeave={(e) => {

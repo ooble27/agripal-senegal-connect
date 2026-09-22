@@ -372,7 +372,7 @@ function CampaignComposer({ clients, clientsLoading, onSent }: ComposerProps) {
           {/* Segment quick-add buttons */}
           <div style={{
             display: "flex", gap: 4, flexWrap: "wrap", marginTop: 8,
-            paddingTop: 8, borderTop: `1px solid rgba(255,255,255,0.03)`,
+            paddingTop: 8, borderTop: `1px solid ${C.bds}`,
           }}>
             <span style={{ fontSize: 10, color: C.t3, fontFamily: FONT, marginRight: 4, lineHeight: "26px" }}>
               Ajouter un segment :
@@ -417,13 +417,14 @@ function CampaignComposer({ clients, clientsLoading, onSent }: ComposerProps) {
                   display: "inline-flex", alignItems: "center", gap: 4,
                   height: 26, padding: "0 9px", borderRadius: 7,
                   background: "transparent",
-                  border: `1px solid rgba(200,60,60,0.2)`,
-                  color: "rgba(200,100,100,0.6)",
+                  border: `1px solid ${C.dangerBd}`,
+                  color: C.dangerText,
+                  opacity: 0.7,
                   fontSize: 10.5, fontFamily: FONT, cursor: "pointer",
                   transition: "all 0.12s",
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(200,60,60,0.4)"; e.currentTarget.style.color = "#e8a0a0"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(200,60,60,0.2)"; e.currentTarget.style.color = "rgba(200,100,100,0.6)"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.borderColor = C.dangerText; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.7"; e.currentTarget.style.borderColor = C.dangerBd; }}
               >
                 <X style={{ width: 9, height: 9 }} strokeWidth={2} />
                 Vider
@@ -478,7 +479,7 @@ function CampaignComposer({ clients, clientsLoading, onSent }: ComposerProps) {
           <div style={{
             position: "relative",
             borderRadius: 10,
-            background: "rgba(255,255,255,0.02)",
+            background: C.hover2,
             border: `1px solid ${C.bds}`,
             padding: "12px 14px",
             transition: "border-color 0.15s",
@@ -502,7 +503,7 @@ function CampaignComposer({ clients, clientsLoading, onSent }: ComposerProps) {
             />
             <div style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
-              marginTop: 8, paddingTop: 8, borderTop: `1px solid rgba(255,255,255,0.04)`,
+              marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.bds}`,
             }}>
               <span style={{ fontSize: 10.5, color: C.t3, display: "flex", alignItems: "center", gap: 4 }}>
                 <Sparkles style={{ width: 10, height: 10 }} strokeWidth={1.5} />
@@ -516,7 +517,7 @@ function CampaignComposer({ clients, clientsLoading, onSent }: ComposerProps) {
                   display: "inline-flex", alignItems: "center", gap: 5,
                   height: 30, padding: "0 14px", borderRadius: 8, border: "none",
                   background: aiPrompt.trim() && !aiLoading ? C.accent : C.l3,
-                  color: aiPrompt.trim() && !aiLoading ? "#111" : C.t3,
+                  color: aiPrompt.trim() && !aiLoading ? C.btnText : C.t3,
                   fontSize: 11.5, fontWeight: 500, fontFamily: FONT,
                   cursor: aiPrompt.trim() && !aiLoading ? "pointer" : "default",
                   transition: "background 0.15s",
@@ -535,7 +536,7 @@ function CampaignComposer({ clients, clientsLoading, onSent }: ComposerProps) {
         {generated && !editing && (
           <div style={{
             margin: "0 18px 14px", padding: "14px 16px",
-            borderRadius: 10, background: "rgba(255,255,255,0.025)",
+            borderRadius: 10, background: C.hover2,
             border: `1px solid ${C.bds}`,
           }}>
             <div style={{
@@ -580,7 +581,7 @@ function CampaignComposer({ clients, clientsLoading, onSent }: ComposerProps) {
         {editing && (
           <div style={{
             margin: "0 18px 14px", padding: "16px",
-            borderRadius: 10, background: "rgba(255,255,255,0.025)",
+            borderRadius: 10, background: C.hover2,
             border: `1px solid ${C.bds}`,
           }}>
             <div style={{
@@ -630,9 +631,9 @@ function CampaignComposer({ clients, clientsLoading, onSent }: ComposerProps) {
         {feedback && (
           <div style={{
             margin: "0 18px 10px", padding: "8px 12px", borderRadius: 8,
-            background: feedback.kind === "ok" ? "rgba(127,212,201,0.06)" : "rgba(200,60,60,0.10)",
-            border: `1px solid ${feedback.kind === "ok" ? "rgba(127,212,201,0.15)" : "rgba(200,60,60,0.25)"}`,
-            color: feedback.kind === "ok" ? "#7FD4C9" : "#f2c1c1",
+            background: feedback.kind === "ok" ? C.successBg : C.dangerBg,
+            border: `1px solid ${feedback.kind === "ok" ? C.successBd : C.dangerBd}`,
+            color: feedback.kind === "ok" ? C.successText : C.dangerText,
             fontSize: 11.5, display: "flex", alignItems: "center", gap: 6,
           }}>
             {feedback.kind === "ok"
@@ -723,7 +724,7 @@ function CampaignComposer({ clients, clientsLoading, onSent }: ComposerProps) {
                 disabled={busy}
                 style={{
                   height: 32, padding: "0 16px", borderRadius: 8, border: "none",
-                  background: C.accent, color: "#111",
+                  background: C.accent, color: C.btnText,
                   fontSize: 12, fontWeight: 500, fontFamily: FONT,
                   cursor: busy ? "default" : "pointer",
                   display: "inline-flex", alignItems: "center", gap: 5,
@@ -743,7 +744,7 @@ function CampaignComposer({ clients, clientsLoading, onSent }: ComposerProps) {
               style={{
                 height: 36, padding: "0 20px", borderRadius: 9, border: "none",
                 background: canSend ? C.accent : C.l3,
-                color: canSend ? "#111" : C.t3,
+                color: canSend ? C.btnText : C.t3,
                 fontSize: 12.5, fontWeight: 500, fontFamily: FONT,
                 display: "inline-flex", alignItems: "center", gap: 7,
                 cursor: canSend ? "pointer" : "default",
@@ -924,8 +925,8 @@ function CampaignRecipientPicker({ selected, clients, loading, onAdd, onRemove }
             style={{
               display: "inline-flex", alignItems: "center", gap: 5,
               padding: "3px 5px 3px 8px", borderRadius: 999,
-              background: r.id ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)",
-              border: `1px solid ${r.id ? "rgba(255,255,255,0.12)" : C.bd}`,
+              background: r.id ? C.hover4 : C.hover2,
+              border: `1px solid ${r.id ? C.chipBd : C.bd}`,
               color: C.t1, fontSize: 11.5, fontFamily: FONT,
               maxWidth: "100%",
             }}
@@ -1000,7 +1001,7 @@ function CampaignRecipientPicker({ selected, clients, loading, onAdd, onRemove }
             position: "absolute", top: "100%", left: 0, right: 0,
             marginTop: 4, zIndex: 20,
             background: C.l1, border: `1px solid ${C.bd}`, borderRadius: 10,
-            boxShadow: "0 12px 32px -8px rgba(0,0,0,0.55)",
+            boxShadow: C.shadowHeavy,
             maxHeight: 280, overflowY: "auto",
             padding: 4,
           }}
@@ -1028,18 +1029,18 @@ function CampaignRecipientPicker({ selected, clients, loading, onAdd, onRemove }
               style={{
                 display: "flex", width: "100%", alignItems: "center", gap: 10,
                 padding: "8px 10px", borderRadius: 7,
-                background: "rgba(127,212,201,0.05)", border: "none", cursor: "pointer",
+                background: C.successBg, border: "none", cursor: "pointer",
                 color: C.t1, textAlign: "left", fontFamily: FONT,
                 transition: "background 0.1s",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(127,212,201,0.1)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(127,212,201,0.05)"; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = C.hover4; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = C.successBg; }}
             >
               <span style={{
                 width: 26, height: 26, borderRadius: 7, flexShrink: 0,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                background: "rgba(127,212,201,0.1)", border: "1px solid rgba(127,212,201,0.2)",
-                color: "#7FD4C9",
+                background: C.successBg, border: `1px solid ${C.successBd}`,
+                color: C.successText,
               }}>
                 <UserPlus style={{ width: 12, height: 12 }} strokeWidth={2} />
               </span>
@@ -1061,13 +1062,13 @@ function CampaignRecipientPicker({ selected, clients, loading, onAdd, onRemove }
                 color: C.t1, textAlign: "left", fontFamily: FONT,
                 transition: "background 0.1s",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = C.hover3; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
             >
               <span style={{
                 width: 26, height: 26, borderRadius: 7, flexShrink: 0,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                background: "rgba(255,255,255,0.05)", border: `1px solid ${C.bds}`,
+                background: C.hover3, border: `1px solid ${C.bds}`,
                 color: C.t2, fontSize: 11,
               }}>
                 {(c.firstName || c.email)[0]?.toUpperCase() || "?"}
@@ -1089,9 +1090,9 @@ function CampaignRecipientPicker({ selected, clients, loading, onAdd, onRemove }
               {c.kycStatus === "approved" && (
                 <span style={{
                   fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase",
-                  color: "#7FD4C9", flexShrink: 0,
+                  color: C.successText, flexShrink: 0,
                   padding: "2px 5px", borderRadius: 4,
-                  background: "rgba(127,212,201,0.08)",
+                  background: C.successBg,
                 }}>
                   KYC
                 </span>
@@ -1220,7 +1221,7 @@ function CampaignHistory({ campaigns }: { campaigns: CampaignRecord[] }) {
               background: "transparent", border: "none", cursor: "pointer",
               fontFamily: FONT, transition: "background 0.12s",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.015)"; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = C.hover1; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
           >
             <div style={{
@@ -1260,9 +1261,9 @@ function CampaignHistory({ campaigns }: { campaigns: CampaignRecord[] }) {
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
               <div style={{
                 padding: "3px 8px", borderRadius: 6,
-                background: successRate === 100 ? "rgba(127,212,201,0.08)" : "rgba(200,60,60,0.08)",
+                background: successRate === 100 ? C.successBg : C.dangerBg,
                 fontSize: 11, fontWeight: 500,
-                color: successRate === 100 ? "#7FD4C9" : "#e8a0a0",
+                color: successRate === 100 ? C.successText : C.dangerText,
                 fontVariantNumeric: "tabular-nums",
               }}>
                 {successRate}%
@@ -1289,7 +1290,7 @@ function SectionHeader({ icon: Icon, label }: { icon: typeof Users; label: strin
     <div style={{
       padding: "10px 18px 6px",
       display: "flex", alignItems: "center", gap: 6,
-      borderBottom: `1px solid rgba(255,255,255,0.03)`,
+      borderBottom: `1px solid ${C.bds}`,
     }}>
       <Icon style={{ width: 10, height: 10, color: C.t3 }} strokeWidth={1.7} />
       <span style={{ ...sH, fontSize: 10 }}>{label}</span>
@@ -1358,7 +1359,7 @@ function EditField({
 }) {
   const shared: React.CSSProperties = {
     ...inputStyle, fontSize: 13,
-    background: "rgba(255,255,255,0.03)",
+    background: C.hover2,
   };
   return (
     <label style={{ display: "block" }}>

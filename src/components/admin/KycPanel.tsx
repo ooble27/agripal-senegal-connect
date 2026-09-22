@@ -150,10 +150,10 @@ const KycPanel = () => {
           </div>
           <span style={{
             fontSize: 11, fontFamily: FONT,
-            color: m.text.includes("green") || detail.status === "verifie" ? "#4ade80" : detail.status === "refuse" ? "#f87171" : C.t2,
+            color: m.text.includes("green") || detail.status === "verifie" ? C.successText : detail.status === "refuse" ? C.dangerText : C.t2,
             padding: "4px 10px",
             borderRadius: 20,
-            background: detail.status === "verifie" ? "rgba(74,222,128,0.1)" : detail.status === "refuse" ? "rgba(248,113,113,0.1)" : C.l3,
+            background: detail.status === "verifie" ? C.successBg : detail.status === "refuse" ? C.dangerBg : C.l3,
           }}>
             {m.label}
           </span>

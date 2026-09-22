@@ -123,7 +123,7 @@ const ClientProfile = ({ userId, clientName, onBack, onOpenOrder }: Props) => {
             <div style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 22 }}>
               <span style={{
                 width: 40, height: 40, borderRadius: 11, flexShrink: 0,
-                background: "rgba(255,255,255,0.08)", border: `1px solid ${C.bds}`,
+                background: C.hover4, border: `1px solid ${C.bds}`,
                 color: C.t1, display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 14, fontWeight: 400,
               }}>
@@ -146,7 +146,7 @@ const ClientProfile = ({ userId, clientName, onBack, onOpenOrder }: Props) => {
               {profile?.accountType === "business" && (
                 <span style={{
                   flexShrink: 0, borderRadius: 999, padding: "4px 10px",
-                  background: "rgba(255,255,255,0.06)", border: `1px solid ${C.bds}`,
+                  background: C.hover4, border: `1px solid ${C.bds}`,
                   color: C.t2, fontSize: 10.5,
                 }}>
                   Entreprise
@@ -261,8 +261,8 @@ const ClientProfile = ({ userId, clientName, onBack, onOpenOrder }: Props) => {
               {aiError && (
                 <div style={{
                   padding: "8px 12px", borderRadius: 8,
-                  background: "rgba(200,60,60,0.10)", border: "1px solid rgba(200,60,60,0.3)",
-                  color: "#f2c1c1", fontSize: 12, display: "flex", alignItems: "center", gap: 8,
+                  background: C.dangerBg, border: `1px solid ${C.dangerBd}`,
+                  color: C.dangerText, fontSize: 12, display: "flex", alignItems: "center", gap: 8,
                 }}>
                   <AlertTriangle style={{ width: 13, height: 13 }} strokeWidth={2} />
                   {aiError}

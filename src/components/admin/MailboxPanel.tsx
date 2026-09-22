@@ -793,7 +793,7 @@ function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, rep
         <div style={{
           display: "flex", flexWrap: "wrap", gap: 2,
           padding: "8px 12px", borderBottom: `1px solid ${C.bds}`,
-          background: "rgba(255,255,255,0.015)",
+          background: C.hover1,
         }}>
           <ToolbarButton title="Titre" onClick={withRef((t) => prefixLines(t, "## "))}>
             <Heading2 style={{ width: 14, height: 14 }} strokeWidth={1.7} />
@@ -835,12 +835,12 @@ function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, rep
             style={{
               display: "inline-flex", alignItems: "center", gap: 5,
               height: 30, padding: "0 10px", borderRadius: 7, border: "none",
-              background: aiOpen ? "rgba(255,255,255,0.08)" : "transparent",
+              background: aiOpen ? C.hover4 : "transparent",
               color: aiOpen ? C.t1 : C.t2,
               cursor: "pointer", fontFamily: FONT, fontSize: 11.5,
               transition: "background 0.12s, color 0.12s",
             }}
-            onMouseEnter={(e) => { if (!aiOpen) { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = C.t1; } }}
+            onMouseEnter={(e) => { if (!aiOpen) { e.currentTarget.style.background = C.hover3; e.currentTarget.style.color = C.t1; } }}
             onMouseLeave={(e) => { if (!aiOpen) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.t2; } }}
           >
             <Wand2 style={{ width: 12, height: 12 }} strokeWidth={1.8} />
@@ -868,7 +868,7 @@ function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, rep
         {aiOpen && (
           <div style={{
             padding: "12px 18px", borderBottom: `1px solid ${C.bds}`,
-            background: "rgba(255,255,255,0.02)",
+            background: C.hover2,
             display: "flex", alignItems: "flex-start", gap: 10,
           }}>
             <Wand2 style={{ width: 14, height: 14, color: C.t2, marginTop: 6 }} strokeWidth={1.8} />
@@ -905,7 +905,7 @@ function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, rep
                     display: "inline-flex", alignItems: "center", gap: 5,
                     height: 28, padding: "0 12px", borderRadius: 7, border: "none",
                     background: aiPrompt.trim() && !aiBusy ? C.accent : C.l3,
-                    color: aiPrompt.trim() && !aiBusy ? "#111" : C.t3,
+                    color: aiPrompt.trim() && !aiBusy ? C.btnText : C.t3,
                     fontSize: 11.5, fontFamily: FONT,
                     cursor: aiPrompt.trim() && !aiBusy ? "pointer" : "default",
                     transition: "background 0.15s",
@@ -944,9 +944,9 @@ function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, rep
           <div style={{
             margin: "0 18px 8px",
             padding: "8px 12px", borderRadius: 8,
-            background: "rgba(220,170,60,0.08)",
-            border: "1px solid rgba(220,170,60,0.25)",
-            color: "#dcc47a",
+            background: C.warnBg,
+            border: `1px solid ${C.warnBd}`,
+            color: C.warnText,
             fontSize: 11.5, lineHeight: 1.5,
           }}>
             Variable{remainingVars.length > 1 ? "s" : ""} non remplie{remainingVars.length > 1 ? "s" : ""} —
@@ -954,7 +954,7 @@ function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, rep
             {" "}
             {remainingVars.map((v) => (
               <code key={v} style={{
-                background: "rgba(255,255,255,0.06)", padding: "1px 5px",
+                background: C.codeBg, padding: "1px 5px",
                 borderRadius: 4, marginRight: 4, fontSize: 11,
               }}>{`{{${v}}}`}</code>
             ))}
@@ -972,9 +972,9 @@ function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, rep
               <div style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "6px 12px", borderRadius: 8,
-                background: feedback.kind === "ok" ? "rgba(255,255,255,0.05)" : "rgba(200,60,60,0.10)",
-                border: `1px solid ${feedback.kind === "ok" ? C.accentBd : "rgba(200,60,60,0.3)"}`,
-                color: feedback.kind === "ok" ? C.t1 : "#f2c1c1",
+                background: feedback.kind === "ok" ? C.hover3 : C.dangerBg,
+                border: `1px solid ${feedback.kind === "ok" ? C.accentBd : C.dangerBd}`,
+                color: feedback.kind === "ok" ? C.t1 : C.dangerText,
                 fontSize: 12,
               }}>
                 {feedback.kind === "ok"
@@ -990,7 +990,7 @@ function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, rep
             style={{
               height: 38, padding: "0 20px", borderRadius: 9, border: "none",
               background: valid && !busy ? C.accent : C.l3,
-              color: valid && !busy ? "#111" : C.t3,
+              color: valid && !busy ? C.btnText : C.t3,
               fontSize: 12.5, fontFamily: FONT,
               display: "inline-flex", alignItems: "center", gap: 7,
               cursor: valid && !busy ? "pointer" : "default",
@@ -1090,7 +1090,7 @@ function RecipientPicker({ selected, clients, loading, onAdd, onRemove, onSelect
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "4px 6px 4px 10px", borderRadius: 999,
-              background: r.id ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)",
+              background: r.id ? C.hover4 : C.hover2,
               border: `1px solid ${r.id ? C.accentBd : C.bd}`,
               color: C.t1, fontSize: 12, fontFamily: FONT,
               maxWidth: "100%",
@@ -1115,7 +1115,7 @@ function RecipientPicker({ selected, clients, loading, onAdd, onRemove, onSelect
                 background: "transparent", border: "none", cursor: "pointer",
                 color: C.t3, transition: "background 0.12s, color 0.12s",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = C.t1; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = C.hover4; e.currentTarget.style.color = C.t1; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.t3; }}
             >
               <X style={{ width: 10, height: 10 }} strokeWidth={2} />
@@ -1156,7 +1156,7 @@ function RecipientPicker({ selected, clients, loading, onAdd, onRemove, onSelect
             position: "absolute", top: "100%", left: 48, right: 0,
             marginTop: 4, zIndex: 20,
             background: C.l1, border: `1px solid ${C.bd}`, borderRadius: 10,
-            boxShadow: "0 12px 32px -8px rgba(0,0,0,0.55)",
+            boxShadow: C.shadowHeavy,
             maxHeight: 320, overflowY: "auto",
             padding: 4,
           }}
@@ -1194,13 +1194,13 @@ function RecipientPicker({ selected, clients, loading, onAdd, onRemove, onSelect
                 color: C.t1, textAlign: "left", fontFamily: FONT,
                 transition: "background 0.1s",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = C.hover3; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
             >
               <span style={{
                 width: 26, height: 26, borderRadius: 7, flexShrink: 0,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                background: "rgba(255,255,255,0.05)", border: `1px solid ${C.bds}`,
+                background: C.hover3, border: `1px solid ${C.bds}`,
                 color: C.t2, fontSize: 11.5,
               }}>
                 {(c.firstName || c.email)[0]?.toUpperCase() || "?"}
@@ -1284,7 +1284,7 @@ function ToolbarButton({ title, onClick, children }: { title: string; onClick: (
         background: "transparent", border: "none", cursor: "pointer",
         color: C.t2, transition: "background 0.12s, color 0.12s",
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = C.t1; }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = C.hover3; e.currentTarget.style.color = C.t1; }}
       onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.t2; }}
     >
       {children}
@@ -1360,9 +1360,9 @@ function SentView({ sent }: { sent: SentMail[] }) {
           <div key={m.id} style={{ ...listRowStyle(i === sent.length - 1), alignItems: "flex-start", gap: 14 }}>
             <div style={{
               width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-              background: "rgba(255,255,255,0.05)", border: `1px solid ${C.bds}`,
+              background: C.hover3, border: `1px solid ${C.bds}`,
               display: "flex", alignItems: "center", justifyContent: "center",
-              color: ok ? C.t1 : "#dda0a0",
+              color: ok ? C.t1 : C.dangerText,
             }}>
               {ok ? <Check style={{ width: 13, height: 13 }} strokeWidth={2} />
                   : <AlertTriangle style={{ width: 13, height: 13 }} strokeWidth={2} />}
@@ -1373,7 +1373,7 @@ function SentView({ sent }: { sent: SentMail[] }) {
               </p>
               <p style={{ margin: "2px 0 0", fontSize: 11.5, color: C.t3, fontVariantNumeric: "tabular-nums" }}>
                 à {m.to} · par {m.sentBy} · {dateFmt.format(new Date(m.sentAt))}
-                {!ok && <> · <span style={{ color: "#dda0a0" }}>{m.outcome.error}</span></>}
+                {!ok && <> · <span style={{ color: C.dangerText }}>{m.outcome.error}</span></>}
               </p>
             </div>
           </div>
@@ -1397,7 +1397,7 @@ function SnippetsView({ onLoad }: SnippetsViewProps) {
         >
           <div style={{
             width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-            background: "rgba(255,255,255,0.05)", border: `1px solid ${C.bds}`,
+            background: C.hover3, border: `1px solid ${C.bds}`,
             display: "flex", alignItems: "center", justifyContent: "center",
             color: C.t2,
           }}>
@@ -1511,7 +1511,7 @@ function InboxView({ onReply }: InboxViewProps) {
             onClick={() => onReply(selectedThread)}
             style={{
               height: 30, padding: "0 14px", borderRadius: 7, border: "none",
-              background: C.accent, color: "#111",
+              background: C.accent, color: C.btnText,
               fontSize: 11.5, fontFamily: FONT,
               display: "inline-flex", alignItems: "center", gap: 5,
               cursor: "pointer", transition: "background 0.15s",
@@ -1553,13 +1553,13 @@ function InboxView({ onReply }: InboxViewProps) {
                   style={{
                     padding: "16px 18px",
                     borderBottom: i < messages.length - 1 ? `1px solid ${C.bds}` : "none",
-                    background: isInbound ? "rgba(255,255,255,0.015)" : "transparent",
+                    background: isInbound ? C.hover1 : "transparent",
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <div style={{
                       width: 24, height: 24, borderRadius: 6, flexShrink: 0,
-                      background: isInbound ? "rgba(255,255,255,0.06)" : C.accentSoft,
+                      background: isInbound ? C.hover4 : C.accentSoft,
                       border: `1px solid ${isInbound ? C.bds : C.accentBd}`,
                       display: "flex", alignItems: "center", justifyContent: "center",
                       color: isInbound ? C.t2 : C.t1, fontSize: 10,
@@ -1624,14 +1624,14 @@ function InboxView({ onReply }: InboxViewProps) {
             display: "flex", width: "100%", alignItems: "center", gap: 12,
             padding: "14px 18px", textAlign: "left",
             borderBottom: i < threads.length - 1 ? `1px solid ${C.bds}` : "none",
-            background: t.hasUnread ? "rgba(255,255,255,0.02)" : "transparent",
+            background: t.hasUnread ? C.hover2 : "transparent",
             border: "none", borderBottomStyle: i < threads.length - 1 ? "solid" : "none",
             borderBottomWidth: 1, borderBottomColor: C.bds,
             cursor: "pointer", fontFamily: FONT,
             transition: "background 0.12s",
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = t.hasUnread ? "rgba(255,255,255,0.02)" : "transparent"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = C.hover2; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = t.hasUnread ? C.hover2 : "transparent"; }}
         >
           {/* Indicateur non lu */}
           <div style={{
@@ -1642,7 +1642,7 @@ function InboxView({ onReply }: InboxViewProps) {
           {/* Avatar */}
           <div style={{
             width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-            background: "rgba(255,255,255,0.05)", border: `1px solid ${C.bds}`,
+            background: C.hover3, border: `1px solid ${C.bds}`,
             display: "flex", alignItems: "center", justifyContent: "center",
             color: C.t2, fontSize: 12,
           }}>

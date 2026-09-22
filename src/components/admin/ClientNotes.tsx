@@ -118,7 +118,7 @@ const ClientNotes = ({ userId }: { userId: string }) => {
                 height: 30, padding: "0 14px", borderRadius: 8,
                 background: draft.trim() ? C.accent : C.l3,
                 border: "none",
-                color: draft.trim() ? "#111" : C.t3,
+                color: draft.trim() ? C.btnText : C.t3,
                 fontSize: 12, fontFamily: FONT,
                 cursor: draft.trim() ? "pointer" : "default",
                 transition: "background 0.12s",

@@ -1,10 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { X } from "lucide-react";
 
-const OobleMascot = ({ size = 24, dark = false }: { size?: number; dark?: boolean }) => {
-  const body = dark ? "#111" : "currentColor";
-  const eye = dark ? "#fff" : "#fff";
-  const pupil = dark ? "#111" : "#1a1a1a";
+const OobleMascot = ({ size = 24, onBtn = false }: { size?: number; onBtn?: boolean }) => {
+  // When on the floating action button, body follows the button's foreground
+  // color (var(--a-btnPrimaryText)) so it flips with theme. Otherwise it uses
+  // the ambient currentColor.
+  const body = onBtn ? "var(--a-btnPrimaryText)" : "currentColor";
+  const eye = "#fff";
+  const pupil = "#1a1a1a";
   const accent = "#f5a623";
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
@@ -53,7 +56,7 @@ const AIFloatingChat = () => {
           display: "flex",
           flexDirection: "column",
           background: C.bg,
-          boxShadow: "0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06)",
+          boxShadow: C.panelShadow,
           transform: open ? "translateY(0)" : "translateY(100%)",
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
@@ -121,7 +124,7 @@ const AIFloatingChat = () => {
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.4)",
+            background: C.overlay,
             zIndex: 99,
           }}
         />
@@ -141,16 +144,16 @@ const AIFloatingChat = () => {
             borderRadius: "50%",
             background: C.accent,
             border: "none",
-            color: "#111",
+            color: C.btnText,
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+            boxShadow: C.bubbleShadow,
             zIndex: 101,
           }}
         >
-          <OobleMascot size={34} dark />
+          <OobleMascot size={34} onBtn />
         </button>
       )}
     </>

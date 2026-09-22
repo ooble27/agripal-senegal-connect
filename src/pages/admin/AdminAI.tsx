@@ -2,7 +2,7 @@ import { useLayoutEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import AIAssistPanel from "@/components/admin/AIAssistPanel";
-import { C, FONT } from "@/components/admin/adminTheme";
+import { C, FONT, ADMIN_THEME_CSS, ADMIN_BG } from "@/components/admin/adminTheme";
 
 const AdminAI = () => {
   useLayoutEffect(() => {
@@ -10,13 +10,30 @@ const AdminAI = () => {
     const body = document.body;
     const prevHtmlBg = html.style.backgroundColor;
     const prevBodyBg = body.style.backgroundColor;
-    html.style.backgroundColor = C.bg;
-    body.style.backgroundColor = C.bg;
-    body.style.overflow = "hidden";
+
+    const style = document.createElement("style");
+    style.textContent = ADMIN_THEME_CSS;
+    document.head.appendChild(style);
+
     const meta = document.querySelector('meta[name="theme-color"]');
     const prevTheme = meta?.getAttribute("content") ?? "";
-    meta?.setAttribute("content", C.bg);
+
+    const sync = () => {
+      const isDark = html.classList.contains("dark");
+      const bg = isDark ? ADMIN_BG.dark : ADMIN_BG.light;
+      html.style.backgroundColor = bg;
+      body.style.backgroundColor = bg;
+      meta?.setAttribute("content", bg);
+    };
+    sync();
+    body.style.overflow = "hidden";
+
+    const obs = new MutationObserver(sync);
+    obs.observe(html, { attributes: true, attributeFilter: ["class"] });
+
     return () => {
+      obs.disconnect();
+      document.head.removeChild(style);
       html.style.backgroundColor = prevHtmlBg;
       body.style.backgroundColor = prevBodyBg;
       body.style.overflow = "";
@@ -25,7 +42,7 @@ const AdminAI = () => {
   }, []);
 
   return (
-    <div className="ai-page" style={{
+    <div className="admin-scope ai-page" style={{
       background: C.bg, color: C.t1,
       fontFamily: FONT,
       display: "flex", flexDirection: "column",

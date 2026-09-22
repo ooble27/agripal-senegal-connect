@@ -255,7 +255,7 @@ const ClientTimeline = ({ profile, orders, userId }: Props) => {
                             margin: "6px 0 0", fontSize: 12.5, color: C.t2,
                             lineHeight: 1.5, whiteSpace: "pre-wrap",
                             padding: "8px 10px", borderRadius: 8,
-                            background: "rgba(255,255,255,0.02)",
+                            background: "var(--a-hover2)",
                             border: `1px solid ${C.bds}`,
                           }}>
                             {e.detail}

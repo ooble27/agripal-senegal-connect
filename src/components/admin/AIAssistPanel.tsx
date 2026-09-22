@@ -97,7 +97,7 @@ function ActionCardBody({ action }: { action: PendingAction }) {
         {p.body && (
           <div style={{
             marginTop: 8, padding: "10px 12px",
-            background: "rgba(255,255,255,0.02)",
+            background: C.hover2,
             borderRadius: 8,
             fontSize: 12, lineHeight: 1.6, color: C.t2,
             maxHeight: 120, overflowY: "auto",
@@ -152,9 +152,9 @@ function ActionCard({
       <div style={{
         display: "flex", alignItems: "center", gap: 8,
         padding: "10px 14px", borderRadius: 10,
-        background: "rgba(74, 222, 128, 0.08)",
-        border: "1px solid rgba(74, 222, 128, 0.2)",
-        fontSize: 13, fontFamily: FONT, color: "rgb(74, 222, 128)",
+        background: C.successBg,
+        border: `1px solid ${C.successBd}`,
+        fontSize: 13, fontFamily: FONT, color: C.successText,
         marginTop: 8,
       }}>
         <Check style={{ width: 14, height: 14, flexShrink: 0 }} strokeWidth={2} />
@@ -168,7 +168,7 @@ function ActionCard({
       <div style={{
         display: "flex", alignItems: "center", gap: 8,
         padding: "10px 14px", borderRadius: 10,
-        background: "rgba(255,255,255,0.03)",
+        background: C.hover2,
         border: `1px solid ${C.bds}`,
         fontSize: 13, fontFamily: FONT, color: C.t3,
         marginTop: 8,
@@ -183,9 +183,9 @@ function ActionCard({
     return (
       <div style={{
         padding: "10px 14px", borderRadius: 10,
-        background: "rgba(239, 68, 68, 0.08)",
-        border: "1px solid rgba(239, 68, 68, 0.2)",
-        fontSize: 13, fontFamily: FONT, color: "rgb(239, 68, 68)",
+        background: C.dangerBg,
+        border: `1px solid ${C.dangerBd}`,
+        fontSize: 13, fontFamily: FONT, color: C.dangerText,
         marginTop: 8,
       }}>
         Erreur : {error || "L'action a échoué."}
@@ -254,7 +254,7 @@ function ActionCard({
             borderRadius: 8, fontSize: 12, fontFamily: FONT, fontWeight: 500,
             background: C.accent,
             border: "none",
-            color: "#111", cursor: "pointer",
+            color: C.btnText, cursor: "pointer",
             display: "flex", alignItems: "center", gap: 5,
             transition: "all 0.15s",
             opacity: status === "executing" ? 0.6 : 1,
@@ -460,7 +460,7 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
             width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
             background: input.trim() && !hasPendingAction ? C.accent : C.l3,
             border: "none",
-            color: input.trim() && !hasPendingAction ? "#111" : C.t3,
+            color: input.trim() && !hasPendingAction ? C.btnText : C.t3,
             cursor: input.trim() && !hasPendingAction ? "pointer" : "default",
             display: "flex", alignItems: "center", justifyContent: "center",
             transition: "all 0.15s",
@@ -650,7 +650,7 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
             background: C.l3, border: `1px solid ${C.bd}`,
             color: C.t2, cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
+            boxShadow: C.shadowSoft,
             zIndex: 5,
           }}
         >
@@ -686,7 +686,7 @@ const AIAssistPanel = ({ fullPage = false }: { fullPage?: boolean }) => {
         .ai-resp strong { color: ${C.t1}; font-weight: 500; }
         .ai-resp em { color: ${C.t2}; }
         .ai-resp code {
-          background: rgba(255,255,255,0.06);
+          background: ${C.codeBg};
           padding: 1px 6px;
           border-radius: 4px;
           font-size: 0.9em;

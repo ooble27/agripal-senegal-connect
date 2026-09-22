@@ -64,7 +64,7 @@ function ActionButton({ action }: { action: HeroAction }) {
     transition: "all 0.15s",
   };
   const style: React.CSSProperties = primary
-    ? { ...base, background: C.accent, border: "none", color: "#111" }
+    ? { ...base, background: C.accent, border: "none", color: C.btnText }
     : { ...base, background: "transparent", border: `1px solid ${C.bd}`, color: C.t2 };
 
   return (

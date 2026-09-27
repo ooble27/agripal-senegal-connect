@@ -203,8 +203,8 @@ const AppVendre = () => {
 
         <div className="mt-3 flex flex-col gap-2.5 rounded-[16px] border border-border bg-card px-5 py-4">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] text-muted-foreground">{t("sell.youReceive")}</span>
-            <span className="text-sm font-semibold">{nfCad.format(cad)} CAD</span>
+            <span className="text-[13px] text-muted-foreground">{unit === "USDT" ? t("sell.youReceive") : t("sell.youSend")}</span>
+            <span className="text-sm font-semibold">{unit === "USDT" ? `${nfCad.format(cad)} CAD` : `${nfUsdt.format(usdt)} USDT`}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-[13px] text-muted-foreground">{t("sell.rate")}</span>

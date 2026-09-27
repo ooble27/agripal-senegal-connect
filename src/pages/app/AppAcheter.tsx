@@ -55,7 +55,7 @@ const AppAcheter = () => {
             {t("buy.title")}
           </h1>
           <p className="mt-2 max-w-xs text-[14px] leading-relaxed text-muted-foreground">
-            {t("trade.suspended")}
+            {t("buy.comingSoonMsg")}
           </p>
           <Link
             to="/app"

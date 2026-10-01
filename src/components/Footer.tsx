@@ -18,6 +18,7 @@ const Footer = () => {
     {
       title: t("footer.resources"),
       links: [
+        { label: t("guide.title"), to: "/guide" },
         { label: t("nav.faq"), to: "/faq" },
         { label: t("nav.contact"), to: "/contact" },
         { label: t("nav.login"), to: "/connexion" },

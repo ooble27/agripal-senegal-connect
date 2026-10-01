@@ -692,6 +692,65 @@ const dict = {
   "misc.showPw": { fr: "Afficher le mot de passe", en: "Show password" },
   "misc.hidePw": { fr: "Masquer le mot de passe", en: "Hide password" },
   "misc.wait": { fr: "Un instant…", en: "One moment…" },
+
+  // ── Guide ──
+  "guide.title": { fr: "Comment ça marche", en: "How it works" },
+  "guide.sub": {
+    fr: "Suivez les étapes pour acheter ou vendre des USDT en toute simplicité.",
+    en: "Follow the steps to buy or sell USDT with ease.",
+  },
+  "guide.buyTitle": { fr: "Acheter des USDT", en: "Buy USDT" },
+  "guide.buySub": {
+    fr: "Payez en dollars canadiens par Interac e-Transfer et recevez vos USDT directement dans votre wallet.",
+    en: "Pay in Canadian dollars via Interac e-Transfer and receive USDT directly in your wallet.",
+  },
+  "guide.sellTitle": { fr: "Vendre des USDT", en: "Sell USDT" },
+  "guide.sellSub": {
+    fr: "Envoyez vos USDT et recevez vos dollars canadiens par Interac e-Transfer.",
+    en: "Send your USDT and receive your Canadian dollars via Interac e-Transfer.",
+  },
+  "guide.buy.step1": { fr: "Entrez le montant à dépenser", en: "Enter the amount to spend" },
+  "guide.buy.step1d": {
+    fr: "Choisissez CAD ou USDT, puis entrez le montant. Le taux et la conversion s'affichent en temps réel.",
+    en: "Choose CAD or USDT, then enter the amount. The rate and conversion are shown in real time.",
+  },
+  "guide.buy.step2": { fr: "Choisissez le réseau", en: "Choose the network" },
+  "guide.buy.step2d": {
+    fr: "Sélectionnez le réseau blockchain sur lequel vous souhaitez recevoir vos USDT (Tron, BNB Chain, Ethereum, etc.).",
+    en: "Select the blockchain network on which you want to receive your USDT (Tron, BNB Chain, Ethereum, etc.).",
+  },
+  "guide.buy.step3": { fr: "Entrez votre adresse", en: "Enter your address" },
+  "guide.buy.step3d": {
+    fr: "Collez l'adresse de votre wallet ou sélectionnez une adresse enregistrée. Vérifiez qu'elle correspond au bon réseau.",
+    en: "Paste your wallet address or select a saved address. Make sure it matches the correct network.",
+  },
+  "guide.buy.step4": { fr: "Vérifiez et validez", en: "Review and confirm" },
+  "guide.buy.step4d": {
+    fr: "Vérifiez le récapitulatif de votre commande (montant, taux, réseau, adresse), puis cliquez sur Valider.",
+    en: "Review your order summary (amount, rate, network, address), then click Confirm.",
+  },
+  "guide.sell.step1": { fr: "Entrez le montant à vendre", en: "Enter the amount to sell" },
+  "guide.sell.step1d": {
+    fr: "Entrez le montant en USDT que vous souhaitez vendre. Le montant en CAD que vous recevrez s'affiche automatiquement.",
+    en: "Enter the USDT amount you want to sell. The CAD amount you'll receive is shown automatically.",
+  },
+  "guide.sell.step2": { fr: "Choisissez le réseau", en: "Choose the network" },
+  "guide.sell.step2d": {
+    fr: "Sélectionnez le réseau depuis lequel vous allez envoyer vos USDT.",
+    en: "Select the network from which you will send your USDT.",
+  },
+  "guide.sell.step3": { fr: "Vérifiez la réception Interac", en: "Review Interac reception" },
+  "guide.sell.step3d": {
+    fr: "Confirmez l'adresse e-mail Interac où vous recevrez vos dollars. Notez la question et la réponse de sécurité pour débloquer le virement.",
+    en: "Confirm the Interac email address where you'll receive your dollars. Note the security question and answer to unlock the transfer.",
+  },
+  "guide.sell.step4": { fr: "Envoyez vos USDT", en: "Send your USDT" },
+  "guide.sell.step4d": {
+    fr: "Scannez le code QR ou copiez l'adresse de dépôt, puis envoyez le montant exact en USDT. Vos CAD seront crédités dès réception.",
+    en: "Scan the QR code or copy the deposit address, then send the exact USDT amount. Your CAD will be credited upon reception.",
+  },
+  "guide.cta": { fr: "Commencer maintenant", en: "Get started" },
+  "guide.step": { fr: "Étape", en: "Step" },
 } as const;
 
 export type TKey = keyof typeof dict;

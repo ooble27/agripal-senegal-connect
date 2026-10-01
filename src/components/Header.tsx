@@ -21,6 +21,7 @@ const Header = ({ inverted }: { inverted?: boolean }) => {
   const links = [
     { to: "/", label: t("nav.home") },
     { to: "/#reseaux", label: t("nav.networks") },
+    { to: "/guide", label: t("guide.title") },
     { to: "/faq", label: t("nav.faq") },
     { to: "/contact", label: t("nav.contact") },
   ];

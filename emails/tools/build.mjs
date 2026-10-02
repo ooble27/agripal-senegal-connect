@@ -52,7 +52,7 @@ const templates = [
     subject: "Votre ordre d'achat Ooble ({{ref}})",
     sample: {
       ref: "OOB-9QX3M1", cadAmount: "500,00", usdtAmount: "349,65",
-      network: "Tron · TRC-20", interacRecipient: "oobletechnologiesinc@gmail.com", orderUrl: "#",
+      network: "Tron · TRC-20", interacRecipient: "interac@ooble.ca", orderUrl: "#",
     },
     html: layout({
       illustration: "buy",

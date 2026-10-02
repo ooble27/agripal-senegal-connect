@@ -58,7 +58,7 @@ await sendEmail({
   to: "client@exemple.ca",
   template: "order-buy",
   vars: { ref: "OOB-9QX3M1", cadAmount: "500,00", usdtAmount: "349,65",
-          network: "Tron · TRC-20", interacRecipient: "oobletechnologiesinc@gmail.com",
+          network: "Tron · TRC-20", interacRecipient: "interac@ooble.ca",
           orderUrl: "https://ooble.ca/app" },
 });
 ```

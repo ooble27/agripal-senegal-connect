@@ -6,7 +6,7 @@
  * prévu mais pas encore en place — quand il le sera, cette constante ne servira
  * plus qu'au repli.
  */
-export const OOBLE_INTERAC_EMAIL = "oobletechnologiesinc@gmail.com";
+export const OOBLE_INTERAC_EMAIL = "interac@ooble.ca";
 
 export const OOBLE_SUPPORT_EMAIL = "support@ooble.ca";
 

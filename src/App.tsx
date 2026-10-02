@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import FAQ from "./pages/FAQ";
 import Guide from "./pages/Guide";
+import GuideDetail from "./pages/GuideDetail";
 import Contact from "./pages/Contact";
 import Connexion from "./pages/Connexion";
 import Inscription from "./pages/Inscription";
@@ -67,6 +68,7 @@ const App = () => (
         <Route path="/" element={<Index />} />
         <Route path="/faq" element={<FAQ />} />
         <Route path="/guide" element={<Guide />} />
+        <Route path="/guide/:slug" element={<GuideDetail />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/connexion" element={<Connexion />} />
         <Route path="/inscription" element={<Inscription />} />

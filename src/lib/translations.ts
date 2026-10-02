@@ -693,64 +693,238 @@ const dict = {
   "misc.hidePw": { fr: "Masquer le mot de passe", en: "Hide password" },
   "misc.wait": { fr: "Un instant…", en: "One moment…" },
 
-  // ── Guide ──
+  // ── Guide (centre d'aide) ──
+  "guide.kicker": { fr: "Centre d'aide", en: "Help center" },
   "guide.title": { fr: "Comment ça marche", en: "How it works" },
   "guide.sub": {
-    fr: "Suivez les étapes pour acheter ou vendre des USDT en toute simplicité.",
-    en: "Follow the steps to buy or sell USDT with ease.",
+    fr: "De courts guides vidéo pour tout faire sur Ooble, étape par étape.",
+    en: "Short video guides to do everything on Ooble, step by step.",
   },
-  "guide.buyTitle": { fr: "Acheter des USDT", en: "Buy USDT" },
-  "guide.buySub": {
-    fr: "Payez en dollars canadiens par Interac e-Transfer et recevez vos USDT directement dans votre wallet.",
-    en: "Pay in Canadian dollars via Interac e-Transfer and receive USDT directly in your wallet.",
+  "guide.group.start": { fr: "Premiers pas", en: "Getting started" },
+  "guide.group.startSub": {
+    fr: "Ouvrez votre compte et faites vérifier votre identité.",
+    en: "Open your account and get your identity verified.",
   },
-  "guide.sellTitle": { fr: "Vendre des USDT", en: "Sell USDT" },
-  "guide.sellSub": {
-    fr: "Envoyez vos USDT et recevez vos dollars canadiens par Interac e-Transfer.",
-    en: "Send your USDT and receive your Canadian dollars via Interac e-Transfer.",
+  "guide.group.trade": { fr: "Acheter et vendre", en: "Buy and sell" },
+  "guide.group.tradeSub": {
+    fr: "Échangez des USDT contre des dollars canadiens, par Interac e-Transfer.",
+    en: "Exchange USDT for Canadian dollars, via Interac e-Transfer.",
   },
-  "guide.buy.step1": { fr: "Entrez le montant à dépenser", en: "Enter the amount to spend" },
-  "guide.buy.step1d": {
-    fr: "Choisissez CAD ou USDT, puis entrez le montant. Le taux et la conversion s'affichent en temps réel.",
-    en: "Choose CAD or USDT, then enter the amount. The rate and conversion are shown in real time.",
+  "guide.label": { fr: "Guide", en: "Guide" },
+  "guide.steps6": { fr: "6 étapes", en: "6 steps" },
+  "guide.seconds": { fr: "s", en: "sec" },
+  "guide.watch": { fr: "Regarder le guide", en: "Watch the guide" },
+  "guide.all": { fr: "Tous les guides", en: "All guides" },
+  "guide.stepByStep": { fr: "Étape par étape", en: "Step by step" },
+  "guide.tips": { fr: "Bon à savoir", en: "Good to know" },
+  "guide.prev": { fr: "Guide précédent", en: "Previous guide" },
+  "guide.next": { fr: "Guide suivant", en: "Next guide" },
+  "guide.help": { fr: "Une autre question ?", en: "Another question?" },
+  "guide.helpSub": {
+    fr: "Consultez la FAQ ou écrivez-nous, notre équipe vous répond rapidement.",
+    en: "Check the FAQ or write to us, our team gets back to you quickly.",
   },
-  "guide.buy.step2": { fr: "Choisissez le réseau", en: "Choose the network" },
-  "guide.buy.step2d": {
-    fr: "Sélectionnez le réseau blockchain sur lequel vous souhaitez recevoir vos USDT (Tron, BNB Chain, Ethereum, etc.).",
-    en: "Select the blockchain network on which you want to receive your USDT (Tron, BNB Chain, Ethereum, etc.).",
+  "guide.contact": { fr: "Nous contacter", en: "Contact us" },
+  "guide.noVideo": {
+    fr: "Votre navigateur ne peut pas lire cette vidéo.",
+    en: "Your browser can't play this video.",
   },
-  "guide.buy.step3": { fr: "Entrez votre adresse", en: "Enter your address" },
-  "guide.buy.step3d": {
-    fr: "Collez l'adresse de votre wallet ou sélectionnez une adresse enregistrée. Vérifiez qu'elle correspond au bon réseau.",
-    en: "Paste your wallet address or select a saved address. Make sure it matches the correct network.",
+
+  "guide.account.title": { fr: "Créer un compte", en: "Create an account" },
+  "guide.account.desc": {
+    fr: "Ouvrez votre compte Ooble en moins d'une minute.",
+    en: "Open your Ooble account in under a minute.",
   },
-  "guide.buy.step4": { fr: "Vérifiez et validez", en: "Review and confirm" },
-  "guide.buy.step4d": {
-    fr: "Vérifiez le récapitulatif de votre commande (montant, taux, réseau, adresse), puis cliquez sur Valider.",
-    en: "Review your order summary (amount, rate, network, address), then click Confirm.",
+  "guide.account.cta": { fr: "Créer mon compte", en: "Create my account" },
+  "guide.account.s1": { fr: "Ouvrez la page d'inscription", en: "Open the sign-up page" },
+  "guide.account.s1d": {
+    fr: "Rendez-vous sur ooble.ca et cliquez sur « Ouvrir un compte », en haut à droite.",
+    en: "Go to ooble.ca and click “Create account” in the top right corner.",
   },
-  "guide.sell.step1": { fr: "Entrez le montant à vendre", en: "Enter the amount to sell" },
-  "guide.sell.step1d": {
-    fr: "Entrez le montant en USDT que vous souhaitez vendre. Le montant en CAD que vous recevrez s'affiche automatiquement.",
-    en: "Enter the USDT amount you want to sell. The CAD amount you'll receive is shown automatically.",
+  "guide.account.s2": { fr: "Choisissez le type de compte", en: "Choose an account type" },
+  "guide.account.s2d": {
+    fr: "Compte individuel pour vous-même, ou Compte entreprise pour une société, un OBNL ou une organisation. Vous pouvez aussi continuer avec Google.",
+    en: "Individual account for yourself, or Business account for a company, NPO or organization. You can also continue with Google.",
   },
-  "guide.sell.step2": { fr: "Choisissez le réseau", en: "Choose the network" },
-  "guide.sell.step2d": {
+  "guide.account.s3": { fr: "Remplissez le formulaire", en: "Fill in the form" },
+  "guide.account.s3d": {
+    fr: "Entrez votre nom complet, votre adresse e-mail et un mot de passe d'au moins 6 caractères.",
+    en: "Enter your full name, your email address and a password of at least 6 characters.",
+  },
+  "guide.account.s4": { fr: "Créez votre compte", en: "Create your account" },
+  "guide.account.s4d": {
+    fr: "Cliquez sur « Créer mon compte ». Un message confirme que votre compte a été créé.",
+    en: "Click “Create my account”. A message confirms your account has been created.",
+  },
+  "guide.account.s5": { fr: "Confirmez votre e-mail", en: "Confirm your email" },
+  "guide.account.s5d": {
+    fr: "Ouvrez le courriel envoyé par Ooble et cliquez sur le lien de confirmation. Pensez à vérifier vos courriels indésirables.",
+    en: "Open the email sent by Ooble and click the confirmation link. Remember to check your spam folder.",
+  },
+  "guide.account.s6": { fr: "Connectez-vous", en: "Sign in" },
+  "guide.account.s6d": {
+    fr: "Revenez sur ooble.ca et connectez-vous avec votre e-mail et votre mot de passe : votre compte est prêt.",
+    en: "Come back to ooble.ca and sign in with your email and password: your account is ready.",
+  },
+  "guide.account.tip1": {
+    fr: "Utilisez une adresse e-mail à laquelle vous avez accès : elle sert à confirmer votre compte et à recevoir vos notifications.",
+    en: "Use an email address you can access: it's used to confirm your account and to receive notifications.",
+  },
+  "guide.account.tip2": {
+    fr: "Une fois connecté, faites vérifier votre identité pour lever les limites de votre compte.",
+    en: "Once signed in, verify your identity to unlock full access to your account.",
+  },
+  "guide.account.tip3": {
+    fr: "Mot de passe oublié ? Le lien sur la page de connexion vous envoie un code de réinitialisation.",
+    en: "Forgot your password? The link on the sign-in page sends you a reset code.",
+  },
+
+  "guide.kyc.title": { fr: "Vérifier son identité", en: "Verify your identity" },
+  "guide.kyc.desc": {
+    fr: "Une seule fois, avec une pièce d'identité valide et un selfie.",
+    en: "Once and done, with a valid ID and a selfie.",
+  },
+  "guide.kyc.cta": { fr: "Vérifier mon identité", en: "Verify my identity" },
+  "guide.kyc.s1": { fr: "Ouvrez la vérification", en: "Open verification" },
+  "guide.kyc.s1d": {
+    fr: "Dans Mon compte, ouvrez « Vérification d'identité », puis cliquez sur « Commencer la vérification ».",
+    en: "In My account, open “Identity verification”, then click “Start verification”.",
+  },
+  "guide.kyc.s2": { fr: "Choisissez votre document", en: "Choose your document" },
+  "guide.kyc.s2d": {
+    fr: "Passeport, permis de conduire ou carte d'identité nationale. Pour le permis et la carte d'identité, le recto et le verso sont requis.",
+    en: "Passport, driver's licence or national ID card. For a licence or an ID card, both front and back are required.",
+  },
+  "guide.kyc.s3": { fr: "Photographiez votre pièce", en: "Photograph your ID" },
+  "guide.kyc.s3d": {
+    fr: "Prenez une photo nette du recto, puis du verso si demandé. Toutes les informations doivent être lisibles, sans reflet ni flou.",
+    en: "Take a clear photo of the front, then the back if required. All information must be readable, with no glare or blur.",
+  },
+  "guide.kyc.s4": { fr: "Prenez un selfie", en: "Take a selfie" },
+  "guide.kyc.s4d": {
+    fr: "Tenez votre pièce d'identité à côté de votre visage, à hauteur du menton. Votre visage et le document doivent être nets.",
+    en: "Hold your ID next to your face, at chin level. Both your face and the document must be sharp.",
+  },
+  "guide.kyc.s5": { fr: "Soumettez", en: "Submit" },
+  "guide.kyc.s5d": {
+    fr: "Vérifiez vos photos dans le récapitulatif, puis cliquez sur « Soumettre la vérification ».",
+    en: "Check your photos in the summary, then click “Submit verification”.",
+  },
+  "guide.kyc.s6": { fr: "Patientez pendant l'examen", en: "Wait for the review" },
+  "guide.kyc.s6d": {
+    fr: "Notre équipe examine vos documents, en général sous 24 heures. Vous êtes notifié dès que votre identité est vérifiée.",
+    en: "Our team reviews your documents, usually within 24 hours. You're notified as soon as your identity is verified.",
+  },
+  "guide.kyc.tip1": {
+    fr: "La vérification se fait une seule fois : vous n'aurez jamais à la refaire.",
+    en: "Verification only happens once: you'll never have to do it again.",
+  },
+  "guide.kyc.tip2": {
+    fr: "Vos documents sont chiffrés et servent uniquement à la vérification réglementaire. Ils ne sont jamais partagés avec des tiers.",
+    en: "Your documents are encrypted and used only for regulatory verification. They are never shared with third parties.",
+  },
+  "guide.kyc.tip3": {
+    fr: "Prenez vos photos dans un endroit bien éclairé, sur un fond uni.",
+    en: "Take your photos somewhere well lit, against a plain background.",
+  },
+
+  "guide.buy.title": { fr: "Acheter des USDT", en: "Buy USDT" },
+  "guide.buy.desc": {
+    fr: "Payez en dollars canadiens par Interac et recevez vos USDT dans votre wallet.",
+    en: "Pay in Canadian dollars via Interac and receive USDT in your wallet.",
+  },
+  "guide.buy.cta": { fr: "Acheter des USDT", en: "Buy USDT" },
+  "guide.buy.s1": { fr: "Entrez le montant", en: "Enter the amount" },
+  "guide.buy.s1d": {
+    fr: "Dans l'onglet Acheter, entrez le montant en dollars canadiens (ou en USDT). Le montant reçu et le taux s'affichent en temps réel.",
+    en: "On the Buy tab, enter the amount in Canadian dollars (or in USDT). The amount you receive and the rate update in real time.",
+  },
+  "guide.buy.s2": { fr: "Choisissez le réseau", en: "Choose the network" },
+  "guide.buy.s2d": {
+    fr: "Sélectionnez le réseau sur lequel vous voulez recevoir vos USDT : Tron, BNB Chain, Ethereum, Polygon, Solana ou Avalanche.",
+    en: "Select the network you want to receive your USDT on: Tron, BNB Chain, Ethereum, Polygon, Solana or Avalanche.",
+  },
+  "guide.buy.s3": { fr: "Collez votre adresse", en: "Paste your address" },
+  "guide.buy.s3d": {
+    fr: "Collez l'adresse de votre wallet. Elle doit correspondre au réseau choisi, sinon les fonds pourraient être perdus.",
+    en: "Paste your wallet address. It must match the network you chose, otherwise the funds could be lost.",
+  },
+  "guide.buy.s4": { fr: "Validez l'ordre", en: "Confirm the order" },
+  "guide.buy.s4d": {
+    fr: "Vérifiez le récapitulatif (montant, taux, réseau, adresse), puis cliquez sur « Valider ».",
+    en: "Review the summary (amount, rate, network, address), then click “Confirm”.",
+  },
+  "guide.buy.s5": { fr: "Payez par Interac", en: "Pay with Interac" },
+  "guide.buy.s5d": {
+    fr: "Envoyez un virement Interac e-Transfer à l'adresse indiquée, avec le montant exact et la référence de l'ordre dans le message.",
+    en: "Send an Interac e-Transfer to the address shown, with the exact amount and the order reference in the message.",
+  },
+  "guide.buy.s6": { fr: "Recevez vos USDT", en: "Receive your USDT" },
+  "guide.buy.s6d": {
+    fr: "Dès réception du paiement, vos USDT sont envoyés directement dans votre wallet. Ooble ne conserve aucun solde.",
+    en: "As soon as the payment arrives, your USDT is sent straight to your wallet. Ooble holds no balance.",
+  },
+  "guide.buy.tip1": {
+    fr: "Envoyez toujours le montant exact affiché, avec la référence de l'ordre.",
+    en: "Always send the exact amount shown, with the order reference.",
+  },
+  "guide.buy.tip2": {
+    fr: "Vérifiez deux fois l'adresse et le réseau : une transaction blockchain ne peut pas être annulée.",
+    en: "Double-check the address and the network: a blockchain transaction can't be reversed.",
+  },
+  "guide.buy.tip3": {
+    fr: "Vos USDT arrivent directement dans votre wallet : vous gardez le contrôle de vos clés.",
+    en: "Your USDT lands directly in your wallet: you stay in control of your keys.",
+  },
+
+  "guide.sell.title": { fr: "Vendre des USDT", en: "Sell USDT" },
+  "guide.sell.desc": {
+    fr: "Envoyez vos USDT et recevez des dollars canadiens par Interac.",
+    en: "Send your USDT and receive Canadian dollars via Interac.",
+  },
+  "guide.sell.cta": { fr: "Vendre des USDT", en: "Sell USDT" },
+  "guide.sell.s1": { fr: "Entrez le montant", en: "Enter the amount" },
+  "guide.sell.s1d": {
+    fr: "Dans l'onglet Vendre, entrez le montant en USDT à vendre (minimum 50 USDT). Le montant en dollars s'affiche automatiquement.",
+    en: "On the Sell tab, enter the USDT amount to sell (minimum 50 USDT). The dollar amount is shown automatically.",
+  },
+  "guide.sell.s2": { fr: "Choisissez le réseau", en: "Choose the network" },
+  "guide.sell.s2d": {
     fr: "Sélectionnez le réseau depuis lequel vous allez envoyer vos USDT.",
-    en: "Select the network from which you will send your USDT.",
+    en: "Select the network you'll send your USDT from.",
   },
-  "guide.sell.step3": { fr: "Vérifiez la réception Interac", en: "Review Interac reception" },
-  "guide.sell.step3d": {
-    fr: "Confirmez l'adresse e-mail Interac où vous recevrez vos dollars. Notez la question et la réponse de sécurité pour débloquer le virement.",
-    en: "Confirm the Interac email address where you'll receive your dollars. Note the security question and answer to unlock the transfer.",
+  "guide.sell.s3": { fr: "Indiquez où recevoir vos dollars", en: "Tell us where to send your dollars" },
+  "guide.sell.s3d": {
+    fr: "Entrez l'adresse e-mail Interac où recevoir votre virement, et notez la question et la réponse de sécurité.",
+    en: "Enter the Interac email where you'll receive your transfer, and note the security question and answer.",
   },
-  "guide.sell.step4": { fr: "Envoyez vos USDT", en: "Send your USDT" },
-  "guide.sell.step4d": {
-    fr: "Scannez le code QR ou copiez l'adresse de dépôt, puis envoyez le montant exact en USDT. Vos CAD seront crédités dès réception.",
-    en: "Scan the QR code or copy the deposit address, then send the exact USDT amount. Your CAD will be credited upon reception.",
+  "guide.sell.s4": { fr: "Envoyez vos USDT", en: "Send your USDT" },
+  "guide.sell.s4d": {
+    fr: "Scannez le code QR ou copiez l'adresse de dépôt, puis envoyez le montant exact, uniquement sur le réseau indiqué.",
+    en: "Scan the QR code or copy the deposit address, then send the exact amount, only on the network shown.",
   },
-  "guide.cta": { fr: "Commencer maintenant", en: "Get started" },
-  "guide.step": { fr: "Étape", en: "Step" },
+  "guide.sell.s5": { fr: "Confirmez l'envoi", en: "Confirm the transfer" },
+  "guide.sell.s5d": {
+    fr: "Une fois le transfert effectué, cliquez sur « J'ai envoyé mes USDT ».",
+    en: "Once the transfer is done, click “I've sent my USDT”.",
+  },
+  "guide.sell.s6": { fr: "Recevez vos dollars", en: "Receive your dollars" },
+  "guide.sell.s6d": {
+    fr: "Dès confirmation sur la blockchain, vous recevez vos dollars par virement Interac e-Transfer.",
+    en: "Once confirmed on the blockchain, you receive your dollars by Interac e-Transfer.",
+  },
+  "guide.sell.tip1": {
+    fr: "Envoyez uniquement de l'USDT, sur le réseau indiqué : un autre réseau entraînerait la perte des fonds.",
+    en: "Only send USDT, on the network shown: using another network would result in lost funds.",
+  },
+  "guide.sell.tip2": {
+    fr: "Gardez la réponse de sécurité : elle sert à débloquer votre virement Interac.",
+    en: "Keep the security answer: it unlocks your Interac e-Transfer.",
+  },
+  "guide.sell.tip3": {
+    fr: "Le montant minimum de vente est de 50 USDT.",
+    en: "The minimum sell amount is 50 USDT.",
+  },
 } as const;
 
 export type TKey = keyof typeof dict;

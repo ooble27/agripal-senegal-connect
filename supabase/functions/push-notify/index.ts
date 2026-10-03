@@ -246,6 +246,12 @@ Deno.serve(async (req) => {
     return json({ error: "Config manquante" }, 500);
   }
 
+  // Appel interne uniquement (order-notify, autres fonctions) : sans ce
+  // contrôle, n'importe qui pourrait envoyer une notification et un lien
+  // de son choix à n'importe quel client.
+  const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
+  if (token !== serviceKey) return json({ error: "Non autorisé" }, 401);
+
   let body: Record<string, unknown>;
   try { body = await req.json(); }
   catch { return json({ error: "JSON invalide" }, 400); }

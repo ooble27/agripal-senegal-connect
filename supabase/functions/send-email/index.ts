@@ -33,6 +33,7 @@
 //   STAFF_NOTIFICATION_EMAIL    destinataire des notifs internes (nouvelles commandes)
 //   EMAIL_ASSET_BASE            ex. "https://ooble.ca/email-assets"
 
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { TEMPLATES, SUBJECTS } from "./templates.ts";
 import {
   wrapCustomBody, htmlToText,
@@ -44,6 +45,11 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+/** Échappe le HTML (données saisies côté client). */
+function escHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
 
 /** Remplace {{clé}} par la valeur ; laisse les clés inconnues intactes. */
 function render(str: string, data: Record<string, string>): string {
@@ -104,6 +110,35 @@ Deno.serve(async (req) => {
     staffNotify, order,
   } = payload;
 
+  // ─── Qui appelle ? ─────────────────────────────────────────
+  // Sans ce contrôle, n'importe qui (la clé publique est dans le site)
+  // pourrait envoyer des e-mails arbitraires depuis le domaine Ooble.
+  //   • autres fonctions edge : clé service_role → tout est permis ;
+  //   • staff (au moins un rôle dans user_roles) → tout est permis ;
+  //   • client connecté → uniquement un modèle transactionnel envoyé à
+  //     SA propre adresse, ou la notification interne de SA commande.
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
+  let callerIsStaff = token !== "" && token === serviceKey;
+  if (!callerIsStaff) {
+    if (!token || !supabaseUrl || !serviceKey) return json({ error: "Authentification requise." }, 401);
+    const admin = createClient(supabaseUrl, serviceKey);
+    const { data: auth } = await admin.auth.getUser(token);
+    const user = auth?.user;
+    if (!user) return json({ error: "Session invalide ou expirée." }, 401);
+    const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", user.id);
+    callerIsStaff = (roles ?? []).length > 0;
+    if (!callerIsStaff) {
+      const own = (user.email ?? "").trim().toLowerCase();
+      const okTemplate = !!template && !html && !cc?.length && !bcc?.length && !replyTo
+        && own !== "" && (rawTo ?? "").trim().toLowerCase() === own;
+      const okStaffNotify = staffNotify === "new-order"
+        && own !== "" && (order?.clientEmail ?? "").trim().toLowerCase() === own;
+      if (!okTemplate && !okStaffNotify) return json({ error: "Envoi non autorisé." }, 403);
+    }
+  }
+
   let finalHtml: string;
   let finalText: string | undefined;
   let finalSubject: string;
@@ -119,7 +154,13 @@ Deno.serve(async (req) => {
     }
     if (!order?.ref) return json({ error: "Champ 'order' requis (avec ref, side, montants…)." }, 400);
     to = staffTo;
-    const built = buildStaffNewOrder(order, assetBase);
+    const safe = Object.fromEntries(
+      Object.entries(order).map(([k, v]) => [k, escHtml(String(v ?? ""))]),
+    ) as unknown as StaffOrderPayload;
+    if (!callerIsStaff || !/^https:\/\//.test(order.adminUrl ?? "")) {
+      safe.adminUrl = `${Deno.env.get("SITE_URL") ?? "https://ooble.ca"}/admin`;
+    }
+    const built = buildStaffNewOrder(safe, assetBase);
     finalHtml = built.html;
     finalText = built.text;
     finalSubject = built.subject;

@@ -1,3 +1,4 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // Edge function Ooble — notification PUSH uniquement quand le statut
 // d'un ordre change (pas d'e-mail, ceux-ci sont gérés par le frontend).
 //
@@ -41,11 +42,21 @@ Deno.serve(async (req) => {
     return json({ ok: true, skipped: "same_status" });
   }
 
-  const userId = payload.record.user_id as string;
-  const orderId = payload.record.id as string;
-  const side = payload.record.side as string;
-  const cadAmount = payload.record.cad_amount as number;
-  const usdtAmount = payload.record.usdt_amount as number;
+  // Le contenu reçu n'est pas une preuve : on relit l'ordre en base et on
+  // n'envoie la notification que si son statut actuel correspond.
+  const orderId = payload.record?.id as string;
+  if (!orderId) return json({ ok: true, skipped: "no_id" });
+  const db = createClient(supabaseUrl, serviceKey);
+  const { data: row } = await db
+    .from("orders")
+    .select("id, user_id, side, cad_amount, usdt_amount, status")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (!row || row.status !== newStatus) return json({ ok: true, skipped: "mismatch" });
+  const userId = row.user_id as string;
+  const side = row.side as string;
+  const cadAmount = row.cad_amount as number;
+  const usdtAmount = row.usdt_amount as number;
   const ref = `OOB-${orderId.slice(0, 8).toUpperCase()}`;
 
   const sideLabel = side === "buy" ? "Achat" : "Vente";

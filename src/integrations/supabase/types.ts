@@ -525,6 +525,7 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      reset_business_verification: { Args: { _user_id: string }; Returns: number }
     }
     Enums: {
       account_type: "individual" | "business"

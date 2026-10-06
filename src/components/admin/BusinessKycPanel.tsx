@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Building2, Check, ChevronLeft, ExternalLink, Eye, FileText, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { decideKyb, fetchKyb, getKybDocumentUrl, type KybRequest } from "@/lib/adminKyb";
+import { decideKyb, fetchKyb, getKybDocumentUrl, resetKyb, type KybRequest } from "@/lib/adminKyb";
 import type { KybDocKey, OwnerRole } from "@/lib/kyb";
 import { useAuth } from "@/lib/auth";
 import { ClientCell, SubTabs } from "./AdminBits";
@@ -56,6 +56,8 @@ const StatusPill = ({ status }: { status: string }) => (
 const BusinessKycPanel = () => {
   const { roles } = useAuth();
   const canDecide = roles.includes("admin") || roles.includes("kyc_reviewer");
+  const isAdmin = roles.includes("admin");
+  const [resetStep, setResetStep] = useState<"idle" | "confirm" | "busy">("idle");
   const [rows, setRows] = useState<KybRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Filter>("pending");
@@ -96,6 +98,17 @@ const BusinessKycPanel = () => {
     setDetail(updated);
   };
 
+  const reset = async () => {
+    if (!detail) return;
+    setResetStep("busy");
+    setError(null);
+    const res = await resetKyb(detail.userId, { businessStatus: detail.status, businessName: detail.legalName });
+    setResetStep("idle");
+    if (res.error) { setError(res.error); return; }
+    setRows((rs) => rs.filter((r) => r.userId !== detail.userId));
+    setDetail(null);
+  };
+
   /* ── Dossier ── */
   if (detail) {
     const d = detail;
@@ -104,7 +117,7 @@ const BusinessKycPanel = () => {
       <div className="space-y-4">
         <button
           type="button"
-          onClick={() => { setDetail(null); setError(null); }}
+          onClick={() => { setDetail(null); setError(null); setResetStep("idle"); }}
           className="flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
         >
           <ChevronLeft className="h-4 w-4" /> Retour à la liste
@@ -180,6 +193,34 @@ const BusinessKycPanel = () => {
             <p className="mt-1 whitespace-pre-wrap text-[13px]">{d.reviewNote}</p>
           </div>
         )}
+
+        {isAdmin && (
+          <div className="flex flex-wrap items-center justify-end gap-2.5 px-1">
+            {resetStep === "confirm" ? (
+              <>
+                <span className="mr-auto text-[12.5px] text-muted-foreground">
+                  Supprimer ce dossier ? Le client repartira d'un dossier vide.
+                </span>
+                <button type="button" onClick={() => setResetStep("idle")} className="rounded-[9px] px-3 py-[7px] text-[12.5px] font-medium text-muted-foreground hover:text-foreground">
+                  Annuler
+                </button>
+                <button type="button" onClick={reset} className="rounded-[9px] bg-destructive px-3 py-[7px] text-[12.5px] font-semibold text-destructive-foreground hover:opacity-90">
+                  Réinitialiser
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                disabled={resetStep === "busy"}
+                onClick={() => { setError(null); setResetStep("confirm"); }}
+                className="rounded-[9px] border border-border px-3 py-[7px] text-[12.5px] font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-50"
+              >
+                {resetStep === "busy" ? "Réinitialisation…" : "Réinitialiser la vérification"}
+              </button>
+            )}
+          </div>
+        )}
+        {d.status !== "pending" && error && <p className="px-1 text-right text-[12.5px] text-destructive">{error}</p>}
 
         {d.status === "pending" && canDecide && (
           <div className="rounded-2xl border border-border bg-card p-4">

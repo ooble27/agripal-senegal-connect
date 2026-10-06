@@ -10,6 +10,8 @@ import {
 import { summarizeClient, isAIError, toAIClientContext, toAIOrderSummaries } from "@/lib/ai";
 import { C, FONT, card, heroCard, heroNumber, heroUnit, sH } from "./adminTheme";
 import ClientNotes from "./ClientNotes";
+import { useAuth } from "@/lib/auth";
+import { resetKyb } from "@/lib/adminKyb";
 import ClientTimeline from "./ClientTimeline";
 import RiskScoreCard from "./RiskScoreCard";
 
@@ -38,6 +40,19 @@ const STATUS_FR: Record<string, string> = {
 
 const ClientProfile = ({ userId, clientName, onBack, onOpenOrder }: Props) => {
   const [profile, setProfile] = useState<ClientProfileData | null>(null);
+  const { isAdmin } = useAuth();
+  const [resetStep, setResetStep] = useState<"idle" | "confirm" | "busy">("idle");
+  const [resetMsg, setResetMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const doReset = async () => {
+    if (!profile) return;
+    setResetStep("busy");
+    const res = await resetKyb(userId, { businessStatus: profile.businessStatus, businessName: profile.businessName });
+    setResetStep("idle");
+    if (res.error) { setResetMsg({ ok: false, text: res.error }); return; }
+    setProfile((p) => (p ? { ...p, businessStatus: "not_started" } : p));
+    setResetMsg({ ok: true, text: "Vérification réinitialisée : le client repart d'un dossier vide." });
+  };
   const [orders, setOrders] = useState<ClientOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
@@ -226,6 +241,33 @@ const ClientProfile = ({ userId, clientName, onBack, onOpenOrder }: Props) => {
                     {profile.businessPhone && <Row label="Téléphone" value={profile.businessPhone} />}
                   </div>
                 </div>
+                {isAdmin && (profile.businessStatus !== "not_started" || resetMsg) && (
+                  <div className="flex flex-wrap items-center justify-end gap-3 px-5 py-3">
+                    {resetMsg && (
+                      <p className={cn("mr-auto text-[12.5px]", resetMsg.ok ? "text-muted-foreground" : "text-destructive")}>{resetMsg.text}</p>
+                    )}
+                    {profile.businessStatus !== "not_started" && (resetStep === "confirm" ? (
+                      <>
+                        <span className="text-[12.5px] text-muted-foreground">Supprimer son dossier et le faire recommencer ?</span>
+                        <button type="button" onClick={() => setResetStep("idle")} className="rounded-[9px] px-3 py-[7px] text-[12.5px] font-medium text-muted-foreground hover:text-foreground">
+                          Annuler
+                        </button>
+                        <button type="button" onClick={doReset} className="rounded-[9px] bg-destructive px-3 py-[7px] text-[12.5px] font-semibold text-destructive-foreground hover:opacity-90">
+                          Réinitialiser
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={resetStep === "busy"}
+                        onClick={() => { setResetMsg(null); setResetStep("confirm"); }}
+                        className="rounded-[9px] border border-border px-3 py-[7px] text-[12.5px] font-medium text-foreground transition-colors hover:bg-secondary disabled:opacity-50"
+                      >
+                        {resetStep === "busy" ? "Réinitialisation…" : "Réinitialiser la vérification"}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

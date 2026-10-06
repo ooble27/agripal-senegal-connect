@@ -12,7 +12,7 @@ import {
 } from "@/lib/kyb";
 import { KYB_PREVIEW_USERS, VERIFICATION_ENABLED } from "@/lib/config";
 import { useAuth } from "@/lib/auth";
-import { useT } from "@/lib/i18n";
+import { useLang, useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { TKey } from "@/lib/translations";
 
@@ -20,7 +20,25 @@ import type { TKey } from "@/lib/translations";
    l'ordre qu'il veut ; l'envoi se débloque quand les trois sont complètes. */
 type View = "hub" | "company" | "people" | "person" | "docs" | "done";
 
-const JURISDICTIONS: TKey[] = ["kyb.jurQc", "kyb.jurFed", "kyb.jurOther", "kyb.jurAbroad"];
+/* Lieu d'immatriculation : Canada seulement. La valeur enregistrée est le nom
+   français (lu par l'équipe conformité), l'affichage suit la langue. */
+const QC = { fr: "Québec", en: "Quebec" };
+const FED = { fr: "Fédéral (Corporations Canada)", en: "Federal (Corporations Canada)" };
+const OTHER_PROVINCES = [
+  { fr: "Ontario", en: "Ontario" },
+  { fr: "Colombie-Britannique", en: "British Columbia" },
+  { fr: "Alberta", en: "Alberta" },
+  { fr: "Manitoba", en: "Manitoba" },
+  { fr: "Saskatchewan", en: "Saskatchewan" },
+  { fr: "Nouvelle-Écosse", en: "Nova Scotia" },
+  { fr: "Nouveau-Brunswick", en: "New Brunswick" },
+  { fr: "Île-du-Prince-Édouard", en: "Prince Edward Island" },
+  { fr: "Terre-Neuve-et-Labrador", en: "Newfoundland and Labrador" },
+  { fr: "Yukon", en: "Yukon" },
+  { fr: "Territoires du Nord-Ouest", en: "Northwest Territories" },
+  { fr: "Nunavut", en: "Nunavut" },
+];
+const ALL_PLACES = [QC, FED, ...OTHER_PROVINCES];
 const ROLE_FULL: Record<OwnerRole, TKey> = { director: "kyb.roleDirector", owner: "kyb.roleOwner", both: "kyb.roleBoth" };
 const ROLE_SHORT: Record<OwnerRole, TKey> = { director: "kyb.roleDirector", owner: "kyb.roleOwnerShort", both: "kyb.roleBothShort" };
 const DOC_KEYS: Record<KybDocKey, { title: TKey; sub: TKey }> = {
@@ -96,6 +114,8 @@ const Entreprise = () => {
   const navigate = useNavigate();
   const t = useT();
   const { user } = useAuth();
+  const [lang] = useLang();
+  const placeLabel = (v: string) => ALL_PLACES.find((p) => p.fr === v || p.en === v)?.[lang] ?? v;
   const kybOpen = VERIFICATION_ENABLED || (!!user && KYB_PREVIEW_USERS.includes(user.id));
 
   const [loading, setLoading] = useState(true);
@@ -115,6 +135,7 @@ const Entreprise = () => {
   const [draftInfo, setDraftInfo] = useState<BusinessInfo>(info);
   const [draftOwner, setDraftOwner] = useState<BusinessOwner>(emptyOwner());
   const [editIdx, setEditIdx] = useState<number>(-1);
+  const [otherOpen, setOtherOpen] = useState(false);
 
   useEffect(() => {
     Promise.all([getMyProfile(), getMyKyb(), getMyKyc()]).then(([p, k, c]) => {
@@ -208,7 +229,7 @@ const Entreprise = () => {
 
   /* ─── Section : l'entreprise ─── */
   if (view === "company") {
-    const set = (k: keyof BusinessInfo) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setDraftInfo((i) => ({ ...i, [k]: e.target.value }));
+    const set = (k: keyof BusinessInfo) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => { setError(null); setDraftInfo((i) => ({ ...i, [k]: e.target.value })); };
     const save = () => {
       const err = infoError(draftInfo);
       if (err) { setError(t(err)); return; }
@@ -224,10 +245,29 @@ const Entreprise = () => {
           </Row>
           <Row label={t("kyb.jurisdiction")} group>
             <Segmented
-              value={draftInfo.jurisdiction}
-              options={JURISDICTIONS.map((k) => ({ v: t(k), label: t(k) }))}
-              onChange={(v) => setDraftInfo((i) => ({ ...i, jurisdiction: v }))}
+              value={draftInfo.jurisdiction === QC.fr || draftInfo.jurisdiction === FED.fr ? draftInfo.jurisdiction : otherOpen || draftInfo.jurisdiction ? "other" : ""}
+              options={[
+                { v: QC.fr, label: QC[lang] },
+                { v: FED.fr, label: t("kyb.jurFed") },
+                { v: "other", label: t("kyb.jurOther") },
+              ]}
+              onChange={(v) => {
+                setError(null);
+                if (v === "other") { setOtherOpen(true); setDraftInfo((i) => ({ ...i, jurisdiction: OTHER_PROVINCES.some((p) => p.fr === i.jurisdiction) ? i.jurisdiction : "" })); }
+                else { setOtherOpen(false); setDraftInfo((i) => ({ ...i, jurisdiction: v })); }
+              }}
             />
+            {(otherOpen || OTHER_PROVINCES.some((p) => p.fr === draftInfo.jurisdiction)) && (
+              <select
+                aria-label={t("kyb.chooseProvince")}
+                value={draftInfo.jurisdiction}
+                onChange={(e) => { setError(null); setDraftInfo((i) => ({ ...i, jurisdiction: e.target.value })); }}
+                className="mt-2.5 w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-[14.5px] text-foreground outline-none focus-visible:border-foreground/50"
+              >
+                <option value="" disabled>{t("kyb.chooseProvince")}</option>
+                {OTHER_PROVINCES.map((p) => <option key={p.fr} value={p.fr}>{p[lang]}</option>)}
+              </select>
+            )}
           </Row>
           <Row label={t("kyb.number")}>
             <input className={cn(bare, "font-mono tracking-wide")} value={draftInfo.businessNumber} onChange={set("businessNumber")} maxLength={60} inputMode="numeric" placeholder={t("kyb.numberHint")} />
@@ -308,7 +348,7 @@ const Entreprise = () => {
   /* ─── Fiche d'une personne ─── */
   if (view === "person") {
     const o = draftOwner;
-    const setO = (patch: Partial<BusinessOwner>) => setDraftOwner((d) => ({ ...d, ...patch }));
+    const setO = (patch: Partial<BusinessOwner>) => { setError(null); setDraftOwner((d) => ({ ...d, ...patch })); };
     const save = () => {
       const err = ownerError(o);
       if (err) { setError(t(err)); return; }
@@ -433,7 +473,7 @@ const Entreprise = () => {
       icon: null,
       title: t("kyb.secCompany"),
       done: companyDone,
-      summary: companyDone ? [info.legalName, info.jurisdiction].filter(Boolean).join(" · ") : t("kyb.secCompanyTodo"),
+      summary: companyDone ? [info.legalName, placeLabel(info.jurisdiction)].filter(Boolean).join(" · ") : t("kyb.secCompanyTodo"),
       open: () => { setDraftInfo(info); go("company"); },
     },
     {

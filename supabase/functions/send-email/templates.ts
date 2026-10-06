@@ -85,6 +85,47 @@ export const TEMPLATES: Record<string, string> = {
     primaryButton("{{orderUrl}}", "Voir le reçu"),
   ),
 
+  // ── Décisions de vérification ─────────────────────────────
+  "kyc-approved": template(
+    eyebrow("Identité vérifiée") +
+    heading("Votre identité est vérifiée, {{firstName}}") +
+    lead("Bonne nouvelle : notre équipe conformité a validé votre pièce d'identité. Votre compte Ooble est vérifié, vous n'aurez pas à refaire cette étape.") +
+    dataRows([
+      ["Vérification", "Identité"],
+      ["Statut",       "Vérifiée"],
+      ["Date",         "{{date}}"],
+    ]) +
+    primaryButton("{{appUrl}}", "Ouvrir Ooble"),
+  ),
+
+  "kyc-rejected": template(
+    eyebrow("Vérification d'identité") +
+    heading("Il manque quelque chose pour vérifier votre identité") +
+    lead("Bonjour {{firstName}}, nous n'avons pas pu valider votre vérification. Ce n'est pas définitif : corrigez le point ci-dessous puis recommencez, cela prend quelques minutes.") +
+    notice("<strong>Ce qu'il faut corriger</strong><br>{{reason}}") +
+    primaryButton("{{retryUrl}}", "Recommencer la vérification"),
+  ),
+
+  "kyb-approved": template(
+    eyebrow("Entreprise vérifiée") +
+    heading("{{businessName}} est vérifiée") +
+    lead("Bonjour {{firstName}}, notre équipe conformité a validé le dossier de votre entreprise. Votre compte entreprise peut maintenant acheter et vendre sur Ooble.") +
+    dataRows([
+      ["Entreprise", "{{businessName}}"],
+      ["Statut",     "Vérifiée"],
+      ["Date",       "{{date}}"],
+    ]) +
+    primaryButton("{{appUrl}}", "Ouvrir Ooble"),
+  ),
+
+  "kyb-rejected": template(
+    eyebrow("Vérification d'entreprise") +
+    heading("Le dossier de {{businessName}} est à corriger") +
+    lead("Bonjour {{firstName}}, nous n'avons pas pu valider le dossier de votre entreprise. Corrigez le point ci-dessous puis renvoyez-le depuis votre espace : vos informations sont conservées.") +
+    notice("<strong>Ce qu'il faut corriger</strong><br>{{reason}}") +
+    primaryButton("{{retryUrl}}", "Corriger mon dossier"),
+  ),
+
   newsletter: template(
     eyebrow("{{eyebrow}}") +
     heading("{{headline}}") +
@@ -100,5 +141,9 @@ export const SUBJECTS: Record<string, string> = {
   "order-sell":       "Votre ordre de vente Ooble ({{ref}})",
   "payment-received": "Paiement reçu, on traite votre commande ({{ref}})",
   "order-completed":  "Transaction terminée ({{ref}})",
+  "kyc-approved":     "Votre identité est vérifiée",
+  "kyc-rejected":     "Votre vérification d'identité est à reprendre",
+  "kyb-approved":     "{{businessName}} est vérifiée sur Ooble",
+  "kyb-rejected":     "Votre dossier entreprise est à corriger",
   newsletter:         "{{subjectLine}}",
 };

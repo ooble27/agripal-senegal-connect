@@ -32,21 +32,34 @@ const PersonKycPanel = () => {
   const [docUrls, setDocUrls] = useState<Record<string, string>>({});
   const [loadingUrls, setLoadingUrls] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [note, setNote] = useState("");
+  const [noteError, setNoteError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchKyc().then((r) => { setRows(r); setLoading(false); });
   }, []);
 
-  const set = (id: string, status: KycStatus) => {
-    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
-    if (detail?.id === id) setDetail((d) => d ? { ...d, status } : d);
-    setKycStatus(id, status).then((res) => {
+  // Approuver ou refuser ; le client reçoit un courriel dans les deux cas.
+  // Un refus exige un motif (il figure dans le courriel).
+  const set = (id: string, status: KycStatus, reason?: string) => {
+    const row = rows.find((r) => r.id === id);
+    if (status === "refuse" && !reason?.trim()) {
+      setNoteError("Indiquez au client ce qu'il doit corriger.");
+      return;
+    }
+    setNoteError(null);
+    const reviewNote = status === "refuse" ? reason!.trim() : null;
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, status, reviewNote } : r)));
+    if (detail?.id === id) setDetail((d) => d ? { ...d, status, reviewNote } : d);
+    setKycStatus(id, status, reason, row ? { email: row.email, name: row.clientName } : undefined).then((res) => {
       if (res.error) fetchKyc().then(setRows);
     });
   };
 
   const openDetail = async (r: KycRequest) => {
     setDetail(r);
+    setNote("");
+    setNoteError(null);
     setDocUrls({});
     if (!r.documentPaths) return;
     setLoadingUrls(true);
@@ -256,10 +269,34 @@ const PersonKycPanel = () => {
           </div>
         )}
 
-        {/* Action buttons */}
+        {detail.status === "refuse" && detail.reviewNote && (
+          <div className="rounded-2xl border border-border bg-card px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.07em] text-muted-foreground">Motif envoyé au client</p>
+            <p className="mt-1 whitespace-pre-wrap text-[13px]">{detail.reviewNote}</p>
+          </div>
+        )}
+
+        {/* Décision : motif (obligatoire pour un refus) + boutons */}
+        {detail.status === "attente" && (
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <label className="block">
+              <span className="text-[12.5px] text-muted-foreground">Motif pour le client (obligatoire en cas de refus)</span>
+              <textarea
+                rows={3}
+                maxLength={1000}
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Ex. : la photo du recto est floue, le texte n'est pas lisible."
+                className="mt-1.5 w-full resize-none rounded-xl border border-border bg-background px-3.5 py-2.5 text-[13px] outline-none focus-visible:border-foreground/50"
+              />
+            </label>
+            {noteError && <p className="mt-2 text-[12.5px] text-destructive">{noteError}</p>}
+            <p className="mt-2 text-[12px] text-muted-foreground">Le client reçoit un courriel avec la décision.</p>
+          </div>
+        )}
         {detail.status === "attente" && (
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 4 }}>
-            <Button variant="appOutline" shape="rounded" className="h-auto gap-1.5 rounded-[9px] px-4 py-[8px] text-[13px]" onClick={() => set(detail.id, "refuse")}>
+            <Button variant="appOutline" shape="rounded" className="h-auto gap-1.5 rounded-[9px] px-4 py-[8px] text-[13px]" onClick={() => set(detail.id, "refuse", note)}>
               <X className="h-[14px] w-[14px]" /> Refuser
             </Button>
             <Button variant="appSolid" shape="rounded" className="h-auto gap-1.5 rounded-[9px] px-4 py-[8px] text-[13px] font-bold" onClick={() => set(detail.id, "verifie")}>
@@ -313,7 +350,7 @@ const PersonKycPanel = () => {
               </Button>
               {r.status === "attente" ? (
                 <>
-                  <Button variant="appOutline" shape="rounded" className="h-auto gap-1.5 rounded-[9px] px-3 py-[7px] text-[12.5px]" onClick={() => set(r.id, "refuse")}>
+                  <Button variant="appOutline" shape="rounded" className="h-auto gap-1.5 rounded-[9px] px-3 py-[7px] text-[12.5px]" onClick={() => openDetail(r)}>
                     <X className="h-[13px] w-[13px]" /> Refuser
                   </Button>
                   <Button variant="appSolid" shape="rounded" className="h-auto gap-1.5 rounded-[9px] px-3 py-[7px] text-[12.5px] font-bold" onClick={() => set(r.id, "verifie")}>

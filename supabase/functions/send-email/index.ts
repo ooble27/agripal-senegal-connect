@@ -184,11 +184,14 @@ Deno.serve(async (req) => {
     if (!(template in TEMPLATES)) {
       return json({ error: `Template inconnu : ${template}` }, 400);
     }
+    const safeVars = Object.fromEntries(
+      Object.entries(vars).map(([k, v]) => [k, k.endsWith("Html") ? String(v ?? "") : escHtml(String(v ?? "")).replace(/\r?\n/g, "<br>")]),
+    );
     const data: Record<string, string> = {
       assetBase,
       year: String(new Date().getFullYear()),
       unsubscribeUrl: vars.unsubscribeUrl ?? "#",
-      ...vars,
+      ...safeVars,
     };
     finalHtml = render(TEMPLATES[template], data);
     finalSubject = render(subject ?? SUBJECTS[template] ?? "Ooble", data);

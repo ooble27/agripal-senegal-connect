@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import type { BusinessOwner, KybDocKey } from "@/lib/kyb";
 import { logAdminAction } from "@/lib/audit";
-import { sendCustomEmail } from "@/lib/email";
+import { sendEmail } from "@/lib/email";
 
 type DbStatus = Database["public"]["Enums"]["kyc_status"];
 type Row = Database["public"]["Tables"]["business_verifications"]["Row"];
@@ -67,7 +67,17 @@ export async function getKybDocumentUrl(path: string): Promise<string | null> {
   return data?.signedUrl ?? null;
 }
 
-const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+/** Variables communes des courriels de décision (prénom, date, liens, motif). */
+export function decisionEmailVars(fullName: string, reason: string | null, retryPath: string): Record<string, string> {
+  const site = window.location.origin;
+  return {
+    firstName: fullName.trim().split(/\s+/)[0] || "",
+    date: new Date().toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" }),
+    appUrl: `${site}/app`,
+    retryUrl: `${site}${retryPath}`,
+    reason: reason ?? "",
+  };
+}
 
 /**
  * Réinitialise la vérification d'entreprise d'un client (admin uniquement,
@@ -116,15 +126,10 @@ export async function decideKyb(
   });
 
   if (req.email) {
-    const site = window.location.origin;
-    const approved = decision === "approved";
-    const html = approved
-      ? `<p>Bonjour ${esc(req.contactName)},</p><p>Bonne nouvelle : <b>${esc(req.legalName)}</b> est maintenant vérifiée sur Ooble. Votre entreprise peut acheter et vendre dès maintenant.</p><p><a href="${site}/app">Ouvrir Ooble</a></p>`
-      : `<p>Bonjour ${esc(req.contactName)},</p><p>Nous n'avons pas pu valider le dossier de <b>${esc(req.legalName)}</b>.</p>${reviewNote ? `<p><b>Ce qu'il faut corriger :</b><br>${esc(reviewNote).replace(/\n/g, "<br>")}</p>` : ""}<p>Vous pouvez corriger et renvoyer le dossier depuis votre espace.</p><p><a href="${site}/app/entreprise">Corriger mon dossier</a></p>`;
-    void sendCustomEmail({
+    void sendEmail({
       to: req.email,
-      subject: approved ? `${req.legalName} est vérifiée` : `Votre dossier entreprise est à corriger`,
-      html,
+      template: decision === "approved" ? "kyb-approved" : "kyb-rejected",
+      vars: { ...decisionEmailVars(req.contactName, reviewNote, "/app/entreprise"), businessName: req.legalName },
     });
   }
   return {};

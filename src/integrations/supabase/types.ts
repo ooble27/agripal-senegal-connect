@@ -208,6 +208,8 @@ export type Database = {
           id: string
           provider: string
           result_payload: Json | null
+          review_note: string | null
+          reviewed_at: string | null
           status: Database["public"]["Enums"]["kyc_status"]
           updated_at: string
           user_id: string
@@ -220,6 +222,8 @@ export type Database = {
           id?: string
           provider?: string
           result_payload?: Json | null
+          review_note?: string | null
+          reviewed_at?: string | null
           status?: Database["public"]["Enums"]["kyc_status"]
           updated_at?: string
           user_id: string
@@ -232,6 +236,8 @@ export type Database = {
           id?: string
           provider?: string
           result_payload?: Json | null
+          review_note?: string | null
+          reviewed_at?: string | null
           status?: Database["public"]["Enums"]["kyc_status"]
           updated_at?: string
           user_id?: string

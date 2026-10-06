@@ -18,6 +18,10 @@ export type EmailTemplate =
   | "order-sell"
   | "payment-received"
   | "order-completed"
+  | "kyc-approved"
+  | "kyc-rejected"
+  | "kyb-approved"
+  | "kyb-rejected"
   | "newsletter";
 
 export interface SendEmailInput {

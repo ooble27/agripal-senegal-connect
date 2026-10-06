@@ -2,6 +2,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import type { KycRequest, KycStatus } from "@/lib/adminOrders";
 import { logAdminAction } from "@/lib/audit";
+import { sendEmail } from "@/lib/email";
+import { decisionEmailVars } from "@/lib/adminKyb";
 
 type DbKycStatus = Database["public"]["Enums"]["kyc_status"];
 type KycRow = Database["public"]["Tables"]["kyc_verifications"]["Row"];
@@ -43,6 +45,7 @@ export async function fetchKyc(): Promise<KycRequest[]> {
     documentPaths: (r.document_paths as Record<string, string> | null) ?? null,
     submittedMinsAgo: minsAgo(r.created_at),
     status: DB_TO_DEMO[r.status],
+    reviewNote: r.review_note,
   }));
 }
 
@@ -51,7 +54,17 @@ export async function getDocumentUrl(path: string): Promise<string | null> {
   return data?.signedUrl ?? null;
 }
 
-export async function setKycStatus(id: string, status: KycStatus): Promise<{ error?: string }> {
+/**
+ * Décision sur une vérification d'identité. Un refus exige un motif : il est
+ * enregistré, affiché au client sur sa page de vérification et envoyé par
+ * courriel avec la décision (approbation comme refus).
+ */
+export async function setKycStatus(
+  id: string,
+  status: KycStatus,
+  note?: string,
+  client?: { email: string; name: string },
+): Promise<{ error?: string }> {
   const { data: before } = await supabase
     .from("kyc_verifications")
     .select("id, user_id, status")
@@ -59,11 +72,20 @@ export async function setKycStatus(id: string, status: KycStatus): Promise<{ err
     .maybeSingle();
 
   const newDbStatus = DEMO_TO_DB[status];
+  const reviewNote = status === "refuse" ? (note ?? "").trim() || null : null;
   const { error } = await supabase
     .from("kyc_verifications")
-    .update({ status: newDbStatus })
+    .update({ status: newDbStatus, review_note: reviewNote, reviewed_at: new Date().toISOString() })
     .eq("id", id);
   if (error) return { error: error.message };
+
+  if (client?.email && status !== "attente") {
+    void sendEmail({
+      to: client.email,
+      template: status === "verifie" ? "kyc-approved" : "kyc-rejected",
+      vars: decisionEmailVars(client.name, reviewNote, "/app/verification"),
+    });
+  }
 
   const action = status === "verifie" ? "kyc.approve" : status === "refuse" ? "kyc.reject" : null;
   if (action) {
@@ -72,7 +94,7 @@ export async function setKycStatus(id: string, status: KycStatus): Promise<{ err
       entityKind: "kyc",
       entityId: id,
       before,
-      after: { ...(before ?? { id }), status: newDbStatus },
+      after: { ...(before ?? { id }), status: newDbStatus, review_note: reviewNote },
       metadata: { client_user_id: before?.user_id ?? null },
     });
   }

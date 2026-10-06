@@ -9,6 +9,8 @@ export type KycDbStatus = Database["public"]["Enums"]["kyc_status"];
 export interface MyKyc {
   status: KycDbStatus;
   submittedAt: string;
+  /** Motif donné par l'équipe en cas de refus. */
+  reviewNote: string | null;
 }
 
 /** Vérification la plus récente de l'utilisateur connecté (ou null). */
@@ -19,12 +21,12 @@ export async function getMyKyc(): Promise<MyKyc | null> {
 
   const { data: row } = await supabase
     .from("kyc_verifications")
-    .select("status, created_at")
+    .select("status, created_at, review_note")
     .eq("user_id", uid)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
   if (!row) return null;
 
-  return { status: row.status, submittedAt: row.created_at };
+  return { status: row.status, submittedAt: row.created_at, reviewNote: row.review_note };
 }

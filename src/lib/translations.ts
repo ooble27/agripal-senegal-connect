@@ -551,6 +551,7 @@ const dict = {
   "kyc.step2Desc": { fr: "Photographiez le recto (et le verso si applicable) de votre pièce.", en: "Photograph the front (and back if applicable) of your ID." },
   "kyc.step3Desc": { fr: "Prenez un selfie avec votre pièce d'identité tenue à côté de votre visage.", en: "Take a selfie with your ID held next to your face." },
   "kyc.step4Desc": { fr: "Vérifiez vos photos et soumettez — notre équipe examine sous 24 heures.", en: "Review your photos and submit — our team reviews within 24 hours." },
+  "kyc.reviewNote": { fr: "Ce qu'il faut corriger", en: "What to fix" },
   "kyc.start": { fr: "Commencer la vérification", en: "Start verification" },
   "kyc.resume": { fr: "Reprendre la vérification", en: "Resume verification" },
   "kyc.wait": { fr: "Envoi en cours…", en: "Submitting…" },

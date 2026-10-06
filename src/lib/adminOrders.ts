@@ -113,6 +113,7 @@ export interface KycRequest {
   documentPaths: Record<string, string> | null;
   submittedMinsAgo: number;
   status: KycStatus;
+  reviewNote?: string | null;
 }
 
 export const KYC_STATUS_META: Record<KycStatus, { label: string; text: string }> = {

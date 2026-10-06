@@ -189,6 +189,7 @@ const Verification = () => {
   const navigate = useNavigate();
   const t = useT();
   const [status, setStatus] = useState<KycDbStatus | null>(null);
+  const [reviewNote, setReviewNote] = useState<string | null>(null);
   const [step, setStep] = useState<Step>("intro");
   const [docType, setDocType] = useState<DocType | null>(null);
   const [idFront, setIdFront] = useState<File | null>(null);
@@ -203,6 +204,7 @@ const Verification = () => {
   useEffect(() => {
     getMyKyc().then((k) => {
       setStatus(k?.status ?? "not_started");
+      setReviewNote(k?.reviewNote ?? null);
       setLoading(false);
     });
   }, []);
@@ -317,6 +319,13 @@ const Verification = () => {
           <h2 className="mt-4 font-display text-[22px] font-semibold tracking-tight">{t(m.titleKey)}</h2>
           <p className="mt-1.5 max-w-[340px] text-[14px] leading-relaxed text-muted-foreground">{t(m.subKey)}</p>
         </div>
+
+        {status === "rejected" && reviewNote && (
+          <div className="mt-4 rounded-2xl bg-destructive/10 px-4 py-3.5 text-destructive">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em]">{t("kyc.reviewNote")}</p>
+            <p className="mt-1 whitespace-pre-wrap text-[13.5px] leading-relaxed">{reviewNote}</p>
+          </div>
+        )}
 
         {!verified && (
           <>

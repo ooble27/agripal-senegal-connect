@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 export type AccountType = Database["public"]["Enums"]["account_type"];
+type KycDbStatus = Database["public"]["Enums"]["kyc_status"];
 
 export interface MyProfile {
   fullName: string | null;
@@ -14,6 +15,7 @@ export interface MyProfile {
   businessNumber: string | null;
   businessAddress: string | null;
   businessPhone: string | null;
+  businessStatus: KycDbStatus;
 }
 
 export async function getMyProfile(): Promise<MyProfile | null> {
@@ -22,7 +24,7 @@ export async function getMyProfile(): Promise<MyProfile | null> {
   if (!uid) return null;
   const { data, error } = await supabase
     .from("profiles")
-    .select("full_name, email, sell_ref, interac_question, interac_answer, account_type, business_name, business_number, business_address, business_phone")
+    .select("full_name, email, sell_ref, interac_question, interac_answer, account_type, business_name, business_number, business_address, business_phone, business_status")
     .eq("id", uid)
     .maybeSingle();
   if (error || !data) return null;
@@ -51,6 +53,7 @@ export async function getMyProfile(): Promise<MyProfile | null> {
     businessNumber: data.business_number,
     businessAddress: data.business_address,
     businessPhone: data.business_phone,
+    businessStatus: data.business_status,
   };
 }
 

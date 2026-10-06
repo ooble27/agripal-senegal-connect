@@ -24,6 +24,8 @@ import ChangerEmail from "./pages/app/ChangerEmail";
 import Activite from "./pages/app/Activite";
 import OrderDetail from "./pages/app/OrderDetail";
 import Verification from "./pages/app/Verification";
+import Entreprise from "./pages/app/Entreprise";
+import BusinessGate from "./components/app/BusinessGate";
 import AdminPortal from "./pages/admin/AdminPortal";
 import AdminAI from "./pages/admin/AdminAI";
 import RequireAuth from "./components/app/RequireAuth";
@@ -80,8 +82,8 @@ const App = () => (
 
         {/* App connectée */}
         <Route path="/app" element={<RequireAuth><Dashboard /></RequireAuth>} />
-        <Route path="/app/acheter" element={<RequireAuth><AppAcheter /></RequireAuth>} />
-        <Route path="/app/vendre" element={<RequireAuth><AppVendre /></RequireAuth>} />
+        <Route path="/app/acheter" element={<RequireAuth><BusinessGate><AppAcheter /></BusinessGate></RequireAuth>} />
+        <Route path="/app/vendre" element={<RequireAuth><BusinessGate><AppVendre /></BusinessGate></RequireAuth>} />
         <Route path="/app/envoyer" element={<RequireAuth><Envoyer /></RequireAuth>} />
         <Route path="/app/otc" element={<RequireAuth><AppOTC /></RequireAuth>} />
         <Route path="/app/activite" element={<RequireAuth><Activite /></RequireAuth>} />
@@ -89,6 +91,7 @@ const App = () => (
         <Route path="/app/compte" element={<RequireAuth><Compte /></RequireAuth>} />
         <Route path="/app/changer-email" element={<RequireAuth><ChangerEmail /></RequireAuth>} />
         <Route path="/app/verification" element={<RequireAuth><Verification /></RequireAuth>} />
+        <Route path="/app/entreprise" element={<RequireAuth><Entreprise /></RequireAuth>} />
 
         {/* Back-office — réservé à l'équipe (rôles dans user_roles) */}
         <Route path="/admin" element={<RequireStaff><AdminPortal /></RequireStaff>} />

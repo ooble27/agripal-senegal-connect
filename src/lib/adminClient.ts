@@ -19,6 +19,7 @@ export interface ClientProfile {
   businessNumber: string | null;
   businessAddress: string | null;
   businessPhone: string | null;
+  businessStatus: Database["public"]["Enums"]["kyc_status"];
   createdAt: string;
   orderCount: number;
   totalCad: number;
@@ -45,7 +46,7 @@ export { KYC_LABEL };
 export async function fetchClientProfile(userId: string): Promise<ClientProfile | null> {
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("id, full_name, email, phone, kyc_status, daily_limit_cad, interac_question, interac_answer, account_type, business_name, business_number, business_address, business_phone, created_at")
+    .select("id, full_name, email, phone, kyc_status, daily_limit_cad, interac_question, interac_answer, account_type, business_name, business_number, business_address, business_phone, business_status, created_at")
     .eq("id", userId)
     .maybeSingle();
   if (error || !profile) return null;
@@ -77,6 +78,7 @@ export async function fetchClientProfile(userId: string): Promise<ClientProfile 
     businessNumber: profile.business_number,
     businessAddress: profile.business_address,
     businessPhone: profile.business_phone,
+    businessStatus: profile.business_status,
     createdAt: profile.created_at,
     orderCount: count ?? 0,
     totalCad,

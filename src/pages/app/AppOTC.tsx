@@ -1,10 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Handshake, Check } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import CopyRow from "@/components/app/CopyRow";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
+import { getMyProfile } from "@/lib/profile";
+import { supabase } from "@/integrations/supabase/client";
+import { t as tr } from "@/lib/translations";
 import { cn } from "@/lib/utils";
 import type { TKey } from "@/lib/translations";
 
@@ -32,7 +36,44 @@ const AppOTC = () => {
   const [source, setSource] = useState("");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const ref = useMemo(() => newRef(), []);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user?.email) setEmail((e) => e || user.email);
+  }, [user?.email]);
+
+  // La demande arrive dans la boîte support@ooble.ca (Admin → Messagerie).
+  const submit = async () => {
+    if (!valid || sending) return;
+    setSending(true);
+    setError(null);
+    const p = await getMyProfile();
+    const company = p?.accountType === "business" ? p.businessName : null;
+    const lines = [
+      `Demande OTC ${ref}`,
+      `Sens : ${side === "buy" ? "achat de USDT" : "vente de USDT"}`,
+      `Volume : ${nf.format(value)} USDT`,
+      `Adresse USDT : ${address}`,
+      `Usage : ${tr(usage as TKey, "fr")}`,
+      `Origine des fonds : ${tr(source as TKey, "fr")}`,
+      "",
+      `Compte : ${user?.name ?? "—"} <${user?.email ?? "—"}>`,
+      company ? `Entreprise : ${company} (vérification : ${{ not_started: "non commencée", pending: "en attente", approved: "vérifiée", rejected: "refusée" }[p!.businessStatus]})` : "Compte individuel",
+    ];
+    const { error: err } = await supabase.functions.invoke("send-email", {
+      body: { contact: { name: company || user?.name || email, email, subject: `Gros volume (OTC) · ${ref}`, message: lines.join("\n") } },
+    });
+    setSending(false);
+    if (err) {
+      const status = (err as { context?: Response }).context?.status;
+      setError(t(status === 429 ? "cont.tooMany" : "cont.error"));
+      return;
+    }
+    setSent(true);
+  };
 
   const value = parseFloat(amount.replace(/[^\d.]/g, "")) || 0;
   const valid =
@@ -167,9 +208,15 @@ const AppOTC = () => {
         {t("otcApp.compliance")}
       </p>
 
+      {error && (
+        <p role="alert" className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
+          {error}
+        </p>
+      )}
+
       <div className="mt-5 flex justify-end">
-        <Button variant="appPrimary" shape="soft" className="h-auto gap-2 px-[22px] py-[13px] text-sm" disabled={!valid} onClick={() => setSent(true)}>
-          <Handshake className="h-[17px] w-[17px]" strokeWidth={2} /> {t("otcApp.requestQuote")}
+        <Button variant="appPrimary" shape="soft" className="h-auto gap-2 px-[22px] py-[13px] text-sm" disabled={!valid || sending} onClick={submit}>
+          <Handshake className="h-[17px] w-[17px]" strokeWidth={2} /> {sending ? t("cont.sending") : t("otcApp.requestQuote")}
         </Button>
       </div>
     </AppShell>

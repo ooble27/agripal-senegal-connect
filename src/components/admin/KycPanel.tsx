@@ -7,6 +7,7 @@ import { fetchKyc, setKycStatus, getDocumentUrl } from "@/lib/adminKyc";
 import { ClientCell, SubTabs } from "./AdminBits";
 import AdminHero from "./AdminHero";
 import { C, FONT, card } from "./adminTheme";
+import BusinessKycPanel from "./BusinessKycPanel";
 
 const KycBadge = ({ status }: { status: KycStatus }) => {
   const m = KYC_STATUS_META[status];
@@ -23,7 +24,7 @@ const DOC_ORDER = ["selfie", "id_front", "id_back"];
 
 type Filter = "attente" | "verifie" | "refuse";
 
-const KycPanel = () => {
+const PersonKycPanel = () => {
   const [rows, setRows] = useState<KycRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Filter>("attente");
@@ -337,6 +338,34 @@ const KycPanel = () => {
           </div>
         )}
       </div>
+    </div>
+  );
+};
+
+/* ── Particuliers / Entreprises ── */
+const KycPanel = () => {
+  const [kind, setKind] = useState<"person" | "business">("person");
+  return (
+    <div className="space-y-4">
+      <div className="inline-flex rounded-[10px] border border-border bg-secondary/60 p-0.5">
+        {([
+          { id: "person", label: "Particuliers" },
+          { id: "business", label: "Entreprises" },
+        ] as const).map((k) => (
+          <button
+            key={k.id}
+            type="button"
+            onClick={() => setKind(k.id)}
+            className={cn(
+              "rounded-md px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
+              kind === k.id ? "bg-card text-foreground" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {k.label}
+          </button>
+        ))}
+      </div>
+      {kind === "person" ? <PersonKycPanel /> : <BusinessKycPanel />}
     </div>
   );
 };

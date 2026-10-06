@@ -62,7 +62,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<AppRole[]>([]);
-  const [rolesLoading, setRolesLoading] = useState(false);
+  // Rôles chargés pour quel utilisateur : tant que ce n'est pas l'utilisateur
+  // courant, les rôles sont « en chargement » (évite de renvoyer le staff
+  // vers /app quand il ouvre directement /admin).
+  const [rolesFor, setRolesFor] = useState<string | null>(null);
 
   useEffect(() => {
     // Session initiale + abonnement aux changements (connexion, déconnexion,
@@ -97,11 +100,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const uid = user?.id;
     if (!uid) {
       setRoles([]);
-      setRolesLoading(false);
+      setRolesFor(null);
       return;
     }
     let active = true;
-    setRolesLoading(true);
     supabase
       .from("user_roles")
       .select("role")
@@ -109,10 +111,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       .then(({ data }) => {
         if (!active) return;
         setRoles((data ?? []).map((r) => r.role));
-        setRolesLoading(false);
+        setRolesFor(uid);
       });
     return () => { active = false; };
   }, [user?.id]);
+
+  const rolesLoading = !!user && rolesFor !== user.id;
 
   const value = useMemo<AuthContextValue>(
     () => ({

@@ -218,6 +218,7 @@ const ClientProfile = ({ userId, clientName, onBack, onOpenOrder }: Props) => {
                 <div className="grid divide-y divide-border md:grid-cols-2 md:divide-x md:divide-y-0">
                   <div className="divide-y divide-border">
                     <Row label="Raison sociale" value={profile.businessName} />
+                    <Row label="Vérification" value={{ not_started: "Non commencée", pending: "En attente", approved: "Vérifiée", rejected: "Refusée" }[profile.businessStatus]} />
                     {profile.businessNumber && <Row label="NEQ / BN" value={profile.businessNumber} mono />}
                   </div>
                   <div className="divide-y divide-border">

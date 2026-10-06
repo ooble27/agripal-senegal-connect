@@ -150,6 +150,18 @@ const Compte = () => {
           <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
         </Link>
 
+        {/* Vérification de l'entreprise (comptes entreprise) */}
+        {profile?.accountType === "business" && (
+          <Link to="/app/entreprise" className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-secondary/40">
+            <Building2 className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />
+            <span className="flex-1 text-sm font-medium">{t("acct.businessVerif")}</span>
+            <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", KYC_TONE[profile.businessStatus])}>
+              {t(KYC_KEYS[profile.businessStatus])}
+            </span>
+            <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
+          </Link>
+        )}
+
         {/* Back-office (staff only) */}
         {isStaff && (
           <Link to="/admin" className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-secondary/40">

@@ -128,6 +128,77 @@ export type Database = {
         }
         Relationships: []
       }
+      business_verifications: {
+        Row: {
+          activity: string
+          address: string
+          attestation: boolean
+          business_number: string | null
+          created_at: string
+          documents: Json
+          id: string
+          jurisdiction: string | null
+          legal_name: string
+          owners: Json
+          phone: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["kyc_status"]
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          activity: string
+          address: string
+          attestation?: boolean
+          business_number?: string | null
+          created_at?: string
+          documents?: Json
+          id?: string
+          jurisdiction?: string | null
+          legal_name: string
+          owners?: Json
+          phone?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["kyc_status"]
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          activity?: string
+          address?: string
+          attestation?: boolean
+          business_number?: string | null
+          created_at?: string
+          documents?: Json
+          id?: string
+          jurisdiction?: string | null
+          legal_name?: string
+          owners?: Json
+          phone?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["kyc_status"]
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_verifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kyc_verifications: {
         Row: {
           created_at: string
@@ -324,6 +395,7 @@ export type Database = {
           account_type: Database["public"]["Enums"]["account_type"]
           business_address: string | null
           business_name: string | null
+          business_status: Database["public"]["Enums"]["kyc_status"]
           business_number: string | null
           business_phone: string | null
           created_at: string
@@ -342,6 +414,7 @@ export type Database = {
           account_type?: Database["public"]["Enums"]["account_type"]
           business_address?: string | null
           business_name?: string | null
+          business_status?: Database["public"]["Enums"]["kyc_status"]
           business_number?: string | null
           business_phone?: string | null
           created_at?: string
@@ -360,6 +433,7 @@ export type Database = {
           account_type?: Database["public"]["Enums"]["account_type"]
           business_address?: string | null
           business_name?: string | null
+          business_status?: Database["public"]["Enums"]["kyc_status"]
           business_number?: string | null
           business_phone?: string | null
           created_at?: string

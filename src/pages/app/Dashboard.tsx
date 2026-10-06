@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Coins, HandCoins, Inbox, ChevronRight } from "lucide-react";
+import { Building2, Clock, Coins, HandCoins, Inbox, ChevronRight } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import RateChart from "@/components/app/RateChart";
 import { NETWORKS } from "@/components/app/networks";
@@ -12,6 +12,8 @@ import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { TRADING_ENABLED } from "@/lib/config";
+import { getMyProfile, type MyProfile } from "@/lib/profile";
+import { businessBlocked } from "@/components/app/BusinessGate";
 
 const nf = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
 
@@ -72,6 +74,9 @@ const Dashboard = () => {
   const rate = useUsdtRate();
   const history = useUsdtHistory();
   const { user, isStaff } = useAuth();
+  const [profile, setProfile] = useState<MyProfile | null>(null);
+  useEffect(() => { getMyProfile().then(setProfile); }, []);
+  const kybPending = profile?.businessStatus === "pending";
   const firstName = user?.name?.trim().split(/\s+/)[0] ?? "";
 
   const greeting = (() => {
@@ -102,6 +107,22 @@ const Dashboard = () => {
         )
       }
     >
+      {!isStaff && businessBlocked(profile) && (
+        <Link
+          to="/app/entreprise"
+          className="mb-4 flex items-center gap-4 rounded-2xl border border-foreground/15 bg-card px-5 py-4 transition-colors hover:bg-secondary/40"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-foreground/70">
+            {kybPending ? <Clock className="h-5 w-5" strokeWidth={1.6} /> : <Building2 className="h-5 w-5" strokeWidth={1.6} />}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[14px] font-semibold">{kybPending ? t("kyb.stPending") : t("kyb.gateTitle")}</p>
+            <p className="mt-0.5 text-[12.5px] leading-relaxed text-muted-foreground">{kybPending ? t("kyb.gatePending") : t("kyb.gateSub")}</p>
+          </div>
+          <ChevronRight className="h-[18px] w-[18px] shrink-0 text-muted-foreground" />
+        </Link>
+      )}
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Taux USDT / CAD — toujours en premier */}
         <section className="flex flex-col rounded-2xl border border-border bg-card p-5 md:row-span-1">

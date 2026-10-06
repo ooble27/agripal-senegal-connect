@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { ArrowRight, Check, Clock, Handshake, Mail, MessageSquare } from "lucide-react";
 import Header from "@/components/Header";
@@ -21,6 +22,28 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 const Contact = () => {
   const t = useT();
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "", website: "" });
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  // Le message part dans la boîte support@ooble.ca (Admin → Messagerie).
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (sending) return;
+    setSending(true);
+    setError(null);
+    const { error: err } = await supabase.functions.invoke("send-email", { body: { contact: form } });
+    setSending(false);
+    if (err) {
+      const status = (err as { context?: Response }).context?.status;
+      setError(t(status === 429 ? "cont.tooMany" : "cont.error"));
+      return;
+    }
+    setSent(true);
+    setForm({ name: "", email: "", subject: "", message: "", website: "" });
+  };
 
   const facts: { icon: React.ElementType; kKey: TKey; vKey: TKey }[] = [
     { icon: Mail, kKey: "cont.email", vKey: "cont.email" },
@@ -111,21 +134,29 @@ const Contact = () => {
               ) : (
                 <form
                   className="space-y-5"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    setSent(true);
-                  }}
+                  onSubmit={submit}
                 >
+                  {/* Champ piège invisible : seuls les robots le remplissent. */}
+                  <input
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    aria-hidden
+                    className="absolute -left-[9999px] h-0 w-0 opacity-0"
+                    value={form.website}
+                    onChange={set("website")}
+                  />
                   <div className="grid gap-5 sm:grid-cols-2">
                     <Field label={t("cont.name")}>
-                      <input required className={fieldCls} placeholder={t("cont.namePh")} />
+                      <input required maxLength={100} className={fieldCls} placeholder={t("cont.namePh")} value={form.name} onChange={set("name")} />
                     </Field>
                     <Field label={t("cont.emailLabel")}>
-                      <input required type="email" className={fieldCls} placeholder="vous@exemple.ca" />
+                      <input required type="email" maxLength={254} className={fieldCls} placeholder="vous@exemple.ca" value={form.email} onChange={set("email")} />
                     </Field>
                   </div>
                   <Field label={t("cont.subject")}>
-                    <select className={fieldCls} defaultValue="">
+                    <select className={fieldCls} value={form.subject} onChange={set("subject")}>
                       <option value="" disabled>
                         {t("cont.subjectPh")}
                       </option>
@@ -138,18 +169,27 @@ const Contact = () => {
                     <textarea
                       required
                       rows={6}
+                      maxLength={5000}
                       className={`${fieldCls} resize-none`}
+                      value={form.message}
+                      onChange={set("message")}
                       placeholder={t("cont.messagePh")}
                     />
                   </Field>
+                  {error && (
+                    <p role="alert" className="text-[14px] text-destructive">
+                      {error}
+                    </p>
+                  )}
                   <Button
                     type="submit"
+                    disabled={sending}
                     variant="appSolid"
                     shape="rounded"
                     size="default"
                     className="w-full"
                   >
-                    {t("cont.send")} <ArrowRight className="h-4 w-4" />
+                    {sending ? t("cont.sending") : t("cont.send")} <ArrowRight className="h-4 w-4" />
                   </Button>
                 </form>
               )}

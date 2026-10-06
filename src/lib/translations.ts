@@ -418,6 +418,15 @@ const dict = {
     en: "Thank you. We'll get back to you shortly at the address provided.",
   },
   "cont.sendAnother": { fr: "Envoyer un autre message", en: "Send another message" },
+  "cont.sending": { fr: "Envoi en cours…", en: "Sending…" },
+  "cont.error": {
+    fr: "Le message n'est pas parti. Réessayez, ou écrivez-nous à support@ooble.ca.",
+    en: "Your message wasn't sent. Try again, or email us at support@ooble.ca.",
+  },
+  "cont.tooMany": {
+    fr: "Vous avez envoyé plusieurs messages. Réessayez dans une heure.",
+    en: "You've sent several messages. Try again in an hour.",
+  },
 
   // ── Buy workflow ──
   "buy.title": { fr: "Acheter USDT", en: "Buy USDT" },

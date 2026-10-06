@@ -90,6 +90,16 @@ interface Payload {
   // Mode staffNotify
   staffNotify?: "new-order";
   order?: StaffOrderPayload;
+  // Mode contact (page /contact, ouvert à tous)
+  contact?: ContactPayload;
+}
+
+interface ContactPayload {
+  name?: string;
+  email?: string;
+  subject?: string;
+  message?: string;
+  website?: string; // champ piège invisible : rempli seulement par les robots
 }
 
 Deno.serve(async (req) => {
@@ -109,6 +119,9 @@ Deno.serve(async (req) => {
     to: rawTo, cc, bcc, replyTo, subject, template, vars = {}, html, text,
     staffNotify, order,
   } = payload;
+
+  // ─── Formulaire de contact du site (visiteurs non connectés) ─
+  if (payload.contact) return handleContact(payload.contact, req, apiKey, from);
 
   // ─── Qui appelle ? ─────────────────────────────────────────
   // Sans ce contrôle, n'importe qui (la clé publique est dans le site)
@@ -218,6 +231,122 @@ Deno.serve(async (req) => {
   }
   return json({ ok: true, id: result.id });
 });
+
+// ────────────────────────────────────────────────────────────
+// Formulaire de contact
+//
+// Le message arrive dans la boîte support (Admin → Messagerie) exactement
+// comme un e-mail envoyé à support@ooble.ca : nouveau fil au nom du
+// visiteur, à qui l'équipe répond depuis le back-office. Une alerte part
+// aussi vers STAFF_NOTIFICATION_EMAIL si ce secret est défini.
+//
+// Ouvert sans connexion, donc bridé : destinataire fixe, texte brut
+// uniquement, longueurs limitées, champ piège, 3 messages par heure et
+// par adresse, 5 par heure et par IP.
+// ────────────────────────────────────────────────────────────
+
+const contactHits = new Map<string, number[]>();
+
+function tooMany(key: string, max: number): boolean {
+  const now = Date.now(), recent = (contactHits.get(key) ?? []).filter((t) => now - t < 3_600_000);
+  recent.push(now);
+  contactHits.set(key, recent);
+  return recent.length > max;
+}
+
+async function handleContact(c: ContactPayload, req: Request, apiKey: string, from: string): Promise<Response> {
+  const name = (c.name ?? "").trim().slice(0, 100);
+  const email = (c.email ?? "").trim().toLowerCase();
+  const subject = (c.subject ?? "").trim().slice(0, 120) || "Autre";
+  const message = (c.message ?? "").trim();
+
+  // Robot : on fait comme si tout s'était bien passé.
+  if ((c.website ?? "").trim()) return json({ ok: true });
+
+  if (!name) return json({ error: "Indiquez votre nom." }, 400);
+  if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/.test(email) || email.length > 254) {
+    return json({ error: "Adresse courriel invalide." }, 400);
+  }
+  if (message.length < 2) return json({ error: "Écrivez votre message." }, 400);
+  if (message.length > 5000) return json({ error: "Message trop long (5 000 caractères maximum)." }, 400);
+
+  const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || "inconnue";
+  if (tooMany(`ip:${ip}`, 5)) return json({ error: "Trop de messages envoyés. Réessayez dans une heure." }, 429);
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  if (!supabaseUrl || !serviceKey) return json({ error: "Configuration serveur incomplète." }, 500);
+  const admin = createClient(supabaseUrl, serviceKey);
+
+  const since = new Date(Date.now() - 3_600_000).toISOString();
+  const { count } = await admin
+    .from("mail_threads")
+    .select("id", { count: "exact", head: true })
+    .eq("client_email", email)
+    .gte("created_at", since);
+  if ((count ?? 0) >= 3) return json({ error: "Trop de messages envoyés. Réessayez dans une heure." }, 429);
+
+  const { data: profile } = await admin.from("profiles").select("id, full_name").eq("email", email).maybeSingle();
+  const threadSubject = `${subject} — formulaire de contact`;
+
+  const { data: thread, error: threadErr } = await admin
+    .from("mail_threads")
+    .insert({
+      client_id: profile?.id ?? null,
+      client_email: email,
+      client_name: name,
+      subject: threadSubject,
+      last_message_at: new Date().toISOString(),
+      has_unread: true,
+    })
+    .select("id")
+    .single();
+  if (threadErr || !thread) {
+    console.error("contact: création du fil impossible", threadErr);
+    return json({ error: "Envoi impossible pour le moment. Écrivez-nous à support@ooble.ca." }, 500);
+  }
+  const { error: msgErr } = await admin.from("mail_messages").insert({
+    thread_id: thread.id,
+    direction: "inbound",
+    from_email: email,
+    from_name: name,
+    to_email: "support@ooble.ca",
+    subject: threadSubject,
+    body_text: message,
+    body_html: null,
+  });
+  if (msgErr) {
+    console.error("contact: enregistrement du message impossible", msgErr);
+    return json({ error: "Envoi impossible pour le moment. Écrivez-nous à support@ooble.ca." }, 500);
+  }
+
+  // Alerte à l'équipe (facultative) : répondre à ce courriel écrit au visiteur.
+  const staffTo = Deno.env.get("STAFF_NOTIFICATION_EMAIL")?.trim();
+  if (staffTo) {
+    const site = Deno.env.get("SITE_URL") ?? "https://ooble.ca";
+    const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#141414">
+      <p style="margin:0 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#777">Formulaire de contact</p>
+      <p style="margin:0 0 16px;font-size:20px;font-weight:bold">${escHtml(subject)}</p>
+      <p style="margin:0"><b>${escHtml(name)}</b> · ${escHtml(email)}${profile ? " · client Ooble" : ""}</p>
+      <p style="margin:16px 0;padding:16px;border:1px solid #e5e5e5;border-radius:10px;white-space:pre-wrap">${escHtml(message)}</p>
+      <p style="margin:0"><a href="${site}/admin" style="color:#141414">Répondre depuis la messagerie Ooble</a></p></div>`;
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from,
+        to: staffTo,
+        reply_to: email,
+        subject: `Contact · ${subject} · ${name}`,
+        html,
+        text: `${subject}\n${name} <${email}>\n\n${message}`,
+      }),
+    }).catch((e) => { console.warn("contact: alerte non envoyée", e); return null; });
+    if (res && !res.ok) console.warn("contact: alerte non envoyée", res.status, await res.text().catch(() => ""));
+  }
+
+  return json({ ok: true, threadId: thread.id });
+}
 
 // ────────────────────────────────────────────────────────────
 // Notification interne : nouvelle commande

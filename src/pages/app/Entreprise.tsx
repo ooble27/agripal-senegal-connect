@@ -14,6 +14,7 @@ import {
 } from "@/lib/kyb";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { VERIFICATION_ENABLED } from "@/lib/config";
 import type { TKey } from "@/lib/translations";
 
 type Step = "intro" | "info" | "people" | "docs" | "review" | "submitting" | "done";
@@ -247,7 +248,7 @@ const Entreprise = () => {
               <p className="text-[12px] leading-relaxed text-muted-foreground/70">{t("kyb.privacy")}</p>
             </div>
             <div className="mt-6 flex justify-end">
-              <Button variant="appSolid" shape="rounded" className="gap-2 px-5 text-[13px]" onClick={() => setStep("info")}>
+              <Button variant="appSolid" shape="rounded" className="gap-2 px-5 text-[13px]" disabled={!VERIFICATION_ENABLED} onClick={() => setStep("info")}>
                 {status === "rejected" ? t("kyb.resubmit") : t("kyb.start")} <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

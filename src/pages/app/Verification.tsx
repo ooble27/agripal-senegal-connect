@@ -11,6 +11,7 @@ import { getMyKyc, type KycDbStatus } from "@/lib/kyc";
 import { submitKycDocuments, type DocType } from "@/lib/kycUpload";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { VERIFICATION_ENABLED } from "@/lib/config";
 import type { TKey } from "@/lib/translations";
 
 /* ─── Status display ─── */
@@ -368,7 +369,7 @@ const Verification = () => {
 
             {/* CTA */}
             <div className="mt-6 flex justify-end">
-              <Button variant="appSolid" shape="rounded" className="gap-2 px-5 text-[13px]" onClick={() => setStep("doc_type")}>
+              <Button variant="appSolid" shape="rounded" className="gap-2 px-5 text-[13px]" disabled={!VERIFICATION_ENABLED} onClick={() => setStep("doc_type")}>
                 {inReview ? t("kyc.resume") : t("kyc.start")}
                 <ChevronRight className="h-4 w-4" />
               </Button>

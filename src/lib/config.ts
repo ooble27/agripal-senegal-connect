@@ -16,3 +16,10 @@ export const OOBLE_SUPPORT_EMAIL = "support@ooble.ca";
  * Remettre à `true` pour réactiver les transactions.
  */
 export const TRADING_ENABLED = false;
+
+/**
+ * Interrupteur des vérifications (identité et entreprise) — à `false`, le
+ * bouton pour commencer une vérification reste désactivé. Remettre à `true`
+ * au lancement des activités.
+ */
+export const VERIFICATION_ENABLED = false;

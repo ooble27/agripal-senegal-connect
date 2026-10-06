@@ -7,6 +7,7 @@ import type { KybDocKey, OwnerRole } from "@/lib/kyb";
 import { useAuth } from "@/lib/auth";
 import { ClientCell, SubTabs } from "./AdminBits";
 import AdminHero from "./AdminHero";
+import BusinessMark from "@/components/app/BusinessMark";
 
 type Filter = "pending" | "approved" | "rejected";
 
@@ -110,9 +111,7 @@ const BusinessKycPanel = () => {
         </button>
 
         <div className="flex items-center gap-3.5 rounded-2xl border border-border bg-card px-4 py-4">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-secondary text-foreground/70">
-            <Building2 className="h-5 w-5" strokeWidth={1.6} />
-          </span>
+          <BusinessMark name={d.legalName} size="md" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-semibold">{d.legalName}</p>
             <p className="truncate text-[12px] text-muted-foreground">{d.contactName} · {d.email}</p>

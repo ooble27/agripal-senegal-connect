@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Building2, ChevronRight, Clock } from "lucide-react";
+import { ChevronRight, Clock } from "lucide-react";
+import BusinessMark from "@/components/app/BusinessMark";
 import AppShell from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -31,9 +32,13 @@ const BusinessGate = ({ children }: { children: React.ReactNode }) => {
   return (
     <AppShell backTo="/app" header={<h1 className="font-display text-[22px] font-semibold tracking-tight">{t("kyb.gateTitle")}</h1>}>
       <div className="flex flex-col items-center rounded-2xl border border-border bg-card px-6 py-10 text-center">
-        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-foreground/70">
-          {pending ? <Clock className="h-6 w-6" strokeWidth={1.6} /> : <Building2 className="h-6 w-6" strokeWidth={1.6} />}
-        </span>
+        <BusinessMark name={profile!.businessName} size="lg" />
+        <p className="mt-3 font-display text-[17px] font-semibold tracking-tight">{profile!.businessName}</p>
+        {pending && (
+          <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-[3px] text-[11.5px] font-semibold text-foreground">
+            <Clock className="h-3 w-3" /> {t("kyb.pillPending")}
+          </span>
+        )}
         <p className="mt-4 max-w-[340px] text-[14px] leading-relaxed text-muted-foreground">
           {pending ? t("kyb.gatePending") : t("kyb.gateSub")}
         </p>

@@ -11,6 +11,7 @@ import { getMyProfile, type MyProfile } from "@/lib/profile";
 import { getMyKyc, type KycDbStatus } from "@/lib/kyc";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import BusinessMark from "@/components/app/BusinessMark";
 import type { TKey } from "@/lib/translations";
 
 const KYC_KEYS: Record<KycDbStatus, TKey> = {
@@ -62,8 +63,9 @@ const Compte = () => {
             <p className="truncate font-display text-xl font-bold tracking-tight">{user?.name}</p>
             <p className="truncate text-sm text-muted-foreground">{user?.email}</p>
             {profile?.accountType === "business" && (
-              <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-deep/10 px-2.5 py-0.5 text-[11px] font-semibold text-deep">
-                <Building2 className="h-3 w-3" /> {t("acct.business")}
+              <span className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full bg-secondary py-[3px] pl-[3px] pr-2.5 text-[11.5px] font-semibold text-foreground/75">
+                <BusinessMark name={profile.businessName} size="sm" className="h-[18px] w-[18px] rounded-full text-[8px]" />
+                <span className="truncate">{t("kyb.accountBusiness")}</span>
               </span>
             )}
           </div>

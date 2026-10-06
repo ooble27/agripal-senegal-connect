@@ -193,35 +193,39 @@ const Compte = () => {
   );
 };
 
-/* ─── Tablette / ordinateur : profil à gauche, réglages à droite ───
-   Arrondis sobres (même rayon que les boutons), textes à taille normale,
-   chaque bloc de droite occupe toute la largeur et répartit ses infos en
-   colonnes. */
+/* ─── Tablette / ordinateur : proposition A ───
+   Colonne profil à gauche (identité, vérifications, actions) ; à droite,
+   une grille de cartes sur deux colonnes : entreprise, Interac, connexion
+   et sécurité, préférences. Arrondi 16 px. */
 
 const initialsOf = (n: string) => n.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "?";
 
-const Panel = ({ title, action, children, className }: { title?: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) => (
-  <section className={cn("rounded-xl border border-border bg-card", className)}>
-    {title && (
-      <div className="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
-        <h2 className="text-[15px] font-semibold tracking-tight">{title}</h2>
-        {action}
-      </div>
-    )}
-    {children}
-  </section>
+const Card = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <section className={cn("overflow-hidden rounded-2xl border border-border bg-card", className)}>{children}</section>
 );
-
-const Field = ({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) => (
-  <div className={cn("min-w-0 px-6 py-4", className)}>
-    <p className="text-[12.5px] text-muted-foreground">{label}</p>
-    <div className="mt-1 text-[15.5px]">{children}</div>
+const Eyebrow = ({ children }: { children: React.ReactNode }) => (
+  <p className="px-6 pb-3 pt-5 text-[11.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{children}</p>
+);
+const InfoRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="flex justify-between gap-6 border-t border-border px-6 py-3.5 text-[15px]">
+    <span className="shrink-0 text-muted-foreground">{label}</span>
+    <span className="min-w-0 text-right">{children}</span>
   </div>
 );
+const LinkRow = ({ to, icon: Icon, label, sub, right }: { to: string; icon: React.ElementType; label: string; sub?: string; right?: React.ReactNode }) => (
+  <Link to={to} className="flex items-center gap-3.5 border-t border-border px-6 py-4 transition-colors hover:bg-secondary/40">
+    <Icon className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.7} />
+    <span className="min-w-0 flex-1">
+      <span className="block text-[15px]">{label}</span>
+      {sub && <span className="block truncate text-[13px] text-muted-foreground">{sub}</span>}
+    </span>
+    {right}
+  </Link>
+);
 
-/** Choix à deux options, libellés en clair (langue, apparence). */
+/** Choix à deux options en pastilles (langue, apparence). */
 const Choice = <V extends string>({ value, options, onChange }: { value: V; options: { v: V; label: string }[]; onChange: (v: V) => void }) => (
-  <div className="inline-flex rounded-xl border border-border bg-secondary/60 p-1">
+  <div className="inline-flex shrink-0 rounded-full border border-border bg-background p-1">
     {options.map((o) => (
       <button
         key={o.v}
@@ -229,20 +233,14 @@ const Choice = <V extends string>({ value, options, onChange }: { value: V; opti
         onClick={() => onChange(o.v)}
         aria-pressed={value === o.v}
         className={cn(
-          "rounded-lg px-4 py-1.5 text-[14px] font-medium transition-colors",
-          value === o.v ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+          "rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-colors",
+          value === o.v ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground",
         )}
       >
         {o.label}
       </button>
     ))}
   </div>
-);
-
-const SmallButton = ({ to, children }: { to: string; children: React.ReactNode }) => (
-  <Button asChild variant="appOutline" shape="rounded" className="h-auto px-3.5 py-1.5 text-[13.5px]">
-    <Link to={to}>{children}</Link>
-  </Button>
 );
 
 function DesktopAccount({
@@ -256,42 +254,37 @@ function DesktopAccount({
   useEffect(() => onThemeChange(setThemeState), []);
   const business = profile?.accountType === "business";
   const pill = (st: KycDbStatus) => (
-    <span className={cn("shrink-0 rounded-lg px-2.5 py-1 text-[12.5px] font-semibold", KYC_TONE[st])}>{t(KYC_KEYS[st])}</span>
+    <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold", KYC_TONE[st])}>{t(KYC_KEYS[st])}</span>
   );
-  const verifRow = (to: string, Icon: React.ElementType, label: string, st: KycDbStatus) => (
-    <Link to={to} className="flex items-center gap-3.5 border-t border-border px-6 py-4 transition-colors hover:bg-secondary/40">
-      <Icon className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.7} />
-      <span className="flex-1 text-[15px]">{label}</span>
-      {pill(st)}
-      <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
-    </Link>
-  );
+  const modify = <span className="shrink-0 text-[13.5px] font-medium text-foreground/80">{t("acct.modify")}</span>;
 
   return (
-    <div className="hidden items-start gap-6 md:flex lg:gap-8">
+    <div className="hidden items-start gap-6 md:flex lg:gap-7">
       {/* Colonne profil */}
-      <aside className="flex w-[300px] shrink-0 flex-col gap-5 lg:w-[340px]">
-        <Panel className="flex flex-col items-center px-6 py-8 text-center">
-          <span className="flex h-24 w-24 items-center justify-center rounded-xl bg-secondary font-display text-[30px] font-medium tracking-tight text-foreground/85">
+      <aside className="flex w-[300px] shrink-0 flex-col gap-4 lg:w-[330px]">
+        <Card className="flex flex-col items-center px-6 py-8 text-center">
+          <span className="flex h-[88px] w-[88px] items-center justify-center rounded-2xl bg-secondary font-display text-[28px] font-medium tracking-tight text-foreground/85">
             {initialsOf(name || email)}
           </span>
-          <p className="mt-5 max-w-full truncate font-display text-[22px] font-semibold tracking-tight">{name}</p>
-          <p className="mt-1 max-w-full truncate text-[15px] text-muted-foreground">{email}</p>
-          <span className="mt-4 inline-flex max-w-full items-center gap-2 rounded-lg bg-secondary px-3 py-1.5 text-[13px] font-medium text-foreground/80">
+          <p className="mt-4 max-w-full truncate font-display text-[21px] font-semibold tracking-tight">{name}</p>
+          <p className="mt-1 max-w-full truncate text-[14.5px] text-muted-foreground">{email}</p>
+          <span className="mt-4 inline-flex max-w-full items-center gap-2 rounded-full bg-secondary py-1 pl-1 pr-3 text-[12.5px] font-semibold text-foreground/80">
             {business ? (
-              <BusinessMark name={profile?.businessName} size="sm" className="h-5 w-5 rounded-md text-[8.5px]" />
+              <BusinessMark name={profile?.businessName} size="sm" className="h-[22px] w-[22px] rounded-full text-[9px]" />
             ) : (
-              <User className="h-4 w-4" strokeWidth={1.9} />
+              <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-foreground text-background"><User className="h-3 w-3" strokeWidth={2.4} /></span>
             )}
             <span className="truncate">{business ? t("kyb.accountBusiness") : t("acct.personal")}</span>
           </span>
-        </Panel>
+        </Card>
 
-        <Panel>
-          <p className="px-6 pb-3 pt-5 text-[12px] font-medium uppercase tracking-[0.1em] text-muted-foreground">{t("acct.verifications")}</p>
-          {kyc && verifRow("/app/verification", ShieldCheck, t("acct.identity"), kyc)}
-          {business && profile && verifRow("/app/entreprise", Building2, t("acct.business"), profile.businessStatus)}
-        </Panel>
+        <Card>
+          <Eyebrow>{t("acct.verifications")}</Eyebrow>
+          {kyc && <LinkRow to="/app/verification" icon={ShieldCheck} label={t("acct.identity")} right={pill(kyc)} />}
+          {business && profile && (
+            <LinkRow to="/app/entreprise" icon={Building2} label={t("acct.business")} right={pill(profile.businessStatus)} />
+          )}
+        </Card>
 
         <div className="flex flex-wrap gap-2.5">
           {isStaff && (
@@ -305,75 +298,62 @@ function DesktopAccount({
         </div>
       </aside>
 
-      {/* Réglages : blocs pleine largeur */}
-      <div className="flex min-w-0 flex-1 flex-col gap-5">
+      {/* Grille de réglages */}
+      <div className="grid min-w-0 flex-1 grid-cols-1 items-start gap-5 xl:grid-cols-2">
         {business && profile && (
-          <Panel
-            title={t("acct.business")}
-            action={<SmallButton to="/app/entreprise">{t("acct.viewFile")}</SmallButton>}
-          >
-            <div className="flex items-center gap-4 px-6 pt-5">
-              <BusinessMark name={profile.businessName} size="md" className="h-12 w-12 rounded-xl text-[16px]" />
-              <div className="min-w-0">
-                <p className="truncate text-[18px] font-semibold tracking-tight">{profile.businessName}</p>
-                <div className="mt-1">{pill(profile.businessStatus)}</div>
+          <Card>
+            <div className="flex items-center gap-3.5 px-6 pb-4 pt-5">
+              <BusinessMark name={profile.businessName} size="md" className="h-11 w-11 rounded-xl text-[15px]" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[16px] font-semibold leading-snug tracking-tight">{profile.businessName}</p>
+                <p className="text-[13px] text-muted-foreground">{t(KYC_KEYS[profile.businessStatus])}</p>
               </div>
+              <Link to="/app/entreprise" className="shrink-0 text-[13.5px] font-medium text-foreground/80 hover:text-foreground hover:underline">
+                {t("acct.viewFile")}
+              </Link>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3">
-              <Field label="NEQ / BN"><span className="tabular-nums">{profile.businessNumber || "—"}</span></Field>
-              <Field label={t("regb.phone")}><span className="tabular-nums">{profile.businessPhone || "—"}</span></Field>
-              <Field label={t("regb.address")}>{profile.businessAddress || "—"}</Field>
-            </div>
-          </Panel>
+            {profile.businessNumber && <InfoRow label="NEQ / BN"><span className="tabular-nums">{profile.businessNumber}</span></InfoRow>}
+            {profile.businessAddress && <InfoRow label={t("regb.address")}>{profile.businessAddress}</InfoRow>}
+            {profile.businessPhone && <InfoRow label={t("regb.phone")}><span className="tabular-nums">{profile.businessPhone}</span></InfoRow>}
+          </Card>
         )}
 
         {profile?.interacQuestion && (
-          <Panel title={t("acct.interac")}>
-            <p className="px-6 pt-4 text-[14px] leading-relaxed text-muted-foreground">{t("acct.interacSub")}</p>
-            <div className="grid grid-cols-1 gap-3 p-6 pt-4 lg:grid-cols-2">
-              <div className="overflow-hidden rounded-xl border border-border"><CopyRow label={t("acct.question")} value={profile.interacQuestion} /></div>
-              <div className="overflow-hidden rounded-xl border border-border"><CopyRow label={t("acct.answer")} value={profile.interacAnswer!} mono /></div>
+          <Card>
+            <div className="px-6 pb-4 pt-5">
+              <p className="text-[11.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{t("acct.interac")}</p>
+              <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">{t("acct.interacSub")}</p>
             </div>
-          </Panel>
+            <div className="divide-y divide-border border-t border-border [&>div]:px-6">
+              <CopyRow label={t("acct.question")} value={profile.interacQuestion} />
+              <CopyRow label={t("acct.answer")} value={profile.interacAnswer!} mono />
+            </div>
+          </Card>
         )}
 
-        <Panel title={t("acct.security")}>
-          <div className="grid grid-cols-1 xl:grid-cols-2">
-            <div className="flex items-center gap-4 px-6 py-5">
-              <Mail className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.7} />
-              <div className="min-w-0 flex-1">
-                <p className="text-[15px]">{t("acct.email")}</p>
-                <p className="truncate text-[13.5px] text-muted-foreground">{email}</p>
-              </div>
-              <SmallButton to="/app/changer-email">{t("acct.modify")}</SmallButton>
-            </div>
-            <div className="flex items-center gap-4 border-t border-border px-6 py-5 xl:border-l xl:border-t-0">
-              <Lock className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.7} />
-              <div className="min-w-0 flex-1">
-                <p className="text-[15px]">{t("acct.password")}</p>
-                <p className="text-[13.5px] tracking-[0.2em] text-muted-foreground">••••••••</p>
-              </div>
-              <SmallButton to="/reinitialiser">{t("acct.modify")}</SmallButton>
-            </div>
-          </div>
-        </Panel>
+        <Card>
+          <Eyebrow>{t("acct.security")}</Eyebrow>
+          <LinkRow to="/app/changer-email" icon={Mail} label={t("acct.email")} sub={email} right={modify} />
+          <LinkRow to="/reinitialiser" icon={Lock} label={t("acct.password")} right={modify} />
+        </Card>
 
-        <Panel title={t("acct.preferences")}>
-          <div className="grid grid-cols-1 lg:grid-cols-2">
-            <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-5">
-              <span className="flex items-center gap-3 text-[15px]"><Globe className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />{t("acct.language")}</span>
-              <Choice value={lang} options={[{ v: "fr", label: "Français" }, { v: "en", label: "English" }]} onChange={setLang} />
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-6 py-5 lg:border-l lg:border-t-0">
-              <span className="flex items-center gap-3 text-[15px]"><SunMoon className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />{t("acct.appearance")}</span>
-              <Choice
-                value={theme}
-                options={[{ v: "light", label: t("acct.light") }, { v: "dark", label: t("acct.dark") }]}
-                onChange={(v) => { setTheme(v); setThemeState(v); }}
-              />
-            </div>
+        <Card>
+          <Eyebrow>{t("acct.preferences")}</Eyebrow>
+          <div className="flex items-center gap-3.5 border-t border-border px-6 py-3.5">
+            <Globe className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.7} />
+            <span className="flex-1 text-[15px]">{t("acct.language")}</span>
+            <Choice value={lang} options={[{ v: "fr", label: "FR" }, { v: "en", label: "EN" }]} onChange={setLang} />
           </div>
-        </Panel>
+          <div className="flex items-center gap-3.5 border-t border-border px-6 py-3.5">
+            <SunMoon className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.7} />
+            <span className="flex-1 text-[15px]">{t("acct.appearance")}</span>
+            <Choice
+              value={theme}
+              options={[{ v: "light", label: t("acct.light") }, { v: "dark", label: t("acct.dark") }]}
+              onChange={(v) => { setTheme(v); setThemeState(v); }}
+            />
+          </div>
+        </Card>
       </div>
     </div>
   );

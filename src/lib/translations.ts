@@ -771,6 +771,8 @@ const dict = {
   "reset.title": { fr: "Nouveau mot de passe", en: "New password" },
   "reset.sub": { fr: "Choisissez un nouveau mot de passe pour votre compte Ooble.", en: "Choose a new password for your Ooble account." },
   "reset.newPw": { fr: "Nouveau mot de passe", en: "New password" },
+  "reset.confirmPw": { fr: "Confirmer le mot de passe", en: "Confirm password" },
+  "reset.mismatch": { fr: "Les deux mots de passe ne correspondent pas.", en: "The two passwords don't match." },
   "reset.changed": { fr: "Mot de passe modifié", en: "Password changed" },
   "reset.redirecting": { fr: "Vous allez être redirigé vers votre espace…", en: "You'll be redirected to your dashboard…" },
   "reset.expired": { fr: "Le lien a peut-être expiré. Redemandez un lien de réinitialisation.", en: "The link may have expired. Request a new reset link." },

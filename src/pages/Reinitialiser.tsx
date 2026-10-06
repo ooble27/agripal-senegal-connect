@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { T } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n";
 
 const Reinitialiser = () => {
@@ -16,6 +17,7 @@ const Reinitialiser = () => {
   const t = useT();
   const [ready, setReady] = useState(false);
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +40,10 @@ const Reinitialiser = () => {
     e.preventDefault();
     if (password.length < 6) {
       setError(t("reg.errPasswordShort"));
+      return;
+    }
+    if (password !== confirm) {
+      setError(t("reset.mismatch"));
       return;
     }
     setBusy(true);
@@ -96,7 +102,7 @@ const Reinitialiser = () => {
                       placeholder={t("reset.newPw")}
                       autoComplete="new-password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => { setPassword(e.target.value); setError(null); }}
                       required
                       className="w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
                     />
@@ -109,6 +115,28 @@ const Reinitialiser = () => {
                       {show ? <EyeOff className="h-5 w-5" strokeWidth={1.9} /> : <Eye className="h-5 w-5" strokeWidth={1.9} />}
                     </button>
                   </label>
+
+                  <label
+                    className={cn(
+                      "flex items-center gap-3 rounded-2xl border bg-card px-4 py-3.5 transition-colors focus-within:border-foreground",
+                      confirm && confirm !== password ? "border-destructive/60" : "border-border",
+                    )}
+                  >
+                    <Lock className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.9} />
+                    <input
+                      type={show ? "text" : "password"}
+                      placeholder={t("reset.confirmPw")}
+                      autoComplete="new-password"
+                      value={confirm}
+                      onChange={(e) => { setConfirm(e.target.value); setError(null); }}
+                      required
+                      className="w-full bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
+                    />
+                    {confirm && confirm === password && <Check className="h-5 w-5 shrink-0 text-primary" strokeWidth={2} />}
+                  </label>
+                  {confirm && confirm !== password && (
+                    <p className="px-1 text-[13px] text-destructive">{t("reset.mismatch")}</p>
+                  )}
 
                   {error && (
                     <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] font-medium text-destructive">

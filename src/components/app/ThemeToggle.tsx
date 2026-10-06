@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sun, Moon } from "lucide-react";
-import { getTheme, setTheme, type Theme } from "@/lib/theme";
+import { getTheme, onThemeChange, setTheme, type Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/i18n";
 
 const ThemeToggle = ({ className }: { className?: string }) => {
   const [lang] = useLang();
   const [theme, setThemeState] = useState<Theme>(getTheme);
+  useEffect(() => onThemeChange(setThemeState), []);
 
   const toggle = () => {
     const next: Theme = theme === "dark" ? "light" : "dark";

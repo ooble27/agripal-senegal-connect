@@ -23,3 +23,11 @@ export const TRADING_ENABLED = false;
  * au lancement des activités.
  */
 export const VERIFICATION_ENABLED = false;
+
+/**
+ * Comptes autorisés à faire la vérification d'entreprise avant le lancement
+ * (aperçu interne du parcours). Identifiants de compte (profiles.id).
+ */
+export const KYB_PREVIEW_USERS: string[] = [
+  "8e6697db-4484-4c5d-8744-777d8001f148", // Ooble Technologies (Mohamed Lo)
+];

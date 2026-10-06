@@ -14,7 +14,8 @@ import {
 } from "@/lib/kyb";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { VERIFICATION_ENABLED } from "@/lib/config";
+import { KYB_PREVIEW_USERS, VERIFICATION_ENABLED } from "@/lib/config";
+import { useAuth } from "@/lib/auth";
 import type { TKey } from "@/lib/translations";
 
 type Step = "intro" | "info" | "people" | "docs" | "review" | "submitting" | "done";
@@ -51,6 +52,8 @@ const emptyOwner = (): BusinessOwner => ({ name: "", role: "both", ownership: 10
 const Entreprise = () => {
   const navigate = useNavigate();
   const t = useT();
+  const { user } = useAuth();
+  const kybOpen = VERIFICATION_ENABLED || (!!user && KYB_PREVIEW_USERS.includes(user.id));
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [kyb, setKyb] = useState<MyKyb | null>(null);
@@ -248,7 +251,7 @@ const Entreprise = () => {
               <p className="text-[12px] leading-relaxed text-muted-foreground/70">{t("kyb.privacy")}</p>
             </div>
             <div className="mt-6 flex justify-end">
-              <Button variant="appSolid" shape="rounded" className="gap-2 px-5 text-[13px]" disabled={!VERIFICATION_ENABLED} onClick={() => setStep("info")}>
+              <Button variant="appSolid" shape="rounded" className="gap-2 px-5 text-[13px]" disabled={!kybOpen} onClick={() => setStep("info")}>
                 {status === "rejected" ? t("kyb.resubmit") : t("kyb.start")} <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

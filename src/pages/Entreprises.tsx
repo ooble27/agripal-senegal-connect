@@ -1,116 +1,159 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Building2, Check, FileText, Handshake, Users } from "lucide-react";
+import { ArrowRight, Building2, Check, Handshake } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Reveal from "@/components/Reveal";
 import OtcVideo from "@/components/OtcVideo";
 import { Button } from "@/components/ui/button";
-import { NETWORKS } from "@/components/app/networks";
 import { TRADE_DAILY_MAX_CAD } from "@/lib/config";
 import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-/* Ooble pour les entreprises : page publique. Même famille que la page OTC
-   (en-tête en deux colonnes avec la vidéo, mise en page ouverte, sans
-   cartes) : les usages, l'ouverture du compte en bande noire, ce qu'on vous
-   demande, les montants, les questions et l'appel final.
-   Les durées citées reprennent celles affichées dans l'app (vérification en
-   environ 5 minutes, examen généralement sous 1 jour ouvrable). */
+/* Ooble pour les entreprises — page publique à part entière, dans la palette
+   chaude de sa vidéo (vert forêt, menthe, corail, tournesol). Pas de gabarit
+   commun : en-tête vert plein écran avec la vidéo qui déborde, sélecteur
+   d'usages, étapes racontées au défilement, liste « Votre dossier est-il
+   prêt ? » à cocher, simulateur de montant (app ou desk OTC), bandeau des
+   métiers et appel final. Les durées reprennent celles affichées dans l'app
+   (vérification en environ 5 minutes, examen généralement sous 1 jour
+   ouvrable). */
 
 type Bi = { fr: string; en: string };
+
+const FOREST = "#0f5c45", MINT = "#bfe8d6", CORAL = "#ff7a59", SUN = "#ffc94d", CREAM = "#f6f1e7";
 
 const Wrap = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <div className={`mx-auto max-w-[1200px] px-6 sm:px-10 ${className}`}>{children}</div>
 );
 
-const Kicker = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <p className={cn("text-[12px] uppercase tracking-[0.16em] text-muted-foreground", className)}>{children}</p>
+/* ───────── Illustrations des usages (formes pleines) ───────── */
+const ArtPay = () => (
+  <svg viewBox="0 0 400 300" className="h-full w-full" aria-hidden>
+    <rect x="0" y="230" width="400" height="70" fill={FOREST} opacity=".25" />
+    {[0, 1, 2].map((r) => [0, 1, 2, 3].slice(0, 4 - r).map((k) => (
+      <rect key={`${r}${k}`} x={95 + k * 52 + r * 26} y={150 - r * 34} width="46" height="30" rx="5" fill={[CORAL, SUN, CREAM, FOREST][(k + r) % 4]} />
+    )))}
+    <path d="M70 186 H330 L300 236 H100 Z" fill={CREAM} />
+    <rect x="270" y="110" width="30" height="76" rx="6" fill={CREAM} />
+    <circle cx="340" cy="60" r="26" fill={SUN} />
+  </svg>
+);
+const ArtGetPaid = () => (
+  <svg viewBox="0 0 400 300" className="h-full w-full" aria-hidden>
+    <rect x="150" y="140" width="190" height="120" rx="22" fill={FOREST} />
+    <rect x="290" y="180" width="62" height="44" rx="12" fill={CORAL} />
+    <circle cx="315" cy="202" r="8" fill={CREAM} />
+    {[[90, 70], [130, 40], [175, 82], [225, 55]].map(([x, y], i) => (
+      <g key={i} transform={`translate(${x} ${y})`}>
+        <circle r="26" fill="#26a17b" />
+        <text y="10" textAnchor="middle" fontSize="28" fontWeight="700" fill="#fff">₮</text>
+      </g>
+    ))}
+  </svg>
+);
+const ArtManage = () => (
+  <svg viewBox="0 0 400 300" className="h-full w-full" aria-hidden>
+    <rect x="120" y="60" width="160" height="200" rx="14" fill={CREAM} transform="rotate(-8 200 160)" />
+    <rect x="120" y="60" width="160" height="200" rx="14" fill={CREAM} transform="rotate(5 200 160)" />
+    <rect x="120" y="60" width="160" height="200" rx="14" fill="#fffaf0" />
+    <rect x="120" y="60" width="160" height="40" rx="14" fill={CORAL} />
+    {[0, 1, 2, 3].map((k) => <rect key={k} x="145" y={122 + k * 30} width={[110, 80, 96, 60][k]} height="12" rx="6" fill="#e9dfcb" />)}
+    <circle cx="282" cy="236" r="34" fill={FOREST} />
+    <path d="M265 236 l12 12 l22 -24" fill="none" stroke={CREAM} strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
 );
 
-const H2 = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <h2 className={cn("font-display text-[2rem] leading-[1.05] tracking-[-0.045em] sm:text-[2.6rem] lg:text-[3rem]", className)}>{children}</h2>
-);
-
-const USES: { w: Bi; d: Bi }[] = [
-  { w: { fr: "Payer", en: "Pay" }, d: { fr: "Réglez vos fournisseurs à l'étranger en USDT, achetés en dollars canadiens.", en: "Pay suppliers abroad in USDT, bought with Canadian dollars." } },
-  { w: { fr: "Encaisser", en: "Get paid" }, d: { fr: "Vos clients vous paient en USDT ? Vendez-les et recevez des dollars par Interac.", en: "Clients pay you in USDT? Sell it and receive dollars by Interac." } },
-  { w: { fr: "Gérer", en: "Manage" }, d: { fr: "Tout se fait au nom de la société, avec un historique clair de chaque opération.", en: "Everything is in the company's name, with a clear history of every trade." } },
-];
-
-const STEPS: { t: Bi; d: Bi }[] = [
-  { t: { fr: "Ouvrez le compte", en: "Open the account" }, d: { fr: "Raison sociale, numéro d'entreprise et personne responsable.", en: "Business name, business number and contact person." } },
-  { t: { fr: "Vérifiez l'entreprise", en: "Verify the business" }, d: { fr: "Depuis votre espace, en environ 5 minutes : informations, personnes, documents.", en: "From your dashboard, in about 5 minutes: details, people, documents." } },
-  { t: { fr: "Examen du dossier", en: "File review" }, d: { fr: "Notre équipe conformité vous répond, généralement sous 1 jour ouvrable.", en: "Our compliance team replies, usually within 1 business day." } },
-  { t: { fr: "Achetez et vendez", en: "Buy and sell" }, d: { fr: "Payez par Interac, recevez vos USDT sur le réseau de votre choix.", en: "Pay by Interac, receive your USDT on the network of your choice." } },
-];
-
-const ASK: { icon: React.ElementType; t: Bi; items: Bi[] }[] = [
+const USES: { w: Bi; t: Bi; d: Bi; art: () => JSX.Element; bg: string }[] = [
   {
-    icon: Building2, t: { fr: "L'entreprise", en: "The business" },
-    items: [
-      { fr: "Raison sociale et lieu d'immatriculation", en: "Legal name and place of registration" },
-      { fr: "Numéro d'entreprise (NEQ ou BN)", en: "Business number (NEQ or BN)" },
-      { fr: "Adresse du siège", en: "Head office address" },
-      { fr: "Activité principale", en: "Main activity" },
-    ],
+    w: { fr: "Payer", en: "Pay" }, art: ArtPay, bg: MINT,
+    t: { fr: "Réglez vos fournisseurs à l'étranger.", en: "Pay suppliers abroad." },
+    d: { fr: "Achetez des USDT en dollars canadiens et envoyez-les sur le réseau de votre fournisseur.", en: "Buy USDT with Canadian dollars and send it on your supplier's network." },
   },
   {
-    icon: Users, t: { fr: "Les personnes", en: "The people" },
-    items: [
-      { fr: "Chaque administrateur", en: "Every director" },
-      { fr: "Chaque propriétaire de 25 % ou plus", en: "Every owner of 25% or more" },
-      { fr: "Nom, date de naissance, pays de résidence", en: "Name, date of birth, country of residence" },
-    ],
+    w: { fr: "Encaisser", en: "Get paid" }, art: ArtGetPaid, bg: SUN,
+    t: { fr: "Vos clients vous paient en USDT ?", en: "Clients pay you in USDT?" },
+    d: { fr: "Vendez-les et recevez des dollars canadiens par Interac, au nom de la société.", en: "Sell it and receive Canadian dollars by Interac, in the company's name." },
   },
   {
-    icon: FileText, t: { fr: "Les documents", en: "The documents" },
-    items: [
-      { fr: "Certificat ou statuts de constitution", en: "Certificate or articles of incorporation" },
-      { fr: "Registre des administrateurs (REQ ou Corporations Canada)", en: "Register of directors (REQ or Corporations Canada)" },
-      { fr: "Preuve d'adresse de moins de 3 mois", en: "Proof of address under 3 months old" },
-    ],
+    w: { fr: "Gérer", en: "Manage" }, art: ArtManage, bg: "#ffd2c4",
+    t: { fr: "Une trace claire de chaque opération.", en: "A clear record of every trade." },
+    d: { fr: "Tout est au nom de l'entreprise, avec l'historique de vos achats et de vos ventes.", en: "Everything is in the company's name, with the history of your purchases and sales." },
   },
 ];
 
-const FAQ: { q: Bi; a: Bi }[] = [
-  {
-    q: { fr: "Pourquoi vérifier l'entreprise ?", en: "Why verify the business?" },
-    a: {
-      fr: "La loi canadienne nous demande de connaître l'entreprise et les personnes qui la dirigent ou la détiennent avant le premier échange. C'est obligatoire, une seule fois.",
-      en: "Canadian law requires us to know the business and the people who run or own it before the first trade. It's mandatory, and done once.",
-    },
-  },
-  {
-    q: { fr: "Combien de temps faut-il ?", en: "How long does it take?" },
-    a: {
-      fr: "Environ 5 minutes pour remplir le dossier depuis votre espace. Notre équipe l'examine ensuite, généralement sous 1 jour ouvrable, et vous répond par courriel.",
-      en: "About 5 minutes to fill in the file from your dashboard. Our team then reviews it, usually within 1 business day, and replies by email.",
-    },
-  },
-  {
-    q: { fr: "Y a-t-il des limites ?", en: "Are there limits?" },
-    a: {
-      fr: `Dans l'application, achats et ventes sont limités à ${TRADE_DAILY_MAX_CAD.toLocaleString("fr-CA")} $ chacun sur 24 heures. Au-delà, le desk OTC traite l'opération en une fois, avec un prix ferme.`,
-      en: `In the app, purchases and sales are limited to $${TRADE_DAILY_MAX_CAD.toLocaleString("en-CA")} each over 24 hours. Above that, the OTC desk handles the trade in one go, at a firm price.`,
-    },
-  },
-  {
-    q: { fr: "Mes documents sont-ils protégés ?", en: "Are my documents protected?" },
-    a: {
-      fr: "Oui. Ils sont chiffrés et seule notre équipe conformité y a accès.",
-      en: "Yes. They're encrypted and only our compliance team can access them.",
-    },
-  },
+const STEPS: { t: Bi; d: Bi; c: string }[] = [
+  { t: { fr: "Ouvrez le compte", en: "Open the account" }, d: { fr: "Raison sociale, numéro d'entreprise (NEQ ou BN) et personne responsable. Quelques minutes.", en: "Business name, business number (NEQ or BN) and contact person. A few minutes." }, c: CORAL },
+  { t: { fr: "Vérifiez l'entreprise", en: "Verify the business" }, d: { fr: "Depuis votre espace, en environ 5 minutes : informations, administrateurs et propriétaires, documents.", en: "From your dashboard, in about 5 minutes: details, directors and owners, documents." }, c: SUN },
+  { t: { fr: "On examine le dossier", en: "We review the file" }, d: { fr: "Notre équipe conformité vous répond par courriel, généralement sous 1 jour ouvrable.", en: "Our compliance team replies by email, usually within 1 business day." }, c: MINT },
+  { t: { fr: "Achetez et vendez", en: "Buy and sell" }, d: { fr: "Payez par Interac, recevez vos USDT sur l'un des 6 réseaux. Ou l'inverse.", en: "Pay by Interac, receive your USDT on one of 6 networks. Or the other way round." }, c: FOREST },
 ];
+
+const READY: { g: Bi; items: Bi[] }[] = [
+  { g: { fr: "L'entreprise", en: "The business" }, items: [
+    { fr: "Raison sociale", en: "Legal name" }, { fr: "NEQ ou BN", en: "NEQ or BN" }, { fr: "Adresse du siège", en: "Head office address" }, { fr: "Activité principale", en: "Main activity" },
+  ] },
+  { g: { fr: "Les personnes", en: "The people" }, items: [
+    { fr: "Administrateurs", en: "Directors" }, { fr: "Propriétaires de 25 % ou plus", en: "Owners of 25% or more" },
+  ] },
+  { g: { fr: "Les documents", en: "The documents" }, items: [
+    { fr: "Statuts de constitution", en: "Articles of incorporation" }, { fr: "Registre des administrateurs", en: "Register of directors" }, { fr: "Preuve d'adresse (< 3 mois)", en: "Proof of address (< 3 months)" },
+  ] },
+];
+
+const TRADES: Bi[] = [
+  { fr: "Import-export", en: "Import-export" }, { fr: "Commerce en ligne", en: "E-commerce" }, { fr: "Agences", en: "Agencies" },
+  { fr: "Logistique", en: "Logistics" }, { fr: "Studios", en: "Studios" }, { fr: "Grossistes", en: "Wholesalers" },
+  { fr: "Consultants", en: "Consultants" }, { fr: "Développeurs", en: "Developers" }, { fr: "Événementiel", en: "Events" },
+];
+
+const nf = (n: number, lang: string) => (lang === "en" ? n.toLocaleString("en-CA") : n.toLocaleString("fr-CA").replace(/ | /g, " "));
 
 const Entreprises = () => {
   const [lang] = useLang();
   const L = (b: Bi) => b[lang];
-  const [faqOpen, setFaqOpen] = useState<number | null>(0);
 
-  const Open = ({ className }: { className?: string }) => (
-    <Button asChild variant="appSolid" shape="rounded" size="lg" className={cn("px-7", className)}>
+  /* Sélecteur d'usages : tourne seul jusqu'au premier clic. */
+  const [use, setUse] = useState(0);
+  const [pinned, setPinned] = useState(false);
+  useEffect(() => {
+    if (pinned) return;
+    const id = window.setInterval(() => setUse((u) => (u + 1) % USES.length), 5000);
+    return () => window.clearInterval(id);
+  }, [pinned]);
+
+  /* Étapes : le numéro suit l'étape visible. */
+  const [step, setStep] = useState(0);
+  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (es) => es.forEach((e) => { if (e.isIntersecting) setStep(Number((e.target as HTMLElement).dataset.i)); }),
+      { rootMargin: "-45% 0px -45% 0px" },
+    );
+    stepRefs.current.forEach((el) => el && io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
+  /* « Votre dossier est-il prêt ? » — gardé dans ce navigateur. */
+  const all = useMemo(() => READY.flatMap((g) => g.items.map((i) => i.fr)), []);
+  const [done, setDone] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("ooble.biz.ready") ?? "[]"); } catch { return []; }
+  });
+  const toggle = (k: string) => setDone((d) => {
+    const n = d.includes(k) ? d.filter((x) => x !== k) : [...d, k];
+    try { localStorage.setItem("ooble.biz.ready", JSON.stringify(n)); } catch { /* navigation privée */ }
+    return n;
+  });
+  const pct = Math.round((done.filter((k) => all.includes(k)).length / all.length) * 100);
+
+  /* Simulateur : app jusqu'à 9 999 $, desk OTC au-delà. */
+  const STOPS = [1000, 2500, 5000, 9999, 15000, 25000, 50000, 100000, 250000, 500000];
+  const [stop, setStop] = useState(3);
+  const amount = STOPS[stop];
+  const inApp = amount <= TRADE_DAILY_MAX_CAD;
+
+  const Open = ({ className, light }: { className?: string; light?: boolean }) => (
+    <Button asChild shape="rounded" size="lg" className={cn("px-7 font-semibold", light ? "bg-[#f6f1e7] text-[#0f5c45] hover:bg-white" : "bg-[#0f5c45] text-white hover:bg-[#0c4c39]", className)}>
       <Link to="/inscription/entreprise">
         <Building2 className="h-4 w-4" strokeWidth={1.8} />
         {L({ fr: "Ouvrir un compte entreprise", en: "Open a business account" })}
@@ -118,213 +161,265 @@ const Entreprises = () => {
     </Button>
   );
 
+  const U = USES[use];
+
   return (
-    <div className="ink-neutral app-type min-h-screen bg-background tracking-[-0.015em]">
+    <div className="app-type min-h-screen bg-background tracking-[-0.015em]">
       <Header />
 
       <main>
-        {/* ===================== EN-TÊTE : texte + vidéo ===================== */}
-        <section>
-          <Wrap className="grid items-center gap-12 pb-8 pt-14 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14 lg:pt-20">
-            <div>
-              <p className="animate-up text-[12px] uppercase tracking-[0.16em] text-muted-foreground">
-                {L({ fr: "Ooble pour les entreprises", en: "Ooble for business" })}
-              </p>
-              <h1 className="animate-up mt-6 font-display text-[2.6rem] leading-[1] tracking-[-0.05em] [animation-delay:80ms] sm:text-[3.3rem] lg:text-[3.5rem]">
-                {L({ fr: "Vos USDT,", en: "Your USDT," })}
-                <br />
-                <span className="text-foreground/35">{L({ fr: "au nom de votre entreprise.", en: "in your company's name." })}</span>
-              </h1>
-              <p className="animate-up mt-6 max-w-[470px] text-[15px] leading-[1.7] text-muted-foreground [animation-delay:160ms] sm:text-[16px]">
-                {L({
-                  fr: "Un compte entreprise pour acheter et vendre des USDT en dollars canadiens, payer vos fournisseurs et encaisser vos clients, avec une vérification faite une seule fois.",
-                  en: "A business account to buy and sell USDT with Canadian dollars, pay suppliers and get paid by clients, with a verification done once.",
-                })}
-              </p>
-              <div className="animate-up mt-8 flex flex-wrap items-center gap-x-7 gap-y-4 [animation-delay:240ms]">
-                <Open />
-                <a href="#ouvrir" className="inline-flex items-center gap-1.5 text-[15px] font-medium underline-offset-4 hover:underline">
-                  {L({ fr: "Comment ça marche", en: "How it works" })} <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
-                </a>
-              </div>
-              <ul className="animate-up mt-9 flex flex-wrap gap-x-6 gap-y-2 text-[13.5px] text-muted-foreground [animation-delay:320ms]">
-                {[
-                  { fr: "Vérification en 5 minutes", en: "Verification in 5 minutes" },
-                  { fr: "Paiement par Interac", en: "Interac payments" },
-                  { fr: "6 réseaux", en: "6 networks" },
-                ].map((x) => (
-                  <li key={x.fr} className="flex items-center gap-2">
-                    <Check className="h-3.5 w-3.5 text-foreground/70" strokeWidth={2.4} />
-                    {L(x)}
-                  </li>
-                ))}
-              </ul>
-            </div>
+        {/* ===================== EN-TÊTE VERT ===================== */}
+        <section data-dark className="relative overflow-hidden pb-48 text-[#f6f1e7] sm:pb-64 lg:pb-80" style={{ background: FOREST }}>
+          {/* formes qui flottent, comme dans la vidéo */}
+          <span aria-hidden className="ooble-float absolute left-[6%] top-[18%] h-10 w-10 rounded-full" style={{ background: CORAL }} />
+          <span aria-hidden className="ooble-float absolute right-[9%] top-[14%] h-0 w-0 border-x-[22px] border-b-[38px] border-x-transparent [animation-delay:-2s]" style={{ borderBottomColor: SUN }} />
+          <span aria-hidden className="ooble-float absolute right-[16%] top-[52%] h-9 w-9 rotate-12 rounded-lg [animation-delay:-4s]" style={{ background: MINT }} />
+          <span aria-hidden className="ooble-float absolute left-[12%] top-[60%] h-6 w-6 rounded-full [animation-delay:-1s]" style={{ background: SUN }} />
 
-            <OtcVideo
-              name="biz"
-              label={{ fr: "Ooble pour les entreprises en vidéo", en: "Ooble for business, the video" }}
-              className="animate-up [animation-delay:200ms]"
-            />
+          <Wrap className="relative pt-20 text-center lg:pt-24">
+            <p className="animate-up text-[13px] font-semibold uppercase tracking-[0.18em]" style={{ color: SUN }}>
+              {L({ fr: "Ooble pour les entreprises", en: "Ooble for business" })}
+            </p>
+            <h1 className="animate-up mx-auto mt-6 max-w-[1050px] font-display text-[2.9rem] font-semibold leading-[0.98] tracking-[-0.05em] [animation-delay:80ms] sm:text-[4.4rem] lg:text-[5.6rem]">
+              {L({ fr: "Vos USDT, au nom de votre ", en: "Your USDT, in your " })}
+              <span style={{ color: SUN }}>{L({ fr: "entreprise.", en: "company's name." })}</span>
+            </h1>
+            <p className="animate-up mx-auto mt-7 max-w-[560px] text-[16px] leading-[1.7] text-[#f6f1e7]/75 [animation-delay:160ms]">
+              {L({
+                fr: "Achetez et vendez des USDT en dollars canadiens, payez vos fournisseurs et encaissez vos clients. La vérification se fait une seule fois.",
+                en: "Buy and sell USDT with Canadian dollars, pay suppliers and get paid by clients. Verification is done once.",
+              })}
+            </p>
+            <div className="animate-up mt-9 flex flex-wrap items-center justify-center gap-x-7 gap-y-4 [animation-delay:240ms]">
+              <Open light />
+              <a href="#simulateur" className="inline-flex items-center gap-1.5 text-[15px] font-medium text-[#f6f1e7] underline-offset-4 hover:underline">
+                {L({ fr: "Quel montant ?", en: "How much?" })} <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
+              </a>
+            </div>
           </Wrap>
         </section>
 
-        {/* ===================== USAGES ===================== */}
+        {/* La vidéo déborde de l'en-tête */}
+        <Wrap className="relative -mt-40 sm:-mt-56 lg:-mt-72">
+          <OtcVideo
+            name="biz"
+            label={{ fr: "Ooble pour les entreprises en vidéo", en: "Ooble for business, the video" }}
+            className="animate-up mx-auto max-w-[980px] [animation-delay:300ms]"
+          />
+        </Wrap>
+
+        {/* ===================== SÉLECTEUR D'USAGES ===================== */}
         <section>
           <Wrap className="pt-28 lg:pt-36">
-            <Reveal>
-              <Kicker>{L({ fr: "Pour quoi faire", en: "What for" })}</Kicker>
-              <H2 className="mt-4 max-w-[760px]">
-                {L({ fr: "Ce que votre entreprise", en: "What your business" })}{" "}
-                <span className="text-foreground/35">{L({ fr: "fait avec Ooble.", en: "does with Ooble." })}</span>
-              </H2>
-            </Reveal>
-            <div className="mt-14 grid gap-12 md:grid-cols-3 md:gap-10">
-              {USES.map((u, i) => (
-                <Reveal key={u.w.fr} delay={i * 100}>
-                  <p className="font-display text-[3rem] leading-none tracking-[-0.055em] sm:text-[3.6rem]">
-                    {L(u.w)}<span className="text-[#26a17b]">.</span>
-                  </p>
-                  <p className="mt-5 max-w-[320px] text-[15px] leading-[1.7] text-muted-foreground">{L(u.d)}</p>
-                </Reveal>
-              ))}
-            </div>
-          </Wrap>
-        </section>
-
-        {/* ===================== OUVRIR (bande noire) ===================== */}
-        <section id="ouvrir" data-dark className="mt-28 scroll-mt-24 bg-foreground text-background lg:mt-36">
-          <Wrap className="py-20 lg:py-24">
-            <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+            <div className="grid items-center gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
               <div>
-                <p className="text-[12px] uppercase tracking-[0.16em] text-background/55">{L({ fr: "Ouvrir un compte entreprise", en: "Open a business account" })}</p>
-                <h2 className="mt-4 font-display text-[2rem] leading-[1.05] tracking-[-0.045em] sm:text-[2.6rem] lg:text-[3rem]">
-                  {L({ fr: "Quatre étapes,", en: "Four steps," })} <span className="text-background/45">{L({ fr: "une seule fois.", en: "done once." })}</span>
-                </h2>
-              </div>
-              <p className="max-w-[300px] text-[15px] leading-[1.6] text-background/60">
-                {L({ fr: "Une fois l'entreprise vérifiée, vous achetez et vendez quand vous voulez.", en: "Once the business is verified, you buy and sell whenever you want." })}
-              </p>
-            </Reveal>
-
-            <ol className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4">
-              {STEPS.map((s, i) => (
-                <Reveal
-                  key={s.t.fr}
-                  delay={i * 90}
-                  className="border-t border-background/15 py-7 sm:pr-8 lg:border-l lg:border-t-0 lg:px-6 lg:py-2 lg:first:border-l-0 lg:first:pl-0"
-                >
-                  <p className="font-display text-[3.4rem] leading-none tracking-[-0.06em] text-background/25">{i + 1}</p>
-                  <h3 className="mt-5 text-[16px] font-semibold tracking-[-0.015em]">{L(s.t)}</h3>
-                  <p className="mt-2 text-[14px] leading-[1.6] text-background/60">{L(s.d)}</p>
-                </Reveal>
-              ))}
-            </ol>
-          </Wrap>
-        </section>
-
-        {/* ===================== CE QU'ON VOUS DEMANDE ===================== */}
-        <section>
-          <Wrap className="pt-24 lg:pt-28">
-            <Reveal className="max-w-[640px]">
-              <Kicker>{L({ fr: "Ce qu'on vous demande", en: "What we ask for" })}</Kicker>
-              <H2 className="mt-4">{L({ fr: "Un dossier simple, préparé d'avance.", en: "A simple file, ready in advance." })}</H2>
-            </Reveal>
-            <div className="mt-14 grid gap-12 md:grid-cols-3 md:gap-10">
-              {ASK.map(({ icon: Icon, t, items }, i) => (
-                <Reveal key={t.fr} delay={i * 90}>
-                  <div className="flex items-center gap-3">
-                    <Icon className="h-6 w-6 text-foreground/70" strokeWidth={1.5} />
-                    <p className="font-display text-[1.25rem] tracking-[-0.025em]">{L(t)}</p>
-                  </div>
-                  <ul className="mt-5 space-y-3">
-                    {items.map((it) => (
-                      <li key={it.fr} className="flex gap-3 text-[14.5px] leading-[1.55] text-muted-foreground">
-                        <Check className="mt-1 h-3.5 w-3.5 shrink-0 text-[#26a17b]" strokeWidth={2.6} />
-                        {L(it)}
-                      </li>
-                    ))}
-                  </ul>
-                </Reveal>
-              ))}
-            </div>
-            <Reveal delay={200}>
-              <p className="mt-12 text-[13.5px] text-muted-foreground">
-                {L({ fr: "Vos documents sont chiffrés et seule notre équipe conformité y a accès.", en: "Your documents are encrypted and only our compliance team can access them." })}
-              </p>
-            </Reveal>
-          </Wrap>
-        </section>
-
-        {/* ===================== MONTANTS ===================== */}
-        <section>
-          <Wrap className="pt-24 lg:pt-32">
-            <div className="grid gap-10 lg:grid-cols-2 lg:items-end lg:gap-16">
-              <Reveal>
-                <p className="text-[15px] text-muted-foreground">{L({ fr: "Dans l'application, jusqu'à", en: "In the app, up to" })}</p>
-                <p className="mt-2 font-display text-[4.2rem] leading-[0.9] tracking-[-0.06em] sm:text-[6rem] lg:text-[7.2rem]">
-                  {L({ fr: "9 999 $", en: "$9,999" })}
+                <p className="text-[13px] font-semibold uppercase tracking-[0.18em]" style={{ color: CORAL }}>
+                  {L({ fr: "Votre entreprise veut…", en: "Your business wants to…" })}
                 </p>
-                <p className="mt-3 text-[15px] text-muted-foreground">{L({ fr: "à l'achat et à la vente, chacun sur 24 heures.", en: "to buy and to sell, each over 24 hours." })}</p>
-              </Reveal>
-              <Reveal delay={120} className="lg:pb-3">
-                <p className="font-display text-[1.6rem] leading-[1.2] tracking-[-0.03em]">
-                  {L({ fr: "Au-delà ? Le desk OTC vous donne un prix ferme pour le montant entier.", en: "Above that? The OTC desk gives you a firm price for the full amount." })}
-                </p>
-                <Link to="/otc" className="mt-5 inline-flex items-center gap-2 text-[15px] font-medium underline-offset-4 hover:underline">
-                  <Handshake className="h-4 w-4" strokeWidth={1.8} /> {L({ fr: "Découvrir le desk OTC", en: "Discover the OTC desk" })} <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
-                </Link>
-                <div className="mt-8 flex flex-wrap gap-x-5 gap-y-3">
-                  {NETWORKS.map((n) => (
-                    <span key={n.id} className="flex items-center gap-2 text-[14px] text-muted-foreground">
-                      <img src={`/coins/${n.id}.svg`} alt="" className="h-6 w-6 rounded-full" />
-                      {n.name}
-                    </span>
+                <div className="mt-6 flex flex-col items-start" role="tablist">
+                  {USES.map((u, i) => (
+                    <button
+                      key={u.w.fr}
+                      role="tab"
+                      aria-selected={use === i}
+                      onClick={() => { setUse(i); setPinned(true); }}
+                      className={cn(
+                        "font-display text-[3.4rem] font-semibold leading-[1.02] tracking-[-0.055em] transition-colors sm:text-[4.6rem]",
+                        use === i ? "text-foreground" : "text-foreground/15 hover:text-foreground/40",
+                      )}
+                    >
+                      {L(u.w)}
+                      <span style={{ color: use === i ? CORAL : "transparent" }}>.</span>
+                    </button>
                   ))}
                 </div>
-              </Reveal>
+                <div key={use} className="animate-up mt-8 max-w-[440px]">
+                  <p className="font-display text-[1.4rem] tracking-[-0.03em]">{L(U.t)}</p>
+                  <p className="mt-2 text-[15px] leading-[1.7] text-muted-foreground">{L(U.d)}</p>
+                </div>
+              </div>
+              <div
+                className="relative mx-auto aspect-[4/3] w-full max-w-[560px] transition-colors duration-500"
+                style={{ background: U.bg, borderRadius: "46% 54% 42% 58% / 55% 44% 56% 45%" }}
+              >
+                <div key={use} className="animate-up absolute inset-[12%]">{U.art()}</div>
+              </div>
             </div>
           </Wrap>
         </section>
 
-        {/* ===================== QUESTIONS ===================== */}
+        {/* ===================== ÉTAPES AU DÉFILEMENT ===================== */}
         <section>
-          <Wrap className="pt-24 lg:pt-28">
-            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
-              <Reveal>
-                <Kicker>{L({ fr: "Questions", en: "Questions" })}</Kicker>
-                <H2 className="mt-4">{L({ fr: "Ce que les entreprises nous demandent.", en: "What businesses ask us." })}</H2>
-              </Reveal>
+          <Wrap className="pt-28 lg:pt-36">
+            <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
+              <div className="lg:sticky lg:top-24 lg:h-[70vh] lg:self-start">
+                <p className="text-[13px] font-semibold uppercase tracking-[0.18em] text-[#0f5c45] dark:text-[#bfe8d6]">
+                  {L({ fr: "Ouvrir un compte entreprise", en: "Open a business account" })}
+                </p>
+                <div className="relative mt-4 hidden h-[320px] lg:block">
+                  {STEPS.map((s, i) => (
+                    <p
+                      key={i}
+                      aria-hidden
+                      className="absolute left-0 top-0 font-display text-[19rem] font-semibold leading-[0.85] tracking-[-0.08em] transition-all duration-500"
+                      style={{ color: s.c, opacity: step === i ? 1 : 0, transform: `translateY(${step === i ? 0 : step > i ? -40 : 40}px)` }}
+                    >
+                      {i + 1}
+                    </p>
+                  ))}
+                </div>
+                <p className="mt-4 font-display text-[2.2rem] leading-[1.05] tracking-[-0.045em] lg:hidden">
+                  {L({ fr: "Quatre étapes, une seule fois.", en: "Four steps, done once." })}
+                </p>
+              </div>
               <div>
-                {FAQ.map((item, i) => {
-                  const open = faqOpen === i;
-                  return (
-                    <Reveal key={item.q.fr} delay={i * 60} className="border-b first:border-t">
-                      <button
-                        onClick={() => setFaqOpen(open ? null : i)}
-                        aria-expanded={open}
-                        className="flex w-full items-center justify-between gap-6 py-6 text-left"
-                      >
-                        <span className="font-display text-[17px] tracking-[-0.02em] sm:text-[19px]">{L(item.q)}</span>
-                        <span className={cn("shrink-0 text-[22px] leading-none text-foreground/35 transition-transform", open && "rotate-45")} aria-hidden>+</span>
-                      </button>
-                      {open && <p className="mb-7 max-w-[600px] text-[15px] leading-[1.7] text-muted-foreground">{L(item.a)}</p>}
-                    </Reveal>
-                  );
-                })}
+                {STEPS.map((s, i) => (
+                  <div
+                    key={s.t.fr}
+                    ref={(el) => (stepRefs.current[i] = el)}
+                    data-i={i}
+                    className="flex min-h-0 flex-col justify-center py-8 lg:min-h-[44vh] lg:py-0"
+                  >
+                    <span className="font-display text-[3rem] font-semibold leading-none tracking-[-0.06em] lg:hidden" style={{ color: s.c }}>{i + 1}</span>
+                    <h3 className={cn("mt-3 font-display text-[2rem] leading-[1.05] tracking-[-0.045em] transition-opacity duration-500 sm:text-[2.6rem]", step === i ? "lg:opacity-100" : "lg:opacity-25")}>
+                      {L(s.t)}
+                    </h3>
+                    <p className={cn("mt-4 max-w-[440px] text-[16px] leading-[1.7] text-muted-foreground transition-opacity duration-500", step === i ? "lg:opacity-100" : "lg:opacity-25")}>
+                      {L(s.d)}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </Wrap>
+        </section>
+
+        {/* ===================== VOTRE DOSSIER EST-IL PRÊT ? ===================== */}
+        <section data-dark className="mt-24 text-[#f6f1e7] lg:mt-32" style={{ background: FOREST }}>
+          <Wrap className="py-20 lg:py-24">
+            <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+              <div>
+                <p className="text-[13px] font-semibold uppercase tracking-[0.18em]" style={{ color: SUN }}>
+                  {L({ fr: "Avant de commencer", en: "Before you start" })}
+                </p>
+                <h2 className="mt-4 font-display text-[2.4rem] font-semibold leading-[1.02] tracking-[-0.05em] sm:text-[3.2rem]">
+                  {L({ fr: "Votre dossier est-il prêt ?", en: "Is your file ready?" })}
+                </h2>
+                <p className="mt-5 max-w-[380px] text-[15px] leading-[1.7] text-[#f6f1e7]/70">
+                  {L({ fr: "Cochez ce que vous avez sous la main. Quand tout est prêt, la vérification prend environ 5 minutes.", en: "Tick what you have at hand. When everything is ready, verification takes about 5 minutes." })}
+                </p>
+                <p className="mt-10 font-display text-[6rem] font-semibold leading-none tracking-[-0.07em] tabular-nums" style={{ color: pct === 100 ? SUN : CREAM }}>
+                  {pct}<span className="text-[3rem]">%</span>
+                </p>
+                <div className="mt-4 h-2 max-w-[360px] overflow-hidden rounded-full bg-[#f6f1e7]/15">
+                  <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${pct}%`, background: SUN }} />
+                </div>
+                <p className="mt-4 text-[14px] text-[#f6f1e7]/70">
+                  {pct === 100
+                    ? L({ fr: "Tout est prêt. Vous pouvez ouvrir le compte.", en: "Everything's ready. You can open the account." })
+                    : L({ fr: "Vos documents sont chiffrés et seule notre équipe conformité y a accès.", en: "Your documents are encrypted and only our compliance team can access them." })}
+                </p>
+                {pct === 100 && <Open light className="mt-6" />}
+              </div>
+              <div className="flex flex-col gap-9">
+                {READY.map((g) => (
+                  <div key={g.g.fr}>
+                    <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#f6f1e7]/55">{L(g.g)}</p>
+                    <div className="mt-4 flex flex-wrap gap-2.5">
+                      {g.items.map((it) => {
+                        const on = done.includes(it.fr);
+                        return (
+                          <button
+                            key={it.fr}
+                            type="button"
+                            onClick={() => toggle(it.fr)}
+                            aria-pressed={on}
+                            className={cn(
+                              "inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[15px] font-medium transition-all active:scale-[0.97]",
+                              on ? "text-[#0f5c45]" : "bg-[#f6f1e7]/10 text-[#f6f1e7] hover:bg-[#f6f1e7]/20",
+                            )}
+                            style={on ? { background: SUN } : undefined}
+                          >
+                            <span className={cn("flex h-5 w-5 items-center justify-center rounded-full transition-colors", on ? "bg-[#0f5c45]" : "bg-[#f6f1e7]/20")}>
+                              {on && <Check className="h-3 w-3 text-[#ffc94d]" strokeWidth={3.2} />}
+                            </span>
+                            {L(it)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Wrap>
+        </section>
+
+        {/* ===================== SIMULATEUR DE MONTANT ===================== */}
+        <section id="simulateur" className="scroll-mt-20">
+          <Wrap className="pt-24 lg:pt-32">
+            <div className="text-center">
+              <p className="text-[13px] font-semibold uppercase tracking-[0.18em]" style={{ color: CORAL }}>
+                {L({ fr: "Quel montant ?", en: "How much?" })}
+              </p>
+              <h2 className="mx-auto mt-4 max-w-[760px] font-display text-[2.2rem] leading-[1.05] tracking-[-0.045em] sm:text-[3rem]">
+                {L({ fr: "Combien votre entreprise veut-elle échanger ?", en: "How much does your business want to trade?" })}
+              </h2>
+              <p className="mt-10 font-display text-[4rem] font-semibold leading-none tracking-[-0.065em] tabular-nums sm:text-[6.5rem]">
+                {lang === "en" ? `$${nf(amount, lang)}` : `${nf(amount, lang)} $`}
+              </p>
+              <input
+                type="range"
+                min={0}
+                max={STOPS.length - 1}
+                step={1}
+                value={stop}
+                onChange={(e) => setStop(Number(e.target.value))}
+                aria-label={L({ fr: "Montant à échanger", en: "Amount to trade" })}
+                className="mx-auto mt-8 block w-full max-w-[640px] cursor-pointer accent-[#0f5c45]"
+              />
+              <div key={inApp ? "app" : "otc"} className="animate-up mx-auto mt-10 max-w-[620px]">
+                <p className="font-display text-[1.8rem] leading-[1.15] tracking-[-0.035em]">
+                  {inApp
+                    ? L({ fr: "Directement dans l'app.", en: "Right in the app." })
+                    : L({ fr: "Passez par le desk OTC.", en: "Go through the OTC desk." })}
+                </p>
+                <p className="mt-3 text-[15px] leading-[1.7] text-muted-foreground">
+                  {inApp
+                    ? L({ fr: `Achats et ventes jusqu'à ${nf(TRADE_DAILY_MAX_CAD, "fr")} $ chacun sur 24 heures, par Interac.`, en: `Purchases and sales up to $${nf(TRADE_DAILY_MAX_CAD, "en")} each over 24 hours, by Interac.` })
+                    : L({ fr: "Un prix ferme pour le montant entier, avec un seul interlocuteur.", en: "A firm price for the full amount, with one contact." })}
+                </p>
+                {inApp ? (
+                  <Open className="mt-7" />
+                ) : (
+                  <Button asChild shape="rounded" size="lg" className="mt-7 px-7 font-semibold text-[#14110f] hover:opacity-90" style={{ background: SUN }}>
+                    <Link to="/otc"><Handshake className="h-4 w-4" strokeWidth={1.8} />{L({ fr: "Découvrir le desk OTC", en: "Discover the OTC desk" })}</Link>
+                  </Button>
+                )}
+              </div>
+            </div>
+          </Wrap>
+        </section>
+
+        {/* ===================== BANDEAU DES MÉTIERS ===================== */}
+        <section className="mt-28 overflow-hidden py-6 lg:mt-36" style={{ background: SUN }}>
+          <div className="animate-marquee flex w-max gap-10 whitespace-nowrap">
+            {[...TRADES, ...TRADES].map((x, i) => (
+              <span key={i} className="flex items-center gap-10 font-display text-[2rem] font-semibold tracking-[-0.04em] text-[#14110f] sm:text-[2.6rem]">
+                {L(x)}
+                <span className="h-3 w-3 rounded-full" style={{ background: i % 2 ? FOREST : CORAL }} />
+              </span>
+            ))}
+          </div>
         </section>
 
         {/* ===================== APPEL FINAL ===================== */}
         <section>
-          <Wrap className="pb-10 pt-28 text-center lg:pt-36">
+          <Wrap className="pb-10 pt-24 text-center lg:pt-32">
             <Reveal>
-              <h2 className="mx-auto max-w-[860px] text-balance font-display text-[2.6rem] leading-[0.98] tracking-[-0.05em] sm:text-[3.8rem] lg:text-[4.8rem]">
-                {L({ fr: "Ouvrez le compte", en: "Open the account" })}
-                <br />
-                <span className="text-foreground/35">{L({ fr: "dès aujourd'hui.", en: "today." })}</span>
+              <h2 className="mx-auto max-w-[900px] font-display text-[2.8rem] font-semibold leading-[0.98] tracking-[-0.055em] sm:text-[4.2rem] lg:text-[5.2rem]">
+                {L({ fr: "Faites entrer votre entreprise ", en: "Bring your business " })}
+                <span className="text-[#0f5c45] dark:text-[#bfe8d6]">{L({ fr: "dans l'USDT.", en: "into USDT." })}</span>
               </h2>
             </Reveal>
             <Reveal delay={140} className="mt-10 flex flex-wrap justify-center gap-3">

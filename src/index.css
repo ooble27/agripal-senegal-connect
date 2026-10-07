@@ -562,8 +562,15 @@
     animation: ooble-dep-lift 2.8s linear infinite;
   }
 
+  /* Formes qui flottent (page Entreprises). */
+  @keyframes ooble-float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-14px) rotate(8deg); }
+  }
+  .ooble-float { animation: ooble-float 6s ease-in-out infinite; }
+
   @media (prefers-reduced-motion: reduce) {
-    .animate-up, .animate-marquee, .animate-page { animation: none; }
+    .animate-up, .animate-marquee, .animate-page, .ooble-float { animation: none; }
     .ooble-buy-cursor,
     .ooble-dep-cursor, .ooble-dep-press, .ooble-dep-btn, .ooble-dep-lift {
       animation: none;

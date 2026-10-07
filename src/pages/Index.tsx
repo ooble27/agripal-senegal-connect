@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import type { TKey } from "@/lib/translations";
-import { useOtcVisible } from "@/lib/otc";
 
 const Wrap = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <div className={`mx-auto max-w-[1200px] px-6 sm:px-10 ${className}`}>{children}</div>
@@ -52,7 +51,6 @@ const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const t = useT();
-  const otc = useOtcVisible();
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
 
   useEffect(() => {
@@ -348,7 +346,6 @@ const Index = () => {
         </section>
 
         {/* ===================== DESK OTC ===================== */}
-        {otc && (
         <section>
           <Wrap className="pt-24 lg:pt-28">
             <Reveal className="grid gap-8 border-b pb-8 lg:grid-cols-2 lg:items-end lg:gap-20">
@@ -377,7 +374,6 @@ const Index = () => {
             </Reveal>
           </Wrap>
         </section>
-        )}
 
         {/* ===================== FAQ ===================== */}
         <section id="faq" className="scroll-mt-24">

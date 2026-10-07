@@ -1,18 +1,19 @@
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ArrowRight, Building2, Clock, Mail, Wallet } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { NETWORKS } from "@/components/app/networks";
-import { OOBLE_OTC_EMAIL, OTC_ENABLED, TRADE_DAILY_MAX_CAD } from "@/lib/config";
-import { useAuth } from "@/lib/auth";
+import { OOBLE_OTC_EMAIL, TRADE_DAILY_MAX_CAD } from "@/lib/config";
+import { useOtcVisible } from "@/lib/otc";
 import { T, useLang } from "@/lib/i18n";
 
 /* Desk OTC : achats et ventes de USDT au-delà de la limite de l'application
    (9 999 $ sur 24 heures). Les demandes arrivent dans la boîte
    otc@ooble.ca (Admin → Messagerie, pastille « OTC »).
-   Tant que OTC_ENABLED vaut false, la page n'est visible que par l'équipe
-   Ooble ; les autres sont renvoyés à l'accueil. */
+   La page est publique. Le bouton « Demander un prix » (formulaire
+   /app/otc) n'apparaît que pour l'équipe Ooble tant que OTC_ENABLED vaut
+   false ; les autres écrivent à otc@ooble.ca. */
 
 type Bi = { fr: string; en: string };
 
@@ -27,8 +28,8 @@ const STEPS: { t: Bi; d: Bi }[] = [
   {
     t: { fr: "Vous faites une demande", en: "You send a request" },
     d: {
-      fr: "Depuis votre espace Ooble ou par courriel : achat ou vente, montant, réseau. Un membre du desk vous répond personnellement.",
-      en: "From your Ooble account or by email: buy or sell, amount, network. A member of the desk replies to you personally.",
+      fr: "Écrivez au desk : achat ou vente, montant, réseau. Un membre du desk vous répond personnellement.",
+      en: "Write to the desk: buy or sell, amount, network. A member of the desk replies to you personally.",
     },
   },
   {
@@ -102,6 +103,7 @@ const FAQ: { q: Bi; a: Bi }[] = [
 const OTC = () => {
   const [lang] = useLang();
   const L = (b: Bi) => b[lang];
+  const canRequest = useOtcVisible();
 
   return (
     <div className="ink-neutral app-type min-h-screen bg-background tracking-[-0.015em]">
@@ -127,11 +129,15 @@ const OTC = () => {
               </T>
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Button asChild variant="appSolid" shape="rounded" size="default" className="px-6">
-                <Link to="/app/otc"><T en="Request a quote">Demander un prix</T> <ArrowRight className="h-4 w-4" /></Link>
-              </Button>
-              <Button asChild variant="secondary" shape="rounded" size="default" className="px-6">
-                <a href={`mailto:${OOBLE_OTC_EMAIL}`}>{OOBLE_OTC_EMAIL}</a>
+              {canRequest && (
+                <Button asChild variant="appSolid" shape="rounded" size="default" className="px-6">
+                  <Link to="/app/otc"><T en="Request a quote">Demander un prix</T> <ArrowRight className="h-4 w-4" /></Link>
+                </Button>
+              )}
+              <Button asChild variant={canRequest ? "secondary" : "appSolid"} shape="rounded" size="default" className="px-6">
+                <a href={`mailto:${OOBLE_OTC_EMAIL}`}>
+                  {canRequest ? OOBLE_OTC_EMAIL : <><T en="Write to the desk">Écrire au desk</T> <ArrowRight className="h-4 w-4" /></>}
+                </a>
               </Button>
             </div>
           </div>
@@ -226,14 +232,22 @@ const OTC = () => {
                 {OOBLE_OTC_EMAIL}
               </a>
               <p className="mt-2 text-[15px] text-muted-foreground">
-                <T en="Or send your request from your Ooble account: it's faster, your file is already there.">
-                  Ou envoyez votre demande depuis votre espace Ooble : c'est plus rapide, votre dossier y est déjà.
-                </T>
+                {canRequest ? (
+                  <T en="Or send your request from your Ooble account: it's faster, your file is already there.">
+                    Ou envoyez votre demande depuis votre espace Ooble : c'est plus rapide, votre dossier y est déjà.
+                  </T>
+                ) : (
+                  <T en="Tell us the side, the amount and the network: a member of the desk replies personally.">
+                    Indiquez le sens, le montant et le réseau : un membre du desk vous répond personnellement.
+                  </T>
+                )}
               </p>
             </div>
-            <Button asChild variant="appSolid" shape="rounded" size="default" className="shrink-0 self-start px-6 lg:self-auto">
-              <Link to="/app/otc"><T en="Request a quote">Demander un prix</T> <ArrowRight className="h-4 w-4" /></Link>
-            </Button>
+            {canRequest && (
+              <Button asChild variant="appSolid" shape="rounded" size="default" className="shrink-0 self-start px-6 lg:self-auto">
+                <Link to="/app/otc"><T en="Request a quote">Demander un prix</T> <ArrowRight className="h-4 w-4" /></Link>
+              </Button>
+            )}
           </div>
         </section>
 
@@ -245,11 +259,4 @@ const OTC = () => {
   );
 };
 
-const OTCPage = () => {
-  const { isStaff, loading, rolesLoading } = useAuth();
-  if (OTC_ENABLED || isStaff) return <OTC />;
-  if (loading || rolesLoading) return null;
-  return <Navigate to="/" replace />;
-};
-
-export default OTCPage;
+export default OTC;

@@ -20,9 +20,9 @@ export const OOBLE_OTC_EMAIL = "otc@ooble.ca";
 export const TRADING_ENABLED = false;
 
 /**
- * Desk OTC (gros volumes). Tant que `false`, le formulaire /app/otc, la page
- * publique /otc et tous les liens vers le desk ne sont visibles que par
- * l'équipe Ooble (staff). Mettre à `true` pour l'ouvrir aux clients.
+ * Desk OTC (gros volumes). La page publique /otc est visible par tous. Tant
+ * que `false`, le formulaire de demande (/app/otc) et ses raccourcis ne sont
+ * accessibles qu'à l'équipe Ooble (staff). `true` : ouvert aux clients.
  */
 export const OTC_ENABLED = false;
 

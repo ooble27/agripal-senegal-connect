@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Building2, Check, FileText, Handshake, Headphones, Landmark, Mail, ShieldCheck, User, Wallet } from "lucide-react";
+import { ArrowRight, Check, FileText, Handshake, Landmark, Mail, ShieldCheck, Wallet } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Reveal from "@/components/Reveal";
@@ -13,9 +13,10 @@ import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 /* Desk OTC : achats et ventes de USDT au-delà de la limite de l'application
-   (9 999 $ sur 24 heures). Mise en page propre à cette page : en-tête en
-   deux colonnes avec la vidéo de présentation, grille de cartes, frise des
-   étapes, cartes « à préparer », questions, bloc final sombre.
+   (9 999 $ sur 24 heures). Page ouverte, sans cartes : en-tête en deux
+   colonnes avec la vidéo de présentation, puis de la typographie — une
+   grande phrase, le chiffre clé, la frise verticale des étapes, la liste à
+   préparer, les questions, et une bande finale pleine largeur.
    Les demandes arrivent dans la boîte otc@ooble.ca (Admin → Messagerie,
    pastille « OTC »). Le bouton « Demander un prix » (formulaire /app/otc)
    n'apparaît que pour l'équipe Ooble tant que OTC_ENABLED vaut false ; les
@@ -35,19 +36,12 @@ const H2 = ({ children, className }: { children: React.ReactNode; className?: st
   <h2 className={cn("font-display text-[2rem] leading-[1.05] tracking-[-0.045em] sm:text-[2.6rem] lg:text-[3rem]", className)}>{children}</h2>
 );
 
-/** Carte de la grille. */
-const Tile = ({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) => (
-  <Reveal delay={delay} className={cn("flex flex-col rounded-[28px] border border-border bg-card p-7 sm:p-8", className)}>
-    {children}
-  </Reveal>
-);
-
 const STEPS: { t: Bi; d: Bi }[] = [
-  { t: { fr: "Demande", en: "Request" }, d: { fr: "Achat ou vente, montant, réseau : écrivez au desk.", en: "Buy or sell, amount, network: write to the desk." } },
-  { t: { fr: "Vérification", en: "Review" }, d: { fr: "Identité ou entreprise, et origine des fonds.", en: "Identity or business, and source of funds." } },
-  { t: { fr: "Prix ferme", en: "Firm price" }, d: { fr: "Garanti pendant la durée indiquée. Vous acceptez ou non.", en: "Guaranteed for the time stated. Accept it or not." } },
-  { t: { fr: "Règlement", en: "Settlement" }, d: { fr: "Par virement bancaire, puis envoi des USDT ou des dollars.", en: "By bank transfer, then the USDT or the dollars are sent." } },
-  { t: { fr: "Reçu", en: "Receipt" }, d: { fr: "Montants, taux et transaction, par courriel.", en: "Amounts, rate and transaction, by email." } },
+  { t: { fr: "Vous écrivez au desk", en: "You write to the desk" }, d: { fr: "Achat ou vente, montant, réseau. Un membre de l'équipe vous répond personnellement.", en: "Buy or sell, amount, network. A team member replies to you personally." } },
+  { t: { fr: "Nous vérifions le dossier", en: "We review your file" }, d: { fr: "Identité ou entreprise, et origine des fonds. Compte déjà vérifié : il ne reste en général qu'un justificatif.", en: "Identity or business, and source of funds. Already verified: usually only one document is left." } },
+  { t: { fr: "Vous recevez un prix ferme", en: "You get a firm price" }, d: { fr: "Garanti pendant la durée indiquée dans la cotation. Vous l'acceptez, ou non.", en: "Guaranteed for the time stated in the quote. Accept it, or not." } },
+  { t: { fr: "Règlement", en: "Settlement" }, d: { fr: "Par virement bancaire, puis envoi des USDT à votre adresse — ou des dollars sur votre compte.", en: "By bank transfer, then the USDT go to your address — or the dollars to your account." } },
+  { t: { fr: "Reçu", en: "Receipt" }, d: { fr: "Montants, taux et transaction sur la blockchain, par courriel.", en: "Amounts, rate and blockchain transaction, by email." } },
 ];
 
 const NEEDS: { icon: React.ElementType; t: Bi; d: Bi }[] = [
@@ -94,6 +88,7 @@ const OTC = () => {
   const canRequest = useOtcVisible();
   const [faqOpen, setFaqOpen] = useState<number | null>(0);
   const mailto = `mailto:${OOBLE_OTC_EMAIL}`;
+  const fr = lang === "fr";
 
   /** Appel principal : formulaire pour l'équipe, courriel pour les autres. */
   const Primary = ({ inverted }: { inverted?: boolean }) => (
@@ -111,6 +106,9 @@ const OTC = () => {
       )}
     </Button>
   );
+
+  /** Mot-clé en noir dans une phrase en gris. */
+  const B = ({ children }: { children: React.ReactNode }) => <span className="text-foreground">{children}</span>;
 
   return (
     <div className="ink-neutral app-type min-h-screen bg-background tracking-[-0.015em]">
@@ -160,185 +158,141 @@ const OTC = () => {
           </Wrap>
         </section>
 
-        {/* ===================== GRILLE ===================== */}
+        {/* ===================== LA PHRASE ===================== */}
         <section>
-          <Wrap className="pt-20 lg:pt-24">
-            <Reveal className="mb-8 max-w-[560px]">
+          <Wrap className="pt-28 lg:pt-36">
+            <Reveal>
               <Kicker>{L({ fr: "Pourquoi le desk", en: "Why the desk" })}</Kicker>
-              <H2 className="mt-4">{L({ fr: "Un gros montant mérite un vrai suivi.", en: "A large amount deserves real follow-up." })}</H2>
+              <p className="mt-8 max-w-[1080px] text-balance font-display text-[1.85rem] leading-[1.18] tracking-[-0.04em] text-foreground/35 sm:text-[2.5rem] lg:text-[3.15rem]">
+                {fr ? (
+                  <>
+                    Un <B>prix ferme</B>, garanti pendant la durée indiquée. <B>Un seul interlocuteur</B>, de la demande jusqu'au reçu.
+                    Et <B>le montant entier</B>, en une seule fois — plus besoin de le découper sur plusieurs jours.
+                  </>
+                ) : (
+                  <>
+                    A <B>firm price</B>, guaranteed for the time stated. <B>One contact</B>, from request to receipt.
+                    And <B>the full amount</B>, in one go — no need to split it over several days.
+                  </>
+                )}
+              </p>
             </Reveal>
+          </Wrap>
+        </section>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {/* Prix ferme — grande carte avec une cotation d'exemple */}
-              <Tile className="justify-between sm:col-span-2 lg:row-span-2">
-                <div>
-                  <p className="font-display text-[1.6rem] tracking-[-0.03em]">{L({ fr: "Un prix ferme", en: "A firm price" })}</p>
-                  <p className="mt-2 max-w-[380px] text-[15px] leading-[1.6] text-muted-foreground">
-                    {L({ fr: "Garanti pendant la durée indiquée dans la cotation. Vous l'acceptez, ou non, sans engagement.", en: "Guaranteed for the time stated in the quote. Accept it, or not, with no commitment." })}
-                  </p>
-                </div>
-                <div className="mt-8 rounded-[22px] border border-border bg-background p-5 sm:p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{L({ fr: "Exemple de cotation", en: "Sample quote" })}</p>
-                      <p className="mt-3 text-[13px] text-muted-foreground">{L({ fr: "Vous recevez", en: "You receive" })}</p>
-                      <p className="mt-1 flex items-center gap-2 whitespace-nowrap font-display text-[1.9rem] leading-none tracking-[-0.05em] sm:gap-2.5 sm:text-[2.6rem]">
-                        <img src="/coins/usdt.svg" alt="" className="h-7 w-7 sm:h-9 sm:w-9" />
-                        {lang === "en" ? "17,260" : "17 260"} <span className="text-[1rem] font-medium tracking-normal text-muted-foreground">USDT</span>
-                      </p>
-                      <p className="mt-2 text-[13px] text-muted-foreground">{L({ fr: "pour 25 000 $ CAD · Tron", en: "for $25,000 CAD · Tron" })}</p>
-                    </div>
-                    <span className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-full border-[3px] border-foreground/80 text-center">
-                      <span className="text-[13px] font-semibold tabular-nums">15:00</span>
+        {/* ===================== LE CHIFFRE ===================== */}
+        <section>
+          <Wrap className="pt-24 lg:pt-32">
+            <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:gap-16">
+              <Reveal>
+                <p className="text-[15px] text-muted-foreground">{L({ fr: "À partir de", en: "From" })}</p>
+                <p className="mt-2 font-display text-[4.6rem] leading-[0.9] tracking-[-0.06em] sm:text-[7rem] lg:text-[9rem]">
+                  {L({ fr: "10 000 $", en: "$10,000" })}
+                </p>
+              </Reveal>
+              <Reveal delay={120} className="lg:pb-4">
+                <p className="max-w-[420px] text-[16px] leading-[1.7] text-muted-foreground">
+                  {L({
+                    fr: `Sous ce montant, l'application suffit : achats et ventes jusqu'à ${TRADE_DAILY_MAX_CAD.toLocaleString("fr-CA")} $ sur 24 heures. Au-delà, c'est le desk.`,
+                    en: `Below that, the app is enough: purchases and sales up to $${TRADE_DAILY_MAX_CAD.toLocaleString("en-CA")} over 24 hours. Above that, it's the desk.`,
+                  })}
+                </p>
+                <p className="mt-8 text-[12px] uppercase tracking-[0.16em] text-muted-foreground">{L({ fr: "Sur les mêmes réseaux que l'app", en: "On the same networks as the app" })}</p>
+                <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3">
+                  {NETWORKS.map((n) => (
+                    <span key={n.id} className="flex items-center gap-2 text-[14px]">
+                      <img src={`/coins/${n.id}.svg`} alt="" className="h-6 w-6 rounded-full" />
+                      {n.name}
                     </span>
-                  </div>
-                  <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
-                    <span className="text-[13px] text-muted-foreground">{L({ fr: "Prix garanti", en: "Price guaranteed" })}</span>
-                    <span className="rounded-xl bg-foreground px-4 py-2 text-[13px] font-semibold text-background">{L({ fr: "Accepter", en: "Accept" })}</span>
-                  </div>
+                  ))}
                 </div>
-              </Tile>
-
-              <Tile delay={80}>
-                <p className="text-[13px] text-muted-foreground">{L({ fr: "À partir de", en: "From" })}</p>
-                <p className="mt-2 font-display text-[2.6rem] leading-none tracking-[-0.055em]">{L({ fr: "10 000 $", en: "$10,000" })}</p>
-                <p className="mt-auto pt-6 text-[14px] leading-[1.55] text-muted-foreground">
-                  {L({ fr: `Sous ce montant, l'app suffit : jusqu'à ${TRADE_DAILY_MAX_CAD.toLocaleString("fr-CA")} $ sur 24 h.`, en: `Below that, the app is enough: up to $${TRADE_DAILY_MAX_CAD.toLocaleString("en-CA")} over 24 h.` })}
-                </p>
-              </Tile>
-
-              <Tile delay={140}>
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-deep text-white">
-                  <Headphones className="h-5 w-5" strokeWidth={1.7} />
-                </span>
-                <p className="mt-5 font-display text-[1.25rem] tracking-[-0.025em]">{L({ fr: "Un seul interlocuteur", en: "One contact" })}</p>
-                <p className="mt-2 text-[14px] leading-[1.55] text-muted-foreground">{L({ fr: "De la demande jusqu'au reçu.", en: "From the request to the receipt." })}</p>
-              </Tile>
-
-              <Tile delay={200} className="sm:col-span-2">
-                <div className="flex flex-wrap items-center justify-between gap-5">
-                  <div>
-                    <p className="font-display text-[1.25rem] tracking-[-0.025em]">{L({ fr: "Les mêmes réseaux que l'app", en: "The same networks as the app" })}</p>
-                    <p className="mt-1 text-[14px] text-muted-foreground">{NETWORKS.map((n) => n.name).join(" · ")}</p>
-                  </div>
-                  <div className="flex -space-x-2">
-                    {NETWORKS.map((n) => (
-                      <img key={n.id} src={`/coins/${n.id}.svg`} alt="" className="h-10 w-10 rounded-full ring-[3px] ring-card" />
-                    ))}
-                  </div>
-                </div>
-              </Tile>
-
-              <Tile delay={260} className="sm:col-span-2">
-                <p className="font-display text-[1.25rem] tracking-[-0.025em]">{L({ fr: "En une seule fois", en: "In one go" })}</p>
-                <p className="mt-2 max-w-[420px] text-[14px] leading-[1.55] text-muted-foreground">
-                  {L({ fr: "Plus besoin de découper votre opération sur plusieurs jours : le desk traite le montant entier.", en: "No need to split your trade over several days: the desk handles the full amount." })}
-                </p>
-              </Tile>
-
-              <Tile delay={320} className="sm:col-span-2">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground/70"><User className="h-[18px] w-[18px]" strokeWidth={1.7} /></span>
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-foreground/70"><Building2 className="h-[18px] w-[18px]" strokeWidth={1.7} /></span>
-                </div>
-                <p className="mt-5 font-display text-[1.25rem] tracking-[-0.025em]">{L({ fr: "Particuliers et entreprises", en: "Individuals and businesses" })}</p>
-                <p className="mt-2 max-w-[420px] text-[14px] leading-[1.55] text-muted-foreground">
-                  {L({ fr: "Épargne, trésorerie, paiements fournisseurs : un dossier vérifié suffit.", en: "Savings, treasury, supplier payments: one verified file is enough." })}
-                </p>
-              </Tile>
+              </Reveal>
             </div>
           </Wrap>
         </section>
 
-        {/* ===================== ÉTAPES (frise) ===================== */}
+        {/* ===================== ÉTAPES ===================== */}
         <section id="etapes" className="scroll-mt-24">
-          <Wrap className="pt-24 lg:pt-28">
-            <Reveal className="mb-12 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-              <div>
+          <Wrap className="pt-28 lg:pt-36">
+            <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+              <Reveal className="lg:sticky lg:top-28 lg:self-start">
                 <Kicker>{L({ fr: "Les étapes", en: "The steps" })}</Kicker>
-                <H2 className="mt-4">{L({ fr: "De la demande au reçu.", en: "From request to receipt." })}</H2>
-              </div>
-              <p className="max-w-[300px] text-[15px] leading-[1.6] text-muted-foreground">
-                {L({ fr: "Vous voyez le prix avant de vous engager. Rien ne bouge sans votre accord.", en: "You see the price before you commit. Nothing moves without your approval." })}
-              </p>
-            </Reveal>
+                <H2 className="mt-4">
+                  {L({ fr: "De la demande", en: "From request" })}
+                  <br />
+                  <span className="text-foreground/35">{L({ fr: "au reçu.", en: "to receipt." })}</span>
+                </H2>
+                <p className="mt-6 max-w-[320px] text-[15px] leading-[1.7] text-muted-foreground">
+                  {L({ fr: "Vous voyez le prix avant de vous engager. Rien ne bouge sans votre accord.", en: "You see the price before you commit. Nothing moves without your approval." })}
+                </p>
+              </Reveal>
 
-            <ol className="relative grid gap-8 lg:grid-cols-5 lg:gap-6">
-              {/* Ligne de la frise (grand écran) */}
-              <span aria-hidden className="absolute left-0 right-0 top-[19px] hidden h-px bg-border lg:block" />
-              {/* Ligne verticale (mobile) */}
-              <span aria-hidden className="absolute bottom-2 left-[19px] top-2 w-px bg-border lg:hidden" />
-              {STEPS.map((s, i) => (
-                <Reveal key={s.t.fr} delay={i * 90} className="relative grid grid-cols-[40px_1fr] gap-x-4 lg:block">
-                  <span className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background font-display text-[14px] tabular-nums">
-                    {i + 1}
-                  </span>
-                  <div className="lg:mt-6 lg:pr-4">
-                    <p className="font-display text-[1.2rem] tracking-[-0.025em]">{L(s.t)}</p>
-                    <p className="mt-2 text-[14px] leading-[1.6] text-muted-foreground">{L(s.d)}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </ol>
+              <ol className="relative">
+                <span aria-hidden className="absolute bottom-6 left-[7px] top-3 w-px bg-border" />
+                {STEPS.map((s, i) => (
+                  <Reveal key={s.t.fr} delay={i * 90} className="relative pb-12 pl-12 last:pb-0">
+                    <span aria-hidden className="absolute left-0 top-[0.55rem] h-[15px] w-[15px] rounded-full border-2 border-foreground bg-background" />
+                    <p className="text-[13px] tabular-nums text-muted-foreground">{String(i + 1).padStart(2, "0")}</p>
+                    <h3 className="mt-1 font-display text-[1.6rem] leading-[1.15] tracking-[-0.035em] sm:text-[2rem]">{L(s.t)}</h3>
+                    <p className="mt-3 max-w-[520px] text-[15px] leading-[1.7] text-muted-foreground">{L(s.d)}</p>
+                  </Reveal>
+                ))}
+              </ol>
+            </div>
           </Wrap>
         </section>
 
         {/* ===================== À PRÉPARER ===================== */}
         <section>
-          <Wrap className="pt-24 lg:pt-28">
-            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-14">
-              <Reveal>
-                <Kicker>{L({ fr: "Avant de commencer", en: "Before you start" })}</Kicker>
-                <H2 className="mt-4">{L({ fr: "Un dossier clair, une réponse plus rapide.", en: "A clear file, a quicker answer." })}</H2>
-                <p className="mt-6 max-w-[380px] text-[14px] leading-[1.7] text-muted-foreground">
-                  {L({
-                    fr: "Comme toute entreprise de services monétaires au Canada, nous vérifions l'identité et l'origine des fonds, et déclarons à CANAFE les opérations prévues par la loi.",
-                    en: "Like every money services business in Canada, we verify identity and the source of funds, and report to FINTRAC the transactions required by law.",
-                  })}
-                </p>
-              </Reveal>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {NEEDS.map(({ icon: Icon, t, d }, i) => (
-                  <Reveal key={t.fr} delay={i * 80} className="rounded-[24px] bg-secondary p-6">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-background text-foreground/75">
-                      <Icon className="h-5 w-5" strokeWidth={1.7} />
-                    </span>
-                    <p className="mt-5 font-display text-[1.1rem] tracking-[-0.02em]">{L(t)}</p>
-                    <p className="mt-1.5 text-[14px] leading-[1.55] text-muted-foreground">{L(d)}</p>
-                  </Reveal>
-                ))}
-              </div>
+          <Wrap className="pt-28 lg:pt-36">
+            <Reveal className="max-w-[640px]">
+              <Kicker>{L({ fr: "Avant de commencer", en: "Before you start" })}</Kicker>
+              <H2 className="mt-4">{L({ fr: "Ce qu'il faut préparer.", en: "What to prepare." })}</H2>
+            </Reveal>
+            <div className="mt-14 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+              {NEEDS.map(({ icon: Icon, t, d }, i) => (
+                <Reveal key={t.fr} delay={i * 80}>
+                  <Icon className="h-7 w-7 text-foreground/70" strokeWidth={1.4} />
+                  <p className="mt-5 font-display text-[1.2rem] tracking-[-0.025em]">{L(t)}</p>
+                  <p className="mt-2 text-[14.5px] leading-[1.6] text-muted-foreground">{L(d)}</p>
+                </Reveal>
+              ))}
             </div>
+            <Reveal delay={200}>
+              <p className="mt-14 max-w-[640px] text-[13.5px] leading-[1.7] text-muted-foreground">
+                {L({
+                  fr: "Comme toute entreprise de services monétaires au Canada, nous vérifions l'identité et l'origine des fonds, et déclarons à CANAFE les opérations prévues par la loi.",
+                  en: "Like every money services business in Canada, we verify identity and the source of funds, and report to FINTRAC the transactions required by law.",
+                })}
+              </p>
+            </Reveal>
           </Wrap>
         </section>
 
         {/* ===================== QUESTIONS ===================== */}
         <section>
-          <Wrap className="pt-24 lg:pt-28">
-            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-14">
+          <Wrap className="pt-28 lg:pt-36">
+            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
               <Reveal>
                 <Kicker>{L({ fr: "Questions", en: "Questions" })}</Kicker>
                 <H2 className="mt-4">{L({ fr: "Ce qu'on nous demande.", en: "What people ask us." })}</H2>
-                <a href={mailto} className="mt-6 inline-flex items-center gap-2 text-[15px] font-medium underline-offset-4 hover:underline">
-                  <Mail className="h-4 w-4" strokeWidth={1.8} /> {OOBLE_OTC_EMAIL}
-                </a>
               </Reveal>
-              <div className="flex flex-col gap-3">
+              <div>
                 {FAQ.map((item, i) => {
                   const open = faqOpen === i;
                   return (
-                    <Reveal key={item.q.fr} delay={i * 60} className={cn("rounded-[22px] border border-border transition-colors", open ? "bg-card" : "bg-transparent")}>
+                    <Reveal key={item.q.fr} delay={i * 60} className="border-b first:border-t">
                       <button
                         onClick={() => setFaqOpen(open ? null : i)}
                         aria-expanded={open}
-                        className="flex w-full items-center justify-between gap-6 px-6 py-5 text-left"
+                        className="flex w-full items-center justify-between gap-6 py-6 text-left"
                       >
-                        <span className="font-display text-[16px] tracking-[-0.02em] sm:text-[18px]">{L(item.q)}</span>
-                        <span className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary text-[18px] leading-none text-foreground/60 transition-transform", open && "rotate-45")} aria-hidden>
+                        <span className="font-display text-[17px] tracking-[-0.02em] sm:text-[19px]">{L(item.q)}</span>
+                        <span className={cn("shrink-0 text-[22px] leading-none text-foreground/35 transition-transform", open && "rotate-45")} aria-hidden>
                           +
                         </span>
                       </button>
-                      {open && <p className="-mt-1 px-6 pb-6 text-[15px] leading-[1.7] text-muted-foreground">{L(item.a)}</p>}
+                      {open && <p className="mb-7 max-w-[600px] text-[15px] leading-[1.7] text-muted-foreground">{L(item.a)}</p>}
                     </Reveal>
                   );
                 })}
@@ -347,24 +301,24 @@ const OTC = () => {
           </Wrap>
         </section>
 
-        {/* ===================== BLOC FINAL ===================== */}
-        <section>
-          <Wrap className="pb-6 pt-24 lg:pt-28">
-            <Reveal className="flex flex-col gap-8 rounded-[32px] bg-foreground px-8 py-12 text-background sm:px-12 sm:py-14 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-[12px] uppercase tracking-[0.16em] text-background/55">{L({ fr: "Joindre le desk", en: "Contact the desk" })}</p>
-                <h2 className="mt-4 font-display text-[2.2rem] leading-[1.02] tracking-[-0.05em] sm:text-[3rem]">
-                  {L({ fr: "Parlons de", en: "Let's talk about" })}
-                  <br />
-                  <span className="text-background/50">{L({ fr: "votre opération.", en: "your trade." })}</span>
-                </h2>
-                <a href={mailto} className="mt-6 inline-flex items-center gap-2 text-[17px] font-medium underline-offset-4 hover:underline sm:text-[19px]">
-                  {OOBLE_OTC_EMAIL} <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
-                </a>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <Primary inverted />
-              </div>
+        {/* ===================== BANDE FINALE ===================== */}
+        <section data-dark className="mt-28 bg-foreground text-background lg:mt-36">
+          <Wrap className="py-24 text-center lg:py-32">
+            <Reveal>
+              <p className="text-[12px] uppercase tracking-[0.16em] text-background/55">{L({ fr: "Joindre le desk", en: "Contact the desk" })}</p>
+              <h2 className="mx-auto mt-6 max-w-[820px] font-display text-[2.6rem] leading-[0.98] tracking-[-0.05em] sm:text-[3.8rem] lg:text-[4.8rem]">
+                {L({ fr: "Parlons de", en: "Let's talk about" })}
+                <br />
+                <span className="text-background/45">{L({ fr: "votre opération.", en: "your trade." })}</span>
+              </h2>
+            </Reveal>
+            <Reveal delay={120}>
+              <a href={mailto} className="mt-10 inline-flex items-center gap-2 font-display text-[1.4rem] tracking-[-0.03em] underline-offset-[6px] hover:underline sm:text-[1.8rem]">
+                {OOBLE_OTC_EMAIL} <ArrowRight className="h-5 w-5" strokeWidth={1.8} />
+              </a>
+            </Reveal>
+            <Reveal delay={200} className="mt-10 flex justify-center">
+              <Primary inverted />
             </Reveal>
           </Wrap>
         </section>

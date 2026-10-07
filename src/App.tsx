@@ -35,6 +35,7 @@ import RequireAuth from "./components/app/RequireAuth";
 import RequireStaff from "./components/app/RequireStaff";
 import NotFound from "./pages/NotFound";
 import GlobalNotice from "./components/GlobalNotice";
+import ScrollToTop from "./components/ScrollToTop";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AuthProvider } from "./lib/auth";
 
@@ -67,6 +68,7 @@ const App = () => (
       <AuthProvider>
         <BrowserRouter>
           <RecoveryRedirect />
+          <ScrollToTop />
           <GlobalNotice />
           <Routes>
         {/* Site public */}

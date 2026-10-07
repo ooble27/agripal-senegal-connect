@@ -234,8 +234,8 @@ function BuyLimitCard({ className }: { className?: string }) {
 
 /* ─── Tablette / ordinateur : proposition A ───
    Colonne profil à gauche (identité, vérifications, actions) ; à droite,
-   une grille de cartes sur deux colonnes : entreprise, Interac, connexion
-   et sécurité, préférences. Arrondi 16 px. */
+   les cartes sur deux colonnes : entreprise, connexion et sécurité, limite
+   d'achat | Interac, préférences. Arrondi 16 px. */
 
 const initialsOf = (n: string) => n.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "?";
 
@@ -325,8 +325,6 @@ function DesktopAccount({
           )}
         </Card>
 
-        <BuyLimitCard />
-
         <div className="flex flex-wrap gap-2.5">
           {isStaff && (
             <Button asChild variant="appOutline" shape="rounded" className="h-auto gap-2 px-[18px] py-[10px] text-sm">
@@ -339,10 +337,12 @@ function DesktopAccount({
         </div>
       </aside>
 
-      {/* Grille de réglages */}
-      <div className="grid min-w-0 flex-1 grid-cols-1 items-start gap-5 xl:grid-cols-2">
+      {/* Réglages : une colonne, puis deux piles à partir de xl
+          (entreprise, sécurité, limite | Interac, préférences). */}
+      <div className="flex min-w-0 flex-1 flex-col gap-5 xl:grid xl:grid-cols-2 xl:items-start">
+        <div className="contents xl:flex xl:flex-col xl:gap-5">
         {business && profile && (
-          <Card>
+          <Card className="order-1 xl:order-none">
             <div className="flex items-center gap-3.5 px-6 pb-4 pt-5">
               <BusinessMark name={profile.businessName} size="md" className="h-11 w-11 rounded-xl text-[15px]" />
               <div className="min-w-0 flex-1">
@@ -359,8 +359,18 @@ function DesktopAccount({
           </Card>
         )}
 
+        <Card className="order-3 xl:order-none">
+          <Eyebrow>{t("acct.security")}</Eyebrow>
+          <LinkRow to="/app/changer-email" icon={Mail} label={t("acct.email")} sub={email} right={modify} />
+          <LinkRow to="/reinitialiser" icon={Lock} label={t("acct.password")} right={modify} />
+        </Card>
+
+        <BuyLimitCard className="order-4 xl:order-none" />
+        </div>
+
+        <div className="contents xl:flex xl:flex-col xl:gap-5">
         {profile?.interacQuestion && (
-          <Card>
+          <Card className="order-2 xl:order-none">
             <div className="px-6 pb-4 pt-5">
               <p className="text-[11.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{t("acct.interac")}</p>
               <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">{t("acct.interacSub")}</p>
@@ -372,13 +382,7 @@ function DesktopAccount({
           </Card>
         )}
 
-        <Card>
-          <Eyebrow>{t("acct.security")}</Eyebrow>
-          <LinkRow to="/app/changer-email" icon={Mail} label={t("acct.email")} sub={email} right={modify} />
-          <LinkRow to="/reinitialiser" icon={Lock} label={t("acct.password")} right={modify} />
-        </Card>
-
-        <Card>
+        <Card className="order-5 xl:order-none">
           <Eyebrow>{t("acct.preferences")}</Eyebrow>
           <div className="flex items-center gap-3.5 border-t border-border px-6 py-3.5">
             <Globe className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={1.7} />
@@ -395,6 +399,7 @@ function DesktopAccount({
             />
           </div>
         </Card>
+        </div>
       </div>
     </div>
   );

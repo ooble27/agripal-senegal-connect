@@ -230,6 +230,10 @@ const AppAcheter = () => {
               {unit === "CAD" && <img src="/coins/usdt.svg" alt="" className="h-[18px] w-[18px]" />}
             </div>
           </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[13px] text-muted-foreground">{t("buy.rate")}</span>
+            <span className="text-[13px] text-muted-foreground">1 USDT = {nfCad.format(buyRate)} CAD</span>
+          </div>
         </div>
 
         <div className="mt-3 flex justify-end">
@@ -317,6 +321,7 @@ const AppAcheter = () => {
           {[
             { label: t("buy.youPay"), value: `${nfCad.format(cad)} CAD` },
             { label: t("buy.youReceive"), value: `${nfUsdt.format(usdt)} USDT` },
+            { label: t("buy.rate"), value: `1 USDT = ${nfCad.format(buyRate)} CAD` },
             { label: t("buy.network"), value: `${network?.name} · ${network?.tag}` },
             { label: t("buy.address"), value: short(address), mono: true },
           ].map((r, i, arr) => (

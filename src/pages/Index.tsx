@@ -368,7 +368,7 @@ const Index = () => {
                   size="default"
                   className="mt-6 px-6"
                 >
-                  <Link to="/contact">{t("otc.cta")}</Link>
+                  <Link to="/otc">{t("otc.cta")}</Link>
                 </Button>
               </div>
             </Reveal>

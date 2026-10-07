@@ -49,7 +49,7 @@ import {
 import {
   fetchThreads, fetchMessages, markThreadRead, archiveThread,
   createThread, insertOutboundMessage, threadReplyTo, countUnread,
-  type MailThread, type MailMessage,
+  type MailThread, type MailMessage, type MailboxId,
 } from "@/lib/mailThreads";
 import AdminHero from "./AdminHero";
 import { SubTabs } from "./AdminBits";
@@ -502,9 +502,10 @@ interface ComposeViewProps {
   clients: ClientDirectoryEntry[];
   clientsLoading: boolean;
   replyThreadId?: string | null;
+  replyMailbox?: MailboxId;
 }
 
-function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, replyThreadId }: ComposeViewProps) {
+function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, replyThreadId, replyMailbox }: ComposeViewProps) {
   const { session } = useAuth();
   const author = session?.user?.email ?? "staff";
   const signature = useMemo(() => defaultSignature(author), [author]);
@@ -589,7 +590,7 @@ function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, rep
         });
       }
 
-      const replyTo = usedThreadId ? threadReplyTo(usedThreadId) : undefined;
+      const replyTo = usedThreadId ? threadReplyTo(usedThreadId, replyThreadId ? replyMailbox : "support") : undefined;
       const res = await sendCustomEmail({
         to: r.email,
         subject: subj,
@@ -1607,7 +1608,7 @@ function InboxView({ onReply }: InboxViewProps) {
           Aucune conversation pour l'instant.
         </p>
         <p style={{ fontSize: 11, color: C.t3, margin: 0, lineHeight: 1.6 }}>
-          Les réponses des clients apparaissent ici une fois Resend Inbound activé sur <code style={{ background: C.l3, padding: "1px 5px", borderRadius: 4 }}>support@ooble.ca</code>.
+          Les réponses des clients apparaissent ici une fois Resend Inbound activé sur <code style={{ background: C.l3, padding: "1px 5px", borderRadius: 4 }}>support@ooble.ca</code> et <code style={{ background: C.l3, padding: "1px 5px", borderRadius: 4 }}>otc@ooble.ca</code>.
           <br />Les e-mails envoyés depuis le composer créent aussi un fil ici.
         </p>
       </div>
@@ -1660,6 +1661,14 @@ function InboxView({ onReply }: InboxViewProps) {
               }}>
                 {t.clientName || t.clientEmail}
               </span>
+              {t.mailbox === "otc" && (
+                <span style={{
+                  fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", color: C.t1,
+                  border: `1px solid ${C.bds}`, padding: "1px 6px", borderRadius: 999, flexShrink: 0,
+                }}>
+                  OTC
+                </span>
+              )}
               <span style={{
                 fontSize: 10.5, color: C.t3, flexShrink: 0,
                 fontVariantNumeric: "tabular-nums",
@@ -1701,6 +1710,7 @@ const MailboxPanel = () => {
   const [clients, setClients] = useState<ClientDirectoryEntry[]>([]);
   const [clientsLoading, setClientsLoading] = useState(true);
   const [replyThreadId, setReplyThreadId] = useState<string | null>(null);
+  const [replyMailbox, setReplyMailbox] = useState<MailboxId>("support");
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => { setSent(loadSent()); }, []);
@@ -1743,6 +1753,7 @@ const MailboxPanel = () => {
       body: "",
     });
     setReplyThreadId(thread.id);
+    setReplyMailbox(thread.mailbox);
     setTab("compose");
   }, []);
 
@@ -1781,6 +1792,7 @@ const MailboxPanel = () => {
           clients={clients}
           clientsLoading={clientsLoading}
           replyThreadId={replyThreadId}
+          replyMailbox={replyMailbox}
         />
       )}
       {tab === "sent"     && <SentView sent={sent} />}

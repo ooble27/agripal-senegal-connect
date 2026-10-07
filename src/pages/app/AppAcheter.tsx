@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Coins, Check, ShieldOff } from "lucide-react";
+import { ArrowLeft, ArrowRight, Coins, Check, ShieldOff } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import CopyRow from "@/components/app/CopyRow";
 import RecipientBook from "@/components/app/RecipientBook";
@@ -214,6 +214,11 @@ const AppAcheter = () => {
           ) : belowMin ? (
             <p className="mt-3 text-[13px] text-destructive">{t("buy.minHint")}</p>
           ) : null}
+          {(blocked || (value > 0 && cad >= maxCad)) && (
+            <Link to="/app/otc" className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-foreground underline-offset-2 hover:underline">
+              {t("trade.otcHint")} <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          )}
         </div>
 
         <div className="mt-3 flex flex-col gap-2.5 rounded-[16px] border border-border bg-card px-5 py-4">

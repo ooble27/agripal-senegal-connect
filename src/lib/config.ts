@@ -9,6 +9,8 @@
 export const OOBLE_INTERAC_EMAIL = "interac@ooble.ca";
 
 export const OOBLE_SUPPORT_EMAIL = "support@ooble.ca";
+/** Desk OTC (gros volumes) : arrive dans Admin → Messagerie, pastille « OTC ». */
+export const OOBLE_OTC_EMAIL = "otc@ooble.ca";
 
 /**
  * Kill switch — mettre à `false` pour bloquer toute création d'ordre

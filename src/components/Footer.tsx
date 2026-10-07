@@ -12,6 +12,7 @@ const Footer = () => {
       links: [
         { label: t("nav.home"), to: "/" },
         { label: t("nav.networks"), to: "/#reseaux" },
+        { label: t("nav.otc"), to: "/otc" },
         { label: t("nav.signup"), to: "/inscription" },
       ],
     },

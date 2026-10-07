@@ -7,6 +7,9 @@ const dict = {
   "nav.networks": { fr: "Réseaux", en: "Networks" },
   "nav.faq": { fr: "FAQ", en: "FAQ" },
   "nav.contact": { fr: "Contact", en: "Contact" },
+  "nav.otc": { fr: "Desk OTC", en: "OTC desk" },
+  "dash.otcSub": { fr: "à partir de 10 000 $", en: "from $10,000" },
+  "trade.otcHint": { fr: "Plus de 9 999 $ ? Passez par le desk OTC", en: "Over $9,999? Use the OTC desk" },
   "nav.login": { fr: "Connexion", en: "Sign in" },
   "nav.signup": { fr: "Ouvrir un compte", en: "Create account" },
   "nav.openMenu": { fr: "Ouvrir le menu", en: "Open menu" },
@@ -146,10 +149,10 @@ const dict = {
   "otc.title1": { fr: "Un ordre important ?", en: "A large order?" },
   "otc.title2": { fr: "Passez par notre desk", en: "Use our OTC desk" },
   "otc.sub": {
-    fr: "Pour les gros volumes, écrivez-nous avant de créer l'ordre.",
-    en: "For large volumes, contact us before creating the order.",
+    fr: "À partir de 10 000 $, notre desk vous donne un prix ferme et suit votre achat ou votre vente du début à la fin.",
+    en: "From $10,000, our desk gives you a firm price and handles your purchase or sale from start to finish.",
   },
-  "otc.cta": { fr: "Écrire au desk", en: "Contact the desk" },
+  "otc.cta": { fr: "Découvrir le desk OTC", en: "Discover the OTC desk" },
 
   // ── Landing — FAQ ──
   "faq.kicker": { fr: "FAQ", en: "FAQ" },
@@ -759,8 +762,8 @@ const dict = {
   "otcApp.buyLabel": { fr: "Acheter", en: "Buy" },
   "otcApp.sellLabel": { fr: "Vendre", en: "Sell" },
   "otcApp.desiredAmount": { fr: "Montant souhaité", en: "Desired amount" },
-  "otcApp.usdtAddress": { fr: "Adresse USDT", en: "USDT address" },
-  "otcApp.addressPh": { fr: "Votre adresse de réception / d'envoi", en: "Your receiving / sending address" },
+  "otcApp.usdtAddress": { fr: "Adresse USDT de réception", en: "USDT receiving address" },
+  "otcApp.addressPh": { fr: "L'adresse qui recevra les USDT", en: "The address that will receive the USDT" },
   "otcApp.usage": { fr: "Usage prévu des fonds", en: "Intended use of funds" },
   "otcApp.select": { fr: "Sélectionnez…", en: "Select…" },
   "otcApp.usage1": { fr: "Réserve de valeur / épargne", en: "Store of value / savings" },
@@ -777,7 +780,7 @@ const dict = {
   "otcApp.contactEmail": { fr: "E-mail de contact", en: "Contact email" },
   "otcApp.emailPh": { fr: "vous@exemple.ca", en: "you@example.ca" },
   "otcApp.compliance": { fr: "Informations demandées pour la conformité (vérification de la provenance des fonds).", en: "Information required for compliance (source of funds verification)." },
-  "otcApp.requestQuote": { fr: "Demander un devis", en: "Request a quote" },
+  "otcApp.requestQuote": { fr: "Demander un prix", en: "Request a quote" },
 
   // ── Password reset ──
   "reset.title": { fr: "Nouveau mot de passe", en: "New password" },

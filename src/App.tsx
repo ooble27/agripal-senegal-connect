@@ -7,6 +7,7 @@ import FAQ from "./pages/FAQ";
 import Guide from "./pages/Guide";
 import GuideDetail from "./pages/GuideDetail";
 import Contact from "./pages/Contact";
+import OTC from "./pages/OTC";
 import Connexion from "./pages/Connexion";
 import Inscription from "./pages/Inscription";
 import InscriptionIndividuel from "./pages/InscriptionIndividuel";
@@ -72,6 +73,7 @@ const App = () => (
         <Route path="/guide" element={<Guide />} />
         <Route path="/guide/:slug" element={<GuideDetail />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/otc" element={<OTC />} />
         <Route path="/connexion" element={<Connexion />} />
         <Route path="/inscription" element={<Inscription />} />
         <Route path="/inscription/individuel" element={<InscriptionIndividuel />} />

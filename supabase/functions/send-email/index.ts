@@ -100,6 +100,7 @@ interface ContactPayload {
   subject?: string;
   message?: string;
   website?: string; // champ piège invisible : rempli seulement par les robots
+  desk?: string;    // "otc" : demande du desk gros volumes → boîte otc@ooble.ca
 }
 
 Deno.serve(async (req) => {
@@ -238,9 +239,10 @@ Deno.serve(async (req) => {
 // ────────────────────────────────────────────────────────────
 // Formulaire de contact
 //
-// Le message arrive dans la boîte support (Admin → Messagerie) exactement
-// comme un e-mail envoyé à support@ooble.ca : nouveau fil au nom du
-// visiteur, à qui l'équipe répond depuis le back-office. Une alerte part
+// Le message arrive dans la messagerie (Admin → Messagerie) exactement
+// comme un e-mail envoyé à support@ooble.ca — ou à otc@ooble.ca pour une
+// demande du desk OTC (desk: "otc") : nouveau fil au nom du visiteur, à
+// qui l'équipe répond depuis le back-office. Une alerte part
 // aussi vers STAFF_NOTIFICATION_EMAIL si ce secret est défini.
 //
 // Ouvert sans connexion, donc bridé : destinataire fixe, texte brut
@@ -262,6 +264,9 @@ async function handleContact(c: ContactPayload, req: Request, apiKey: string, fr
   const email = (c.email ?? "").trim().toLowerCase();
   const subject = (c.subject ?? "").trim().slice(0, 120) || "Autre";
   const message = (c.message ?? "").trim();
+  const otc = c.desk === "otc";
+  const box = otc ? "otc@ooble.ca" : "support@ooble.ca";
+  const fail = `Envoi impossible pour le moment. Écrivez-nous à ${box}.`;
 
   // Robot : on fait comme si tout s'était bien passé.
   if ((c.website ?? "").trim()) return json({ ok: true });
@@ -290,7 +295,7 @@ async function handleContact(c: ContactPayload, req: Request, apiKey: string, fr
   if ((count ?? 0) >= 3) return json({ error: "Trop de messages envoyés. Réessayez dans une heure." }, 429);
 
   const { data: profile } = await admin.from("profiles").select("id, full_name").eq("email", email).maybeSingle();
-  const threadSubject = `${subject} — formulaire de contact`;
+  const threadSubject = otc ? subject : `${subject} — formulaire de contact`;
 
   const { data: thread, error: threadErr } = await admin
     .from("mail_threads")
@@ -301,26 +306,27 @@ async function handleContact(c: ContactPayload, req: Request, apiKey: string, fr
       subject: threadSubject,
       last_message_at: new Date().toISOString(),
       has_unread: true,
+      mailbox: otc ? "otc" : "support",
     })
     .select("id")
     .single();
   if (threadErr || !thread) {
     console.error("contact: création du fil impossible", threadErr);
-    return json({ error: "Envoi impossible pour le moment. Écrivez-nous à support@ooble.ca." }, 500);
+    return json({ error: fail }, 500);
   }
   const { error: msgErr } = await admin.from("mail_messages").insert({
     thread_id: thread.id,
     direction: "inbound",
     from_email: email,
     from_name: name,
-    to_email: "support@ooble.ca",
+    to_email: box,
     subject: threadSubject,
     body_text: message,
     body_html: null,
   });
   if (msgErr) {
     console.error("contact: enregistrement du message impossible", msgErr);
-    return json({ error: "Envoi impossible pour le moment. Écrivez-nous à support@ooble.ca." }, 500);
+    return json({ error: fail }, 500);
   }
 
   // Alerte à l'équipe (facultative) : répondre à ce courriel écrit au visiteur.
@@ -328,7 +334,7 @@ async function handleContact(c: ContactPayload, req: Request, apiKey: string, fr
   if (staffTo) {
     const site = Deno.env.get("SITE_URL") ?? "https://ooble.ca";
     const html = `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.6;color:#141414">
-      <p style="margin:0 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#777">Formulaire de contact</p>
+      <p style="margin:0 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#777">${otc ? "Desk OTC" : "Formulaire de contact"}</p>
       <p style="margin:0 0 16px;font-size:20px;font-weight:bold">${escHtml(subject)}</p>
       <p style="margin:0"><b>${escHtml(name)}</b> · ${escHtml(email)}${profile ? " · client Ooble" : ""}</p>
       <p style="margin:16px 0;padding:16px;border:1px solid #e5e5e5;border-radius:10px;white-space:pre-wrap">${escHtml(message)}</p>
@@ -340,7 +346,7 @@ async function handleContact(c: ContactPayload, req: Request, apiKey: string, fr
         from,
         to: staffTo,
         reply_to: email,
-        subject: `Contact · ${subject} · ${name}`,
+        subject: `${otc ? "OTC" : "Contact"} · ${subject} · ${name}`,
         html,
         text: `${subject}\n${name} <${email}>\n\n${message}`,
       }),

@@ -83,7 +83,9 @@ const Contact = () => {
                 <div className="min-w-0">
                   <p className="text-[12px] text-muted-foreground">{t(kKey)}</p>
                   <p className="mt-1 font-display text-[15px] tracking-[-0.02em]">
-                    {kKey === "cont.email" ? "support@ooble.ca" : t(vKey)}
+                    {kKey === "cont.email" ? "support@ooble.ca" : kKey === "cont.volumes" ? (
+                      <Link to="/otc" className="underline-offset-2 hover:underline">{t(vKey)}</Link>
+                    ) : t(vKey)}
                   </p>
                 </div>
               </div>

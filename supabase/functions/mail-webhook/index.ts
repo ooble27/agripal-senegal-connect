@@ -1,11 +1,14 @@
 // Fonction edge Ooble — webhook e-mails entrants (Resend Inbound).
 //
-// Reçoit les e-mails envoyés à `support@ooble.ca` et les insère dans
-// la table `mail_messages`, rattachés au bon thread. Le thread est
-// identifié par le plus-addressing de l'adresse de destination :
+// Reçoit les e-mails envoyés à `support@ooble.ca` et à `otc@ooble.ca`
+// (desk gros volumes) et les insère dans la table `mail_messages`,
+// rattachés au bon thread. Le thread est identifié par le plus-addressing
+// de l'adresse de destination :
 //
 //   support+t.{threadId}@ooble.ca  →  rattaché au thread existant
-//   support@ooble.ca (sans +t.)    →  nouveau thread créé automatiquement
+//   otc+t.{threadId}@ooble.ca      →  idem
+//   support@ooble.ca (sans +t.)    →  nouveau thread, boîte « support »
+//   otc@ooble.ca (sans +t.)        →  nouveau thread, boîte « otc »
 //
 // Le webhook Resend Inbound n'envoie souvent QUE les métadonnées de l'email
 // (from, to, subject, id). Pour obtenir le contenu (text/html), on fait un
@@ -164,9 +167,11 @@ Deno.serve(async (req) => {
   // Extraire l'ID du thread depuis le plus-addressing.
   let threadId: string | null = null;
   for (const addr of toAddresses) {
-    const match = /^support\+t\.([a-f0-9-]{36})@/i.exec(extractEmail(addr));
+    const match = /^(?:support|otc)\+t\.([a-f0-9-]{36})@/i.exec(extractEmail(addr));
     if (match) { threadId = match[1]; break; }
   }
+  // Boîte d'arrivée d'un nouveau fil : otc@ooble.ca → desk OTC.
+  const mailbox = toAddresses.some((a) => /^otc(\+[^@]*)?@ooble\.ca$/i.test(extractEmail(a))) ? "otc" : "support";
 
   const admin = createClient(supabaseUrl, serviceKey);
 
@@ -210,6 +215,7 @@ Deno.serve(async (req) => {
       subject: cleanSubject(subject),
       last_message_at: new Date().toISOString(),
       has_unread: true,
+      mailbox,
     })
     .select("id")
     .single();

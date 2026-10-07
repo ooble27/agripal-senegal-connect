@@ -16,9 +16,13 @@ export interface MailThread {
   messageCount: number;
   hasUnread: boolean;
   status: "open" | "archived";
+  /** Boîte d'arrivée : support@ooble.ca ou otc@ooble.ca (desk gros volumes). */
+  mailbox: MailboxId;
   createdAt: string;
   lastSnippet?: string;
 }
+
+export type MailboxId = "support" | "otc";
 
 export interface MailMessage {
   id: string;
@@ -134,8 +138,9 @@ export async function countUnread(): Promise<number> {
   return count ?? 0;
 }
 
-export function threadReplyTo(threadId: string): string {
-  return `support+t.${threadId}@ooble.ca`;
+/** Reply-To d'une réponse : la réponse du client revient dans le même fil. */
+export function threadReplyTo(threadId: string, mailbox: MailboxId = "support"): string {
+  return `${mailbox}+t.${threadId}@ooble.ca`;
 }
 
 function mapThread(r: Record<string, unknown>): MailThread {
@@ -149,6 +154,7 @@ function mapThread(r: Record<string, unknown>): MailThread {
     messageCount: (r.message_count as number) ?? 0,
     hasUnread: (r.has_unread as boolean) ?? false,
     status: (r.status as "open" | "archived") ?? "open",
+    mailbox: r.mailbox === "otc" ? "otc" : "support",
     createdAt: r.created_at as string,
   };
 }

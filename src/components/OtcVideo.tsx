@@ -44,7 +44,7 @@ const OtcVideo = ({ className }: { className?: string }) => {
 
   const en = lang === "en";
   return (
-    <div className={cn("relative overflow-hidden rounded-xl border border-border bg-[#f4f4f2]", className)}>
+    <div className={cn("relative overflow-hidden rounded-xl bg-[#0b0b0c]", className)}>
       <video
         key={lang}
         ref={ref}

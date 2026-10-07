@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, ShieldCheck, LayoutGrid, ChevronRight, MessageSquare, Building2, Globe, MapPin, Phone, Hash, Mail, User, Lock, SunMoon } from "lucide-react";
+import { LogOut, ShieldCheck, LayoutGrid, ChevronRight, Gauge, MessageSquare, Building2, Globe, MapPin, Phone, Hash, Mail, User, Lock, SunMoon } from "lucide-react";
 import { Link } from "react-router-dom";
 import AppShell from "@/components/app/AppShell";
 import CopyRow from "@/components/app/CopyRow";
@@ -8,7 +8,6 @@ import { LangPill } from "@/components/app/LangToggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { getMyProfile, type MyProfile } from "@/lib/profile";
-import { getAllowance, type TradeAllowance } from "@/lib/orders";
 import { getMyKyc, type KycDbStatus } from "@/lib/kyc";
 import { useLang, useT } from "@/lib/i18n";
 import { getTheme, onThemeChange, setTheme, type Theme } from "@/lib/theme";
@@ -123,7 +122,15 @@ const Compte = () => {
         <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
       </Link>
 
-      <LimitsCard className="mt-3" />
+      {/* ─── Limites : sur une page à part, comme l'e-mail ─── */}
+      <Link to="/app/limites" className="mt-3 flex items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card px-5 py-4 transition-colors hover:bg-secondary/40">
+        <Gauge className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />
+        <div className="min-w-0 flex-1">
+          <span className="text-sm font-medium">{t("acct.limits")}</span>
+          <p className="truncate text-[13px] text-muted-foreground">{t("acct.limitsSub")}</p>
+        </div>
+        <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
+      </Link>
 
       {/* ─── Interac e-Transfer ─── */}
       {profile?.interacQuestion && (
@@ -195,64 +202,6 @@ const Compte = () => {
     </AppShell>
   );
 };
-
-/* ─── Limite d'achat sur 24 heures (même règle qu'en base) ─── */
-
-const nfInt = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 0 });
-
-const fmtNext = (d: Date) =>
-  d.toLocaleString("fr-CA", {
-    hour: "2-digit", minute: "2-digit",
-    ...(d.toDateString() !== new Date().toDateString() ? { day: "numeric", month: "long" } : {}),
-  });
-
-/** Limites sur 24 heures : achats et ventes, comptés séparément. */
-function LimitsCard({ className }: { className?: string }) {
-  const t = useT();
-  const [lim, setLim] = useState<{ buy: TradeAllowance; sell: TradeAllowance } | null>(null);
-  useEffect(() => {
-    Promise.all([getAllowance("buy"), getAllowance("sell")]).then(([buy, sell]) => setLim({ buy, sell }));
-  }, []);
-  if (!lim) return null;
-  const rows: { key: "buy" | "sell"; label: TKey; next: TKey }[] = [
-    { key: "buy", label: "acct.limitBuy", next: "acct.buyLimitNext" },
-    { key: "sell", label: "acct.limitSell", next: "acct.sellLimitNext" },
-  ];
-  const notes = rows.filter((r) => lim[r.key].nextAt).map((r) => t(r.next).replace("{time}", fmtNext(lim[r.key].nextAt!)));
-  return (
-    <section className={cn("overflow-hidden rounded-2xl border border-border bg-card px-6 py-5", className)}>
-      <div className="flex items-baseline justify-between gap-4">
-        <p className="text-[11.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{t("acct.limits")}</p>
-        <p className="text-[13px] text-muted-foreground">
-          <span className="font-medium text-foreground tabular-nums">{nfInt.format(lim.buy.limit)} $</span> {t("acct.buyLimitPer")}
-        </p>
-      </div>
-      <div className="mt-4 flex flex-col gap-3.5">
-        {rows.map(({ key, label }) => {
-          const a = lim[key];
-          const pct = a.limit > 0 ? Math.min(100, (a.used / a.limit) * 100) : 0;
-          return (
-            <div key={key}>
-              <div className="flex items-baseline justify-between gap-4 text-[14.5px]">
-                <span>{t(label)}</span>
-                <span className="text-[13.5px] text-muted-foreground">
-                  {t("acct.buyLimitLeft")} <span className="font-medium text-foreground tabular-nums">{nfInt.format(Math.floor(a.remaining))} $</span>
-                  <span className="sr-only"> · {t("acct.buyLimitUsed")} {nfInt.format(a.used)} $</span>
-                </span>
-              </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary">
-                <div className="h-full rounded-full bg-foreground transition-[width]" style={{ width: `${pct}%` }} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <p className="mt-4 text-[12.5px] leading-relaxed text-muted-foreground">
-        {notes.length ? notes.join(" ") : t("acct.buyLimitReset")}
-      </p>
-    </section>
-  );
-}
 
 /* ─── Tablette / ordinateur : proposition A ───
    Colonne profil à gauche (identité, vérifications, actions) ; à droite,
@@ -392,7 +341,10 @@ function DesktopAccount({
           <LinkRow to="/reinitialiser" icon={Lock} label={t("acct.password")} right={modify} />
         </Card>
 
-        <LimitsCard className="order-4 xl:order-none" />
+        <Card className="order-4 xl:order-none">
+          <Eyebrow>{t("acct.limits")}</Eyebrow>
+          <LinkRow to="/app/limites" icon={Gauge} label={t("acct.limitsRow")} sub={t("acct.limitsSub")} right={<ChevronRight className="h-[18px] w-[18px] shrink-0 text-muted-foreground" />} />
+        </Card>
         </div>
 
         <div className="contents xl:flex xl:flex-col xl:gap-5">

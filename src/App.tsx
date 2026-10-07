@@ -22,6 +22,7 @@ import Envoyer from "./pages/app/Envoyer";
 import AppOTC from "./pages/app/AppOTC";
 import Compte from "./pages/app/Compte";
 import ChangerEmail from "./pages/app/ChangerEmail";
+import Limites from "./pages/app/Limites";
 import Activite from "./pages/app/Activite";
 import OrderDetail from "./pages/app/OrderDetail";
 import Verification from "./pages/app/Verification";
@@ -92,6 +93,7 @@ const App = () => (
         <Route path="/app/activite/:id" element={<RequireAuth><OrderDetail /></RequireAuth>} />
         <Route path="/app/compte" element={<RequireAuth><Compte /></RequireAuth>} />
         <Route path="/app/changer-email" element={<RequireAuth><ChangerEmail /></RequireAuth>} />
+        <Route path="/app/limites" element={<RequireAuth><Limites /></RequireAuth>} />
         <Route path="/app/verification" element={<RequireAuth><Verification /></RequireAuth>} />
         <Route path="/app/entreprise" element={<RequireAuth><Entreprise /></RequireAuth>} />
 

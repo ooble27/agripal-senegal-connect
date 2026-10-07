@@ -8,18 +8,16 @@ import RecipientBook from "@/components/app/RecipientBook";
 import { Button } from "@/components/ui/button";
 import { NETWORKS, type NetId } from "@/components/app/networks";
 import { useUsdtRate } from "@/hooks/useUsdtRate";
-import { createOrder, orderRef } from "@/lib/orders";
+import { createOrder, getAllowance, orderRef, type TradeAllowance } from "@/lib/orders";
+import { amountText, parseAmount, toCad, toUsdt, type Unit } from "@/lib/tradeAmounts";
 import { sendEmail, notifyStaffOfNewOrder } from "@/lib/email";
 import { getMyProfile } from "@/lib/profile";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { TRADING_ENABLED } from "@/lib/config";
+import { TRADE_DAILY_MAX_CAD, TRADE_MIN_CAD, TRADING_ENABLED } from "@/lib/config";
 
-type Unit = "USDT" | "CAD";
 type Step = "amount" | "reception" | "network" | "deposit" | "done";
-
-const MIN_USDT = 50;
 
 const OOBLE_DEPOSIT: Record<NetId, string> = {
   trx: "TSPUk2W5bcGGNPpKzx1xTDc2NuxpRJRCBb",
@@ -100,10 +98,35 @@ const AppVendre = () => {
     });
   }, []);
 
-  const value = parseFloat(amount.replace(",", ".")) || 0;
-  const usdt = unit === "USDT" ? value : value / rate.sell;
-  const cad = unit === "USDT" ? value * rate.sell : value;
-  const belowMin = usdt > 0 && usdt < MIN_USDT;
+  // Limites : 100 $ minimum, 9 999 $ au total sur 24 heures, sur le montant
+  // en CAD (même règle en base, comptée à part des achats).
+  const [allowance, setAllowance] = useState<TradeAllowance | null>(null);
+  useEffect(() => { getAllowance("sell").then(setAllowance); }, []);
+  const maxCad = Math.floor(Math.min(TRADE_DAILY_MAX_CAD, allowance?.remaining ?? TRADE_DAILY_MAX_CAD));
+  const blocked = allowance !== null && maxCad < TRADE_MIN_CAD;
+
+  const sellRate = rate.sell;
+  const value = parseAmount(amount);
+  const usdt = toUsdt(value, unit, sellRate);
+  const cad = toCad(usdt, "USDT", sellRate);
+  const belowMin = value > 0 && cad < TRADE_MIN_CAD;
+
+  const maxText = (u: Unit) => amountText(maxCad, u, sellRate, "max");
+  const minText = (u: Unit) => amountText(TRADE_MIN_CAD, u, sellRate, "min");
+
+  // Au-delà du maximum permis, la saisie est ramenée au maximum.
+  const onAmount = (raw: string) => {
+    const clean = raw.replace(/[^\d.,]/g, "");
+    if (toCad(toUsdt(parseAmount(clean), unit, sellRate), "USDT", sellRate) > maxCad) setAmount(maxText(unit));
+    else setAmount(clean);
+  };
+
+  const nextAtText = allowance?.nextAt
+    ? allowance.nextAt.toLocaleString("fr-CA", {
+        hour: "2-digit", minute: "2-digit",
+        ...(allowance.nextAt.toDateString() !== new Date().toDateString() ? { day: "numeric", month: "long" } : {}),
+      })
+    : "";
   const network = NETWORKS.find((n) => n.id === net) ?? null;
   const depositAddr = net ? OOBLE_DEPOSIT[net] : "";
 
@@ -115,7 +138,7 @@ const AppVendre = () => {
       side: "sell",
       cad,
       usdt,
-      rate: rate.sell,
+      rate: sellRate,
       network: net ?? undefined,
       interacEmail: email,
     });
@@ -152,7 +175,7 @@ const AppVendre = () => {
       network: network ? `${network.name} · ${network.tag}` : "—",
       address: depositAddr,
       clientEmail: user?.email ?? email,
-      clientName: user?.user_metadata?.full_name ?? "",
+      clientName: user?.name ?? "",
       adminUrl: `${window.location.origin}/admin`,
     });
   };
@@ -167,20 +190,26 @@ const AppVendre = () => {
         <div className="rounded-[20px] border border-border bg-card p-5">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{t("sell.amount")}</span>
-            <div className="inline-flex gap-0.5 rounded-[10px] bg-secondary/70 p-[3px]">
-              {(["USDT", "CAD"] as Unit[]).map((u) => (
-                <button
-                  key={u}
-                  type="button"
-                  onClick={() => { setUnit(u); setAmount(""); }}
-                  className={cn(
-                    "rounded-[7px] px-3 py-[5px] text-xs font-semibold transition-colors",
-                    unit === u ? "bg-card text-foreground dark:bg-neutral-600" : "text-muted-foreground",
-                  )}
-                >
-                  {u}
-                </button>
-              ))}
+            <div className="flex items-center gap-3">
+              <div className="inline-flex gap-0.5 rounded-[10px] bg-secondary/70 p-[3px]">
+                {(["USDT", "CAD"] as Unit[]).map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    onClick={() => { setUnit(u); setAmount(""); }}
+                    className={cn(
+                      "rounded-[7px] px-3 py-[5px] text-xs font-semibold transition-colors",
+                      unit === u ? "bg-card text-foreground dark:bg-neutral-600" : "text-muted-foreground",
+                    )}
+                  >
+                    {u}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setAmount(minText(unit))} className="text-[11px] font-medium text-muted-foreground underline">Min</button>
+                <button type="button" onClick={() => setAmount(maxText(unit))} className="text-[11px] font-medium text-muted-foreground underline">Max</button>
+              </div>
             </div>
           </div>
 
@@ -189,7 +218,8 @@ const AppVendre = () => {
               inputMode="decimal"
               placeholder="0"
               value={amount}
-              onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ""))}
+              onChange={(e) => onAmount(e.target.value)}
+              disabled={blocked}
               className="w-full rounded-[14px] border border-border bg-secondary/40 py-[18px] pl-5 pr-[84px] text-[34px] font-bold tracking-[-1px] outline-none placeholder:text-muted-foreground/40"
             />
             <span className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center gap-1.5 text-sm font-medium text-muted-foreground">
@@ -198,7 +228,13 @@ const AppVendre = () => {
             </span>
           </div>
 
-          <p className={cn("mt-2 text-xs", belowMin ? "text-destructive" : "text-muted-foreground")}>{t("sell.minimum")} {MIN_USDT} USDT</p>
+          {blocked ? (
+            <p className="mt-3 text-[13px] leading-relaxed text-destructive">
+              {t("sell.limitReached").replace("{time}", nextAtText)}
+            </p>
+          ) : belowMin ? (
+            <p className="mt-3 text-[13px] text-destructive">{t("sell.minHint")}</p>
+          ) : null}
         </div>
 
         <div className="mt-3 flex flex-col gap-2.5 rounded-[16px] border border-border bg-card px-5 py-4">
@@ -208,12 +244,12 @@ const AppVendre = () => {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-[13px] text-muted-foreground">{t("sell.rate")}</span>
-            <span className="text-[13px] text-muted-foreground">1 USDT = {nfCad.format(rate.sell)} CAD</span>
+            <span className="text-[13px] text-muted-foreground">1 USDT = {nfCad.format(sellRate)} CAD</span>
           </div>
         </div>
 
         <div className="mt-3 flex justify-start">
-          <Button variant="appPrimary" shape="soft" className="h-auto gap-2 px-[22px] py-[13px] text-sm" disabled={value <= 0 || belowMin} onClick={() => setStep("reception")}>
+          <Button variant="appPrimary" shape="soft" className="h-auto gap-2 px-[22px] py-[13px] text-sm" disabled={value <= 0 || belowMin || blocked} onClick={() => setStep("reception")}>
             <HandCoins className="h-[17px] w-[17px]" strokeWidth={2} /> {t("sell.continue")}
           </Button>
         </div>
@@ -363,7 +399,7 @@ const AppVendre = () => {
           { label: t("sell.youSend"), value: `${nfUsdt.format(usdt)} USDT` },
           { label: t("sell.youReceive"), value: `${nfCad.format(cad)} CAD` },
           { label: t("sell.network"), value: network ? `${network.name} · ${network.tag}` : "—" },
-          { label: t("sell.rate"), value: `1 USDT = ${nfCad.format(rate.sell)} CAD` },
+          { label: t("sell.rate"), value: `1 USDT = ${nfCad.format(sellRate)} CAD` },
           { label: t("sell.receivedByInterac"), value: email, mono: true },
         ].map((r, i, arr) => (
           <div key={r.label} className={cn("flex items-center justify-between px-4 py-[14px]", i < arr.length - 1 && "border-b border-border")}>

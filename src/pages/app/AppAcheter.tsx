@@ -7,15 +7,14 @@ import RecipientBook from "@/components/app/RecipientBook";
 import { NETWORKS, type NetId } from "@/components/app/networks";
 import { Button } from "@/components/ui/button";
 import { useUsdtRate } from "@/hooks/useUsdtRate";
-import { createOrder, getBuyAllowance, orderRef, type BuyAllowance } from "@/lib/orders";
-import { maxUsdtForCad, quoteFromCad, quoteFromUsdt, smallRate } from "@/lib/buyPricing";
+import { createOrder, getAllowance, orderRef, type TradeAllowance } from "@/lib/orders";
+import { amountText, parseAmount, toCad, toUsdt, type Unit } from "@/lib/tradeAmounts";
 import { sendEmail, notifyStaffOfNewOrder } from "@/lib/email";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { BUY_DAILY_MAX_CAD, BUY_MIN_CAD, OOBLE_INTERAC_EMAIL, TRADING_ENABLED } from "@/lib/config";
+import { OOBLE_INTERAC_EMAIL, TRADE_DAILY_MAX_CAD, TRADE_MIN_CAD, TRADING_ENABLED } from "@/lib/config";
 
-type Unit = "CAD" | "USDT";
 type Step = "amount" | "network" | "address" | "recap" | "done";
 const nfCad = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
 const nfUsdt = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 2 });
@@ -79,32 +78,27 @@ const AppAcheter = () => {
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // Limites : 100 $ minimum, 9 999 $ au total sur 24 heures ; taux majoré
-  // de 4 % sous 1 000 $ (src/lib/buyPricing.ts — même règle en base).
-  const [allowance, setAllowance] = useState<BuyAllowance | null>(null);
-  useEffect(() => { getBuyAllowance().then(setAllowance); }, []);
-  const maxCad = Math.floor(Math.min(BUY_DAILY_MAX_CAD, allowance?.remaining ?? BUY_DAILY_MAX_CAD));
-  const blocked = allowance !== null && maxCad < BUY_MIN_CAD;
+  // Limites : 100 $ minimum, 9 999 $ au total sur 24 heures (même règle
+  // en base). Même taux quel que soit le montant.
+  const [allowance, setAllowance] = useState<TradeAllowance | null>(null);
+  useEffect(() => { getAllowance("buy").then(setAllowance); }, []);
+  const maxCad = Math.floor(Math.min(TRADE_DAILY_MAX_CAD, allowance?.remaining ?? TRADE_DAILY_MAX_CAD));
+  const blocked = allowance !== null && maxCad < TRADE_MIN_CAD;
 
-  const parse = (txt: string) => parseFloat(txt.replace(",", ".")) || 0;
-  const quote = (v: number, u: Unit) => (u === "CAD" ? quoteFromCad(v, rate.buy) : quoteFromUsdt(v, rate.buy));
-  const value = parse(amount);
-  const q = quote(value, unit);
-  const usdt = q.usdt;
-  const cad = q.cad;
-  const buyRate = value > 0 ? q.rate : rate.buy;
-  const belowMin = value > 0 && cad < BUY_MIN_CAD;
+  const buyRate = rate.buy;
+  const value = parseAmount(amount);
+  const cad = toCad(value, unit, buyRate);
+  const usdt = toUsdt(value, unit, buyRate);
+  const belowMin = value > 0 && cad < TRADE_MIN_CAD;
   const network = NETWORKS.find((n) => n.id === net) ?? null;
 
-  const maxText = (u: Unit) =>
-    u === "CAD" ? String(maxCad) : String(Math.floor(maxUsdtForCad(maxCad, rate.buy) * 100) / 100).replace(".", ",");
-  const minText = (u: Unit) =>
-    u === "CAD" ? String(BUY_MIN_CAD) : String(Math.ceil((BUY_MIN_CAD / smallRate(rate.buy)) * 100) / 100).replace(".", ",");
+  const maxText = (u: Unit) => amountText(maxCad, u, buyRate, "max");
+  const minText = (u: Unit) => amountText(TRADE_MIN_CAD, u, buyRate, "min");
 
   // Au-delà du maximum permis, la saisie est ramenée au maximum.
   const onAmount = (raw: string) => {
     const clean = raw.replace(/[^\d.,]/g, "");
-    if (quote(parse(clean), unit).cad > maxCad) setAmount(maxText(unit));
+    if (toCad(parseAmount(clean), unit, buyRate) > maxCad) setAmount(maxText(unit));
     else setAmount(clean);
   };
 

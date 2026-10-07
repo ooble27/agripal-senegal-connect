@@ -50,26 +50,27 @@ export interface CreateOrderInput {
   interacEmail?: string;  // vente : e-mail Interac du client
 }
 
-export interface BuyAllowance {
+export interface TradeAllowance {
   /** Limite du compte sur 24 heures (CAD). */
   limit: number;
-  /** Déjà acheté sur les 24 dernières heures (CAD). */
+  /** Déjà acheté (ou vendu) sur les 24 dernières heures (CAD). */
   used: number;
   /** Encore possible maintenant (CAD). */
   remaining: number;
-  /** Quand un nouvel achat redevient possible, si la limite est atteinte. */
+  /** Quand un nouvel ordre redevient possible, si la limite est atteinte. */
   nextAt: Date | null;
 }
 
 /**
- * Ce que le client peut encore acheter sur 24 heures glissantes (achats non
- * annulés, expirés ni remboursés). La base applique la même règle.
+ * Ce que le client peut encore acheter (ou vendre) sur 24 heures glissantes
+ * (ordres non annulés, expirés ni remboursés, du même sens). La base
+ * applique la même règle.
  */
-export async function getBuyAllowance(): Promise<BuyAllowance> {
-  const { BUY_DAILY_MAX_CAD, BUY_MIN_CAD } = await import("@/lib/config");
+export async function getAllowance(side: "buy" | "sell"): Promise<TradeAllowance> {
+  const { TRADE_DAILY_MAX_CAD, TRADE_MIN_CAD } = await import("@/lib/config");
   const { data: auth } = await supabase.auth.getSession();
   const uid = auth.session?.user?.id;
-  const fallback = { limit: BUY_DAILY_MAX_CAD, used: 0, remaining: BUY_DAILY_MAX_CAD, nextAt: null };
+  const fallback = { limit: TRADE_DAILY_MAX_CAD, used: 0, remaining: TRADE_DAILY_MAX_CAD, nextAt: null };
   if (!uid) return fallback;
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
   const [{ data: prof }, { data: rows }] = await Promise.all([
@@ -78,22 +79,22 @@ export async function getBuyAllowance(): Promise<BuyAllowance> {
       .from("orders")
       .select("cad_amount, created_at")
       .eq("user_id", uid)
-      .eq("side", "buy")
+      .eq("side", side)
       .not("status", "in", "(cancelled,expired,refunded)")
       .gt("created_at", since)
       .order("created_at", { ascending: true }),
   ]);
-  const limit = Math.min(Number(prof?.daily_limit_cad ?? BUY_DAILY_MAX_CAD), BUY_DAILY_MAX_CAD);
+  const limit = Math.min(Number(prof?.daily_limit_cad ?? TRADE_DAILY_MAX_CAD), TRADE_DAILY_MAX_CAD);
   const list = (rows ?? []).map((r) => ({ cad: Number(r.cad_amount), at: new Date(r.created_at) }));
   const used = list.reduce((s, r) => s + r.cad, 0);
   const remaining = Math.max(0, Math.floor((limit - used) * 100) / 100);
-  // Limite atteinte : on attend que d'anciens achats sortent de la fenêtre.
+  // Limite atteinte : on attend que d'anciens ordres sortent de la fenêtre.
   let nextAt: Date | null = null;
-  if (remaining < BUY_MIN_CAD) {
+  if (remaining < TRADE_MIN_CAD) {
     let freed = remaining;
     for (const r of list) {
       freed += r.cad;
-      if (freed >= BUY_MIN_CAD) { nextAt = new Date(r.at.getTime() + 24 * 3600 * 1000); break; }
+      if (freed >= TRADE_MIN_CAD) { nextAt = new Date(r.at.getTime() + 24 * 3600 * 1000); break; }
     }
   }
   return { limit, used, remaining, nextAt };

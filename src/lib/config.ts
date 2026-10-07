@@ -33,13 +33,12 @@ export const KYB_PREVIEW_USERS: string[] = [
 ];
 
 /**
- * Achats : limites et taux selon le montant (mêmes règles en base, voir la
- * migration 20261007020000_buy_limits_tiered_rate.sql, qui fait autorité).
- *   • 100 $ minimum par achat ;
- *   • 9 999 $ au total sur 24 heures glissantes (sous le seuil CANAFE) ;
- *   • moins de 1 000 $ : taux d'achat majoré de 4 %.
+ * Achats et ventes : limites sur le montant en CAD (mêmes règles en base,
+ * voir la migration 20261007030000_flat_rate_sell_limits.sql, qui fait
+ * autorité). Achats et ventes sont comptés séparément.
+ *   • 100 $ minimum par ordre ;
+ *   • 9 999 $ au total sur 24 heures glissantes (sous le seuil CANAFE).
+ * Le taux est le même quel que soit le montant.
  */
-export const BUY_MIN_CAD = 100;
-export const BUY_DAILY_MAX_CAD = 9999;
-export const SMALL_BUY_THRESHOLD_CAD = 1000;
-export const SMALL_BUY_MARKUP = 0.04;
+export const TRADE_MIN_CAD = 100;
+export const TRADE_DAILY_MAX_CAD = 9999;

@@ -8,7 +8,7 @@ import { LangPill } from "@/components/app/LangToggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { getMyProfile, type MyProfile } from "@/lib/profile";
-import { getBuyAllowance, type BuyAllowance } from "@/lib/orders";
+import { getAllowance, type TradeAllowance } from "@/lib/orders";
 import { getMyKyc, type KycDbStatus } from "@/lib/kyc";
 import { useLang, useT } from "@/lib/i18n";
 import { getTheme, onThemeChange, setTheme, type Theme } from "@/lib/theme";
@@ -123,7 +123,7 @@ const Compte = () => {
         <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
       </Link>
 
-      <BuyLimitCard className="mt-3" />
+      <LimitsCard className="mt-3" />
 
       {/* ─── Interac e-Transfer ─── */}
       {profile?.interacQuestion && (
@@ -200,33 +200,55 @@ const Compte = () => {
 
 const nfInt = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 0 });
 
-function BuyLimitCard({ className }: { className?: string }) {
+const fmtNext = (d: Date) =>
+  d.toLocaleString("fr-CA", {
+    hour: "2-digit", minute: "2-digit",
+    ...(d.toDateString() !== new Date().toDateString() ? { day: "numeric", month: "long" } : {}),
+  });
+
+/** Limites sur 24 heures : achats et ventes, comptés séparément. */
+function LimitsCard({ className }: { className?: string }) {
   const t = useT();
-  const [a, setA] = useState<BuyAllowance | null>(null);
-  useEffect(() => { getBuyAllowance().then(setA); }, []);
-  if (!a) return null;
-  const pct = a.limit > 0 ? Math.min(100, (a.used / a.limit) * 100) : 0;
-  const next = a.nextAt
-    ? a.nextAt.toLocaleString("fr-CA", {
-        hour: "2-digit", minute: "2-digit",
-        ...(a.nextAt.toDateString() !== new Date().toDateString() ? { day: "numeric", month: "long" } : {}),
-      })
-    : "";
+  const [lim, setLim] = useState<{ buy: TradeAllowance; sell: TradeAllowance } | null>(null);
+  useEffect(() => {
+    Promise.all([getAllowance("buy"), getAllowance("sell")]).then(([buy, sell]) => setLim({ buy, sell }));
+  }, []);
+  if (!lim) return null;
+  const rows: { key: "buy" | "sell"; label: TKey; next: TKey }[] = [
+    { key: "buy", label: "acct.limitBuy", next: "acct.buyLimitNext" },
+    { key: "sell", label: "acct.limitSell", next: "acct.sellLimitNext" },
+  ];
+  const notes = rows.filter((r) => lim[r.key].nextAt).map((r) => t(r.next).replace("{time}", fmtNext(lim[r.key].nextAt!)));
   return (
     <section className={cn("overflow-hidden rounded-2xl border border-border bg-card px-6 py-5", className)}>
-      <p className="text-[11.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{t("acct.buyLimit")}</p>
-      <p className="mt-2 font-display text-[22px] font-semibold tracking-tight tabular-nums">
-        {nfInt.format(a.limit)} $ <span className="text-[14px] font-normal text-muted-foreground">{t("acct.buyLimitPer")}</span>
-      </p>
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-secondary">
-        <div className="h-full rounded-full bg-foreground transition-[width]" style={{ width: `${pct}%` }} />
+      <div className="flex items-baseline justify-between gap-4">
+        <p className="text-[11.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{t("acct.limits")}</p>
+        <p className="text-[13px] text-muted-foreground">
+          <span className="font-medium text-foreground tabular-nums">{nfInt.format(lim.buy.limit)} $</span> {t("acct.buyLimitPer")}
+        </p>
       </div>
-      <div className="mt-3 flex justify-between gap-4 text-[13.5px]">
-        <span className="text-muted-foreground">{t("acct.buyLimitUsed")} <span className="font-medium text-foreground tabular-nums">{nfInt.format(a.used)} $</span></span>
-        <span className="text-muted-foreground">{t("acct.buyLimitLeft")} <span className="font-medium text-foreground tabular-nums">{nfInt.format(Math.floor(a.remaining))} $</span></span>
+      <div className="mt-4 flex flex-col gap-3.5">
+        {rows.map(({ key, label }) => {
+          const a = lim[key];
+          const pct = a.limit > 0 ? Math.min(100, (a.used / a.limit) * 100) : 0;
+          return (
+            <div key={key}>
+              <div className="flex items-baseline justify-between gap-4 text-[14.5px]">
+                <span>{t(label)}</span>
+                <span className="text-[13.5px] text-muted-foreground">
+                  {t("acct.buyLimitLeft")} <span className="font-medium text-foreground tabular-nums">{nfInt.format(Math.floor(a.remaining))} $</span>
+                  <span className="sr-only"> · {t("acct.buyLimitUsed")} {nfInt.format(a.used)} $</span>
+                </span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary">
+                <div className="h-full rounded-full bg-foreground transition-[width]" style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          );
+        })}
       </div>
-      <p className="mt-3 text-[12.5px] leading-relaxed text-muted-foreground">
-        {next ? t("acct.buyLimitNext").replace("{time}", next) : t("acct.buyLimitReset")}
+      <p className="mt-4 text-[12.5px] leading-relaxed text-muted-foreground">
+        {notes.length ? notes.join(" ") : t("acct.buyLimitReset")}
       </p>
     </section>
   );
@@ -234,8 +256,9 @@ function BuyLimitCard({ className }: { className?: string }) {
 
 /* ─── Tablette / ordinateur : proposition A ───
    Colonne profil à gauche (identité, vérifications, actions) ; à droite,
-   les cartes sur deux colonnes : entreprise, connexion et sécurité, limite
-   d'achat | Interac, préférences. Arrondi 16 px. */
+   les cartes sur deux colonnes : entreprise, connexion et sécurité, limites
+   | Interac, préférences. Les boutons du bas de la colonne profil
+   s'alignent sur le bas de la dernière carte. Arrondi 16 px. */
 
 const initialsOf = (n: string) => n.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "?";
 
@@ -245,10 +268,11 @@ const Card = ({ children, className }: { children: React.ReactNode; className?: 
 const Eyebrow = ({ children }: { children: React.ReactNode }) => (
   <p className="px-6 pb-3 pt-5 text-[11.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{children}</p>
 );
+/** Ligne libellé / valeur ; sur grand écran, en tuile (libellé au-dessus). */
 const InfoRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <div className="flex justify-between gap-6 border-t border-border px-6 py-3.5 text-[15px]">
-    <span className="shrink-0 text-muted-foreground">{label}</span>
-    <span className="min-w-0 text-right">{children}</span>
+  <div className="flex justify-between gap-6 border-t border-border px-6 py-3.5 text-[15px] xl:flex-col xl:justify-start xl:gap-1 xl:border-t-0 xl:py-4">
+    <span className="shrink-0 text-muted-foreground xl:text-[13px]">{label}</span>
+    <span className="min-w-0 text-right xl:text-left">{children}</span>
   </div>
 );
 const LinkRow = ({ to, icon: Icon, label, sub, right }: { to: string; icon: React.ElementType; label: string; sub?: string; right?: React.ReactNode }) => (
@@ -298,7 +322,7 @@ function DesktopAccount({
   const modify = <span className="shrink-0 text-[13.5px] font-medium text-foreground/80">{t("acct.modify")}</span>;
 
   return (
-    <div className="hidden items-start gap-6 md:flex lg:gap-7">
+    <div className="hidden items-stretch gap-6 md:flex lg:gap-7">
       {/* Colonne profil */}
       <aside className="flex w-[300px] shrink-0 flex-col gap-4 lg:w-[330px]">
         <Card className="flex flex-col items-center px-6 py-8 text-center">
@@ -325,7 +349,8 @@ function DesktopAccount({
           )}
         </Card>
 
-        <div className="flex flex-wrap gap-2.5">
+        {/* Actions : en bas de la colonne, au niveau de la dernière carte à droite. */}
+        <div className="mt-auto flex flex-wrap gap-2.5 pt-4">
           {isStaff && (
             <Button asChild variant="appOutline" shape="rounded" className="h-auto gap-2 px-[18px] py-[10px] text-sm">
               <Link to="/admin"><LayoutGrid className="h-4 w-4" /> {t("acct.backoffice")}</Link>
@@ -337,12 +362,11 @@ function DesktopAccount({
         </div>
       </aside>
 
-      {/* Réglages : une colonne, puis deux piles à partir de xl
-          (entreprise, sécurité, limite | Interac, préférences). */}
+      {/* Réglages : une colonne ; à partir de xl, l'entreprise sur toute la
+          largeur puis deux piles (sécurité, limites | Interac, préférences). */}
       <div className="flex min-w-0 flex-1 flex-col gap-5 xl:grid xl:grid-cols-2 xl:items-start">
-        <div className="contents xl:flex xl:flex-col xl:gap-5">
         {business && profile && (
-          <Card className="order-1 xl:order-none">
+          <Card className="order-1 xl:order-none xl:col-span-2">
             <div className="flex items-center gap-3.5 px-6 pb-4 pt-5">
               <BusinessMark name={profile.businessName} size="md" className="h-11 w-11 rounded-xl text-[15px]" />
               <div className="min-w-0 flex-1">
@@ -353,19 +377,22 @@ function DesktopAccount({
                 {t("acct.viewFile")}
               </Link>
             </div>
+            <div className="xl:grid xl:grid-cols-3 xl:divide-x xl:divide-border xl:border-t xl:border-border">
             {profile.businessNumber && <InfoRow label="NEQ / BN"><span className="tabular-nums">{profile.businessNumber}</span></InfoRow>}
             {profile.businessAddress && <InfoRow label={t("regb.address")}>{profile.businessAddress}</InfoRow>}
             {profile.businessPhone && <InfoRow label={t("regb.phone")}><span className="tabular-nums">{profile.businessPhone}</span></InfoRow>}
+            </div>
           </Card>
         )}
 
+        <div className="contents xl:flex xl:flex-col xl:gap-5">
         <Card className="order-3 xl:order-none">
           <Eyebrow>{t("acct.security")}</Eyebrow>
           <LinkRow to="/app/changer-email" icon={Mail} label={t("acct.email")} sub={email} right={modify} />
           <LinkRow to="/reinitialiser" icon={Lock} label={t("acct.password")} right={modify} />
         </Card>
 
-        <BuyLimitCard className="order-4 xl:order-none" />
+        <LimitsCard className="order-4 xl:order-none" />
         </div>
 
         <div className="contents xl:flex xl:flex-col xl:gap-5">

@@ -119,10 +119,9 @@ const OTC = () => {
         <section>
           <Wrap className="grid items-center gap-12 pb-8 pt-14 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14 lg:pt-20">
             <div>
-              <span className="animate-up inline-flex items-center gap-2 rounded-full border border-border bg-card py-1.5 pl-1.5 pr-3.5 text-[12.5px] font-medium">
-                <span className="rounded-full bg-foreground px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-background">OTC</span>
-                {L({ fr: "Gros volumes de USDT", en: "Large USDT volumes" })}
-              </span>
+              <p className="animate-up text-[12px] uppercase tracking-[0.16em] text-muted-foreground">
+                {L({ fr: "Desk OTC · Gros volumes de USDT", en: "OTC desk · Large USDT volumes" })}
+              </p>
               <h1 className="animate-up mt-6 font-display text-[2.7rem] leading-[0.98] tracking-[-0.05em] [animation-delay:80ms] sm:text-[3.6rem] lg:text-[4.1rem]">
                 {L({ fr: "Le desk OTC,", en: "The OTC desk," })}
                 <br />
@@ -211,67 +210,69 @@ const OTC = () => {
           </Wrap>
         </section>
 
-        {/* ===================== ÉTAPES ===================== */}
-        <section id="etapes" className="scroll-mt-24">
-          <Wrap className="pt-28 lg:pt-36">
-            <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
-              <Reveal className="lg:sticky lg:top-28 lg:self-start">
+        {/* ===================== ÉTAPES (bande grise pleine largeur) ===================== */}
+        <section id="etapes" className="mt-28 scroll-mt-24 bg-secondary lg:mt-36">
+          <Wrap className="py-20 lg:py-24">
+            <Reveal className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
+              <div>
                 <Kicker>{L({ fr: "Les étapes", en: "The steps" })}</Kicker>
                 <H2 className="mt-4">
-                  {L({ fr: "De la demande", en: "From request" })}
-                  <br />
-                  <span className="text-foreground/35">{L({ fr: "au reçu.", en: "to receipt." })}</span>
+                  {L({ fr: "De la demande", en: "From request" })} <span className="text-foreground/35">{L({ fr: "au reçu.", en: "to receipt." })}</span>
                 </H2>
-                <p className="mt-6 max-w-[320px] text-[15px] leading-[1.7] text-muted-foreground">
-                  {L({ fr: "Vous voyez le prix avant de vous engager. Rien ne bouge sans votre accord.", en: "You see the price before you commit. Nothing moves without your approval." })}
-                </p>
-              </Reveal>
+              </div>
+              <p className="max-w-[300px] text-[15px] leading-[1.6] text-muted-foreground">
+                {L({ fr: "Vous voyez le prix avant de vous engager. Rien ne bouge sans votre accord.", en: "You see the price before you commit. Nothing moves without your approval." })}
+              </p>
+            </Reveal>
 
-              <ol className="relative">
-                <span aria-hidden className="absolute bottom-6 left-[7px] top-3 w-px bg-border" />
-                {STEPS.map((s, i) => (
-                  <Reveal key={s.t.fr} delay={i * 90} className="relative pb-12 pl-12 last:pb-0">
-                    <span aria-hidden className="absolute left-0 top-[0.55rem] h-[15px] w-[15px] rounded-full border-2 border-foreground bg-background" />
-                    <p className="text-[13px] tabular-nums text-muted-foreground">{String(i + 1).padStart(2, "0")}</p>
-                    <h3 className="mt-1 font-display text-[1.6rem] leading-[1.15] tracking-[-0.035em] sm:text-[2rem]">{L(s.t)}</h3>
-                    <p className="mt-3 max-w-[520px] text-[15px] leading-[1.7] text-muted-foreground">{L(s.d)}</p>
-                  </Reveal>
-                ))}
-              </ol>
-            </div>
+            <ol className="mt-14 grid sm:grid-cols-2 lg:grid-cols-5">
+              {STEPS.map((s, i) => (
+                <Reveal
+                  key={s.t.fr}
+                  delay={i * 90}
+                  className="border-t border-foreground/10 py-7 sm:pr-8 lg:border-l lg:border-t-0 lg:px-6 lg:py-2 lg:first:border-l-0 lg:first:pl-0"
+                >
+                  <p className="font-display text-[3.4rem] leading-none tracking-[-0.06em] text-foreground/15">{i + 1}</p>
+                  <h3 className="mt-5 text-[16px] font-semibold tracking-[-0.015em]">{L(s.t)}</h3>
+                  <p className="mt-2 text-[14px] leading-[1.6] text-muted-foreground">{L(s.d)}</p>
+                </Reveal>
+              ))}
+            </ol>
           </Wrap>
         </section>
 
         {/* ===================== À PRÉPARER ===================== */}
         <section>
-          <Wrap className="pt-28 lg:pt-36">
-            <Reveal className="max-w-[640px]">
-              <Kicker>{L({ fr: "Avant de commencer", en: "Before you start" })}</Kicker>
-              <H2 className="mt-4">{L({ fr: "Ce qu'il faut préparer.", en: "What to prepare." })}</H2>
-            </Reveal>
-            <div className="mt-14 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-              {NEEDS.map(({ icon: Icon, t, d }, i) => (
-                <Reveal key={t.fr} delay={i * 80}>
-                  <Icon className="h-7 w-7 text-foreground/70" strokeWidth={1.4} />
-                  <p className="mt-5 font-display text-[1.2rem] tracking-[-0.025em]">{L(t)}</p>
-                  <p className="mt-2 text-[14.5px] leading-[1.6] text-muted-foreground">{L(d)}</p>
-                </Reveal>
-              ))}
+          <Wrap className="pt-24 lg:pt-28">
+            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+              <Reveal>
+                <Kicker>{L({ fr: "Avant de commencer", en: "Before you start" })}</Kicker>
+                <H2 className="mt-4">{L({ fr: "Ce qu'il faut préparer.", en: "What to prepare." })}</H2>
+                <p className="mt-6 max-w-[360px] text-[13.5px] leading-[1.7] text-muted-foreground">
+                  {L({
+                    fr: "Comme toute entreprise de services monétaires au Canada, nous vérifions l'identité et l'origine des fonds, et déclarons à CANAFE les opérations prévues par la loi.",
+                    en: "Like every money services business in Canada, we verify identity and the source of funds, and report to FINTRAC the transactions required by law.",
+                  })}
+                </p>
+              </Reveal>
+              <ul>
+                {NEEDS.map(({ icon: Icon, t, d }, i) => (
+                  <Reveal key={t.fr} delay={i * 70} className="flex items-center gap-5 border-b py-5 first:border-t">
+                    <Icon className="h-6 w-6 shrink-0 text-foreground/70" strokeWidth={1.5} />
+                    <p className="min-w-0 text-[15px] leading-[1.5]">
+                      <span className="font-medium">{L(t)}</span>
+                      <span className="text-muted-foreground"> — {L(d)}</span>
+                    </p>
+                  </Reveal>
+                ))}
+              </ul>
             </div>
-            <Reveal delay={200}>
-              <p className="mt-14 max-w-[640px] text-[13.5px] leading-[1.7] text-muted-foreground">
-                {L({
-                  fr: "Comme toute entreprise de services monétaires au Canada, nous vérifions l'identité et l'origine des fonds, et déclarons à CANAFE les opérations prévues par la loi.",
-                  en: "Like every money services business in Canada, we verify identity and the source of funds, and report to FINTRAC the transactions required by law.",
-                })}
-              </p>
-            </Reveal>
           </Wrap>
         </section>
 
         {/* ===================== QUESTIONS ===================== */}
         <section>
-          <Wrap className="pt-28 lg:pt-36">
+          <Wrap className="pt-24 lg:pt-28">
             <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
               <Reveal>
                 <Kicker>{L({ fr: "Questions", en: "Questions" })}</Kicker>

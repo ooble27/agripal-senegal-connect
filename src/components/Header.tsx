@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import Logo from "./Logo";
 import ThemeToggle from "./app/ThemeToggle";
 import { LangPill } from "./app/LangToggle";
+import { useOtcVisible } from "@/lib/otc";
 
 /**
  * En-tête public. `inverted` l'adapte à un panneau `bg-foreground` en restant
@@ -17,11 +18,12 @@ const Header = ({ inverted }: { inverted?: boolean }) => {
   const { pathname, hash } = useLocation();
   const current = `${pathname}${hash}`;
   const t = useT();
+  const otc = useOtcVisible();
 
   const links = [
     { to: "/", label: t("nav.home") },
     { to: "/#reseaux", label: t("nav.networks") },
-    { to: "/otc", label: t("nav.otc") },
+    ...(otc ? [{ to: "/otc", label: t("nav.otc") }] : []),
     { to: "/faq", label: t("nav.faq") },
     { to: "/contact", label: t("nav.contact") },
   ];

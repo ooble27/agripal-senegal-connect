@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { OOBLE_INTERAC_EMAIL, TRADE_DAILY_MAX_CAD, TRADE_MIN_CAD, TRADING_ENABLED } from "@/lib/config";
+import { useOtcVisible } from "@/lib/otc";
 
 type Step = "amount" | "network" | "address" | "recap" | "done";
 const nfCad = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
@@ -43,6 +44,7 @@ const AppAcheter = () => {
   const rate = useUsdtRate();
   const { user, isStaff } = useAuth();
   const t = useT();
+  const otc = useOtcVisible();
 
   if (!TRADING_ENABLED && !isStaff) {
     return (
@@ -214,7 +216,7 @@ const AppAcheter = () => {
           ) : belowMin ? (
             <p className="mt-3 text-[13px] text-destructive">{t("buy.minHint")}</p>
           ) : null}
-          {(blocked || (value > 0 && cad >= maxCad)) && (
+          {otc && (blocked || (value > 0 && cad >= maxCad)) && (
             <Link to="/app/otc" className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-foreground underline-offset-2 hover:underline">
               {t("trade.otcHint")} <ArrowRight className="h-3.5 w-3.5" />
             </Link>

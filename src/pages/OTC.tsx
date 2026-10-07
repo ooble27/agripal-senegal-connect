@@ -1,15 +1,18 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { ArrowRight, Building2, Clock, Mail, Wallet } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { NETWORKS } from "@/components/app/networks";
-import { OOBLE_OTC_EMAIL, TRADE_DAILY_MAX_CAD } from "@/lib/config";
+import { OOBLE_OTC_EMAIL, OTC_ENABLED, TRADE_DAILY_MAX_CAD } from "@/lib/config";
+import { useAuth } from "@/lib/auth";
 import { T, useLang } from "@/lib/i18n";
 
 /* Desk OTC : achats et ventes de USDT au-delà de la limite de l'application
    (9 999 $ sur 24 heures). Les demandes arrivent dans la boîte
-   otc@ooble.ca (Admin → Messagerie, pastille « OTC »). */
+   otc@ooble.ca (Admin → Messagerie, pastille « OTC »).
+   Tant que OTC_ENABLED vaut false, la page n'est visible que par l'équipe
+   Ooble ; les autres sont renvoyés à l'accueil. */
 
 type Bi = { fr: string; en: string };
 
@@ -242,4 +245,11 @@ const OTC = () => {
   );
 };
 
-export default OTC;
+const OTCPage = () => {
+  const { isStaff, loading, rolesLoading } = useAuth();
+  if (OTC_ENABLED || isStaff) return <OTC />;
+  if (loading || rolesLoading) return null;
+  return <Navigate to="/" replace />;
+};
+
+export default OTCPage;

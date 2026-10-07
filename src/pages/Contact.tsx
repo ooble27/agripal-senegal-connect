@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ContactArt } from "@/components/illustrations";
 import { useT } from "@/lib/i18n";
 import type { TKey } from "@/lib/translations";
+import { useOtcVisible } from "@/lib/otc";
 
 const fieldCls =
   "w-full rounded-xl border border-border bg-card px-4 py-3.5 text-[15px] outline-none transition-colors placeholder:text-muted-foreground/60 focus-visible:border-foreground/40";
@@ -21,6 +22,7 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 
 const Contact = () => {
   const t = useT();
+  const otc = useOtcVisible();
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -83,7 +85,7 @@ const Contact = () => {
                 <div className="min-w-0">
                   <p className="text-[12px] text-muted-foreground">{t(kKey)}</p>
                   <p className="mt-1 font-display text-[15px] tracking-[-0.02em]">
-                    {kKey === "cont.email" ? "support@ooble.ca" : kKey === "cont.volumes" ? (
+                    {kKey === "cont.email" ? "support@ooble.ca" : kKey === "cont.volumes" && otc ? (
                       <Link to="/otc" className="underline-offset-2 hover:underline">{t(vKey)}</Link>
                     ) : t(vKey)}
                   </p>

@@ -2,9 +2,11 @@ import { Link } from "react-router-dom";
 import { useT } from "@/lib/i18n";
 import Logo from "./Logo";
 import { InteracLogo } from "./marks";
+import { useOtcVisible } from "@/lib/otc";
 
 const Footer = () => {
   const t = useT();
+  const otc = useOtcVisible();
 
   const columns = [
     {
@@ -12,7 +14,7 @@ const Footer = () => {
       links: [
         { label: t("nav.home"), to: "/" },
         { label: t("nav.networks"), to: "/#reseaux" },
-        { label: t("nav.otc"), to: "/otc" },
+        ...(otc ? [{ label: t("nav.otc"), to: "/otc" }] : []),
         { label: t("nav.signup"), to: "/inscription" },
       ],
     },

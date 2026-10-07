@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Coins, Check, ShieldOff } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
@@ -7,12 +7,13 @@ import RecipientBook from "@/components/app/RecipientBook";
 import { NETWORKS, type NetId } from "@/components/app/networks";
 import { Button } from "@/components/ui/button";
 import { useUsdtRate } from "@/hooks/useUsdtRate";
-import { createOrder, orderRef } from "@/lib/orders";
+import { createOrder, getBuyAllowance, orderRef, type BuyAllowance } from "@/lib/orders";
+import { maxUsdtForCad, quoteFromCad, quoteFromUsdt, smallRate } from "@/lib/buyPricing";
 import { sendEmail, notifyStaffOfNewOrder } from "@/lib/email";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { OOBLE_INTERAC_EMAIL, TRADING_ENABLED } from "@/lib/config";
+import { BUY_DAILY_MAX_CAD, BUY_MIN_CAD, OOBLE_INTERAC_EMAIL, TRADING_ENABLED } from "@/lib/config";
 
 type Unit = "CAD" | "USDT";
 type Step = "amount" | "network" | "address" | "recap" | "done";
@@ -78,15 +79,43 @@ const AppAcheter = () => {
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const value = parseFloat(amount.replace(",", ".")) || 0;
-  const usdt = unit === "CAD" ? value / rate.buy : value;
-  const cad = unit === "CAD" ? value : value * rate.buy;
+  // Limites : 100 $ minimum, 9 999 $ au total sur 24 heures ; taux majoré
+  // de 4 % sous 1 000 $ (src/lib/buyPricing.ts — même règle en base).
+  const [allowance, setAllowance] = useState<BuyAllowance | null>(null);
+  useEffect(() => { getBuyAllowance().then(setAllowance); }, []);
+  const maxCad = Math.floor(Math.min(BUY_DAILY_MAX_CAD, allowance?.remaining ?? BUY_DAILY_MAX_CAD));
+  const blocked = allowance !== null && maxCad < BUY_MIN_CAD;
+
+  const parse = (txt: string) => parseFloat(txt.replace(",", ".")) || 0;
+  const quote = (v: number, u: Unit) => (u === "CAD" ? quoteFromCad(v, rate.buy) : quoteFromUsdt(v, rate.buy));
+  const value = parse(amount);
+  const q = quote(value, unit);
+  const usdt = q.usdt;
+  const cad = q.cad;
+  const buyRate = value > 0 ? q.rate : rate.buy;
+  const belowMin = value > 0 && cad < BUY_MIN_CAD;
   const network = NETWORKS.find((n) => n.id === net) ?? null;
 
-  const setPreset = (kind: "min" | "max") => {
-    if (unit === "CAD") setAmount(kind === "min" ? "20" : "10000");
-    else setAmount(kind === "min" ? "15" : "7000");
+  const maxText = (u: Unit) =>
+    u === "CAD" ? String(maxCad) : String(Math.floor(maxUsdtForCad(maxCad, rate.buy) * 100) / 100).replace(".", ",");
+  const minText = (u: Unit) =>
+    u === "CAD" ? String(BUY_MIN_CAD) : String(Math.ceil((BUY_MIN_CAD / smallRate(rate.buy)) * 100) / 100).replace(".", ",");
+
+  // Au-delà du maximum permis, la saisie est ramenée au maximum.
+  const onAmount = (raw: string) => {
+    const clean = raw.replace(/[^\d.,]/g, "");
+    if (quote(parse(clean), unit).cad > maxCad) setAmount(maxText(unit));
+    else setAmount(clean);
   };
+
+  const setPreset = (kind: "min" | "max") => setAmount(kind === "min" ? minText(unit) : maxText(unit));
+
+  const nextAtText = allowance?.nextAt
+    ? allowance.nextAt.toLocaleString("fr-CA", {
+        hour: "2-digit", minute: "2-digit",
+        ...(allowance.nextAt.toDateString() !== new Date().toDateString() ? { day: "numeric", month: "long" } : {}),
+      })
+    : "";
 
   const submit = async () => {
     if (saving) return;
@@ -96,7 +125,7 @@ const AppAcheter = () => {
       side: "buy",
       cad,
       usdt,
-      rate: rate.buy,
+      rate: buyRate,
       network: net ?? undefined,
       address,
     });
@@ -175,7 +204,8 @@ const AppAcheter = () => {
               inputMode="decimal"
               placeholder="0"
               value={amount}
-              onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ""))}
+              onChange={(e) => onAmount(e.target.value)}
+              disabled={blocked}
               className="w-full rounded-[14px] border border-border bg-secondary/40 py-[18px] pl-5 pr-[84px] text-[34px] font-bold tracking-[-1px] outline-none placeholder:text-muted-foreground/40"
             />
             <span className="absolute right-4 top-1/2 flex -translate-y-1/2 items-center gap-1.5 text-sm font-medium text-muted-foreground">
@@ -183,6 +213,17 @@ const AppAcheter = () => {
               {unit}
             </span>
           </div>
+          {blocked ? (
+            <p className="mt-3 text-[13px] leading-relaxed text-destructive">
+              {t("buy.limitReached").replace("{time}", nextAtText)}
+            </p>
+          ) : belowMin ? (
+            <p className="mt-3 text-[13px] text-destructive">{t("buy.minHint")}</p>
+          ) : allowance && allowance.used > 0 ? (
+            <p className="mt-3 text-[13px] text-muted-foreground">
+              {t("buy.remaining").replace("{amount}", nfCad.format(maxCad).replace(/[,.]00$/, ""))}
+            </p>
+          ) : null}
         </div>
 
         <div className="mt-3 flex flex-col gap-2.5 rounded-[16px] border border-border bg-card px-5 py-4">
@@ -195,12 +236,15 @@ const AppAcheter = () => {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-[13px] text-muted-foreground">{t("buy.rate")}</span>
-            <span className="text-[13px] text-muted-foreground">1 USDT = {nfCad.format(rate.buy)} CAD</span>
+            <span className="text-[13px] text-muted-foreground">1 USDT = {nfCad.format(buyRate)} CAD</span>
           </div>
+          {value > 0 && q.small && (
+            <p className="text-[12px] text-muted-foreground">{t("buy.smallTier")}</p>
+          )}
         </div>
 
         <div className="mt-3 flex justify-end">
-          <Button variant="appPrimary" shape="soft" className="h-auto gap-2 px-[22px] py-[13px] text-sm" disabled={value <= 0} onClick={() => setStep("network")}>
+          <Button variant="appPrimary" shape="soft" className="h-auto gap-2 px-[22px] py-[13px] text-sm" disabled={value <= 0 || belowMin || blocked} onClick={() => setStep("network")}>
             <Coins className="h-[17px] w-[17px]" strokeWidth={2} /> {t("buy.continue")}
           </Button>
         </div>
@@ -284,7 +328,7 @@ const AppAcheter = () => {
           {[
             { label: t("buy.youPay"), value: `${nfCad.format(cad)} CAD` },
             { label: t("buy.youReceive"), value: `${nfUsdt.format(usdt)} USDT` },
-            { label: t("buy.rate"), value: `1 USDT = ${nfCad.format(rate.buy)} CAD` },
+            { label: t("buy.rate"), value: `1 USDT = ${nfCad.format(buyRate)} CAD` },
             { label: t("buy.network"), value: `${network?.name} · ${network?.tag}` },
             { label: t("buy.address"), value: short(address), mono: true },
           ].map((r, i, arr) => (

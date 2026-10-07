@@ -24,6 +24,7 @@ const ORDER_STATUS_I18N: Record<DbStatus, { fr: string; en: string }> = {
   completed: { fr: "Terminée", en: "Completed" },
   cancelled: { fr: "Annulée", en: "Cancelled" },
   expired: { fr: "Expirée", en: "Expired" },
+  refunded: { fr: "Remboursée", en: "Refunded" },
 };
 
 export function orderStatusLabel(s: DbStatus): string {
@@ -47,6 +48,55 @@ export interface CreateOrderInput {
   network?: NetId;        // achat : réseau de réception
   address?: string;       // achat : adresse wallet du client
   interacEmail?: string;  // vente : e-mail Interac du client
+}
+
+export interface BuyAllowance {
+  /** Limite du compte sur 24 heures (CAD). */
+  limit: number;
+  /** Déjà acheté sur les 24 dernières heures (CAD). */
+  used: number;
+  /** Encore possible maintenant (CAD). */
+  remaining: number;
+  /** Quand un nouvel achat redevient possible, si la limite est atteinte. */
+  nextAt: Date | null;
+}
+
+/**
+ * Ce que le client peut encore acheter sur 24 heures glissantes (achats non
+ * annulés, expirés ni remboursés). La base applique la même règle.
+ */
+export async function getBuyAllowance(): Promise<BuyAllowance> {
+  const { BUY_DAILY_MAX_CAD, BUY_MIN_CAD } = await import("@/lib/config");
+  const { data: auth } = await supabase.auth.getSession();
+  const uid = auth.session?.user?.id;
+  const fallback = { limit: BUY_DAILY_MAX_CAD, used: 0, remaining: BUY_DAILY_MAX_CAD, nextAt: null };
+  if (!uid) return fallback;
+  const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+  const [{ data: prof }, { data: rows }] = await Promise.all([
+    supabase.from("profiles").select("daily_limit_cad").eq("id", uid).maybeSingle(),
+    supabase
+      .from("orders")
+      .select("cad_amount, created_at")
+      .eq("user_id", uid)
+      .eq("side", "buy")
+      .not("status", "in", "(cancelled,expired,refunded)")
+      .gt("created_at", since)
+      .order("created_at", { ascending: true }),
+  ]);
+  const limit = Math.min(Number(prof?.daily_limit_cad ?? BUY_DAILY_MAX_CAD), BUY_DAILY_MAX_CAD);
+  const list = (rows ?? []).map((r) => ({ cad: Number(r.cad_amount), at: new Date(r.created_at) }));
+  const used = list.reduce((s, r) => s + r.cad, 0);
+  const remaining = Math.max(0, Math.floor((limit - used) * 100) / 100);
+  // Limite atteinte : on attend que d'anciens achats sortent de la fenêtre.
+  let nextAt: Date | null = null;
+  if (remaining < BUY_MIN_CAD) {
+    let freed = remaining;
+    for (const r of list) {
+      freed += r.cad;
+      if (freed >= BUY_MIN_CAD) { nextAt = new Date(r.at.getTime() + 24 * 3600 * 1000); break; }
+    }
+  }
+  return { limit, used, remaining, nextAt };
 }
 
 /** Crée un ordre pour l'utilisateur connecté. Renvoie l'id ou une erreur. */

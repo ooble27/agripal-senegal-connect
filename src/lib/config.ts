@@ -31,3 +31,15 @@ export const VERIFICATION_ENABLED = false;
 export const KYB_PREVIEW_USERS: string[] = [
   "8e6697db-4484-4c5d-8744-777d8001f148", // Ooble Technologies (Mohamed Lo)
 ];
+
+/**
+ * Achats : limites et taux selon le montant (mêmes règles en base, voir la
+ * migration 20261007020000_buy_limits_tiered_rate.sql, qui fait autorité).
+ *   • 100 $ minimum par achat ;
+ *   • 9 999 $ au total sur 24 heures glissantes (sous le seuil CANAFE) ;
+ *   • moins de 1 000 $ : taux d'achat majoré de 4 %.
+ */
+export const BUY_MIN_CAD = 100;
+export const BUY_DAILY_MAX_CAD = 9999;
+export const SMALL_BUY_THRESHOLD_CAD = 1000;
+export const SMALL_BUY_MARKUP = 0.04;

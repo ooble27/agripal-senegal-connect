@@ -172,6 +172,8 @@
    * connectée, elle, garde la teinte de marque.
    */
   .ink-neutral {
+    /* Le texte hérité du <body> garderait sinon le pétrole de :root. */
+    color: hsl(var(--foreground));
     --foreground: 0 0% 9%;
     --card-foreground: 0 0% 9%;
     --popover-foreground: 0 0% 9%;

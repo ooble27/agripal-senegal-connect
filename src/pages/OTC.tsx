@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Check, FileText, Handshake, Landmark, Mail, ShieldCheck, Wallet } from "lucide-react";
+import { ArrowRight, Check, FileText, Landmark, ShieldCheck, Wallet } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Reveal from "@/components/Reveal";
 import OtcVideo from "@/components/OtcVideo";
-import { Button } from "@/components/ui/button";
 import { NETWORKS } from "@/components/app/networks";
 import { OOBLE_OTC_EMAIL, TRADE_DAILY_MAX_CAD } from "@/lib/config";
 import { useOtcVisible } from "@/lib/otc";
@@ -90,22 +89,14 @@ const OTC = () => {
   const mailto = `mailto:${OOBLE_OTC_EMAIL}`;
   const fr = lang === "fr";
 
-  /** Appel principal : formulaire pour l'équipe, courriel pour les autres. */
-  const Primary = ({ inverted }: { inverted?: boolean }) => (
-    <Button
-      asChild
-      variant={inverted ? "secondary" : "appSolid"}
-      shape="rounded"
-      size="lg"
-      className="px-7"
-    >
-      {canRequest ? (
-        <Link to="/app/otc"><Handshake className="h-4 w-4" strokeWidth={1.8} />{L({ fr: "Demander un prix", en: "Request a quote" })}</Link>
-      ) : (
-        <a href={mailto}><Mail className="h-4 w-4" strokeWidth={1.8} />{L({ fr: "Écrire au desk", en: "Write to the desk" })}</a>
-      )}
-    </Button>
-  );
+  /** Appel principal, en simple lien : formulaire pour l'équipe, courriel pour les autres. */
+  const linkCls = "inline-flex items-center gap-1.5 text-[15px] font-medium underline-offset-[6px] transition-colors hover:underline";
+  const Primary = () =>
+    canRequest ? (
+      <Link to="/app/otc" className={linkCls}>{L({ fr: "Demander un prix", en: "Request a quote" })} <ArrowRight className="h-4 w-4" strokeWidth={1.8} /></Link>
+    ) : (
+      <a href={mailto} className={linkCls}>{L({ fr: "Écrire au desk", en: "Write to the desk" })} <ArrowRight className="h-4 w-4" strokeWidth={1.8} /></a>
+    );
 
   /** Mot-clé en noir dans une phrase en gris. */
   const B = ({ children }: { children: React.ReactNode }) => <span className="text-foreground">{children}</span>;
@@ -133,11 +124,9 @@ const OTC = () => {
                   en: "Buy or sell USDT from $10,000, at a firm price, with one contact from the Ooble team.",
                 })}
               </p>
-              <div className="animate-up mt-8 flex flex-wrap gap-3 [animation-delay:240ms]">
+              <div className="animate-up mt-8 flex flex-wrap items-center gap-x-8 gap-y-3 [animation-delay:240ms]">
                 <Primary />
-                <Button asChild variant="secondary" shape="rounded" size="lg" className="px-7">
-                  <a href="#etapes">{L({ fr: "Les étapes", en: "The steps" })}</a>
-                </Button>
+                <a href="#etapes" className={cn(linkCls, "text-muted-foreground hover:text-foreground")}>{L({ fr: "Les étapes", en: "The steps" })}</a>
               </div>
               <ul className="animate-up mt-9 flex flex-wrap gap-x-6 gap-y-2 text-[13.5px] text-muted-foreground [animation-delay:320ms]">
                 {[
@@ -318,9 +307,11 @@ const OTC = () => {
                 {OOBLE_OTC_EMAIL} <ArrowRight className="h-5 w-5" strokeWidth={1.8} />
               </a>
             </Reveal>
-            <Reveal delay={200} className="mt-10 flex justify-center">
-              <Primary inverted />
-            </Reveal>
+            {canRequest && (
+              <Reveal delay={200} className="mt-8 flex justify-center">
+                <Primary />
+              </Reveal>
+            )}
           </Wrap>
         </section>
       </main>

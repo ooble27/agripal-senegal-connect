@@ -1,21 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Building2, Check, Handshake } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Reveal from "@/components/Reveal";
 import OtcVideo from "@/components/OtcVideo";
-import { Button } from "@/components/ui/button";
 import { TRADE_DAILY_MAX_CAD } from "@/lib/config";
 import { useLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
-/* Ooble pour les entreprises — page publique à part entière, dans la palette
-   chaude de sa vidéo (vert forêt, menthe, corail, tournesol). Pas de gabarit
-   commun : en-tête vert plein écran avec la vidéo qui déborde, sélecteur
-   d'usages, étapes racontées au défilement, liste « Votre dossier est-il
-   prêt ? » à cocher, simulateur de montant (app ou desk OTC), bandeau des
-   métiers et appel final. Les durées reprennent celles affichées dans l'app
+/* Ooble pour les entreprises — page publique à part entière. Le fond et les
+   textes suivent le design system (encre neutre, comme l'accueil) ; les
+   touches de couleur reprennent celles de la vidéo (menthe, corail,
+   tournesol). En-tête avec la vidéo, sélecteur d'usages, étapes racontées au
+   défilement, ce qu'il faut préparer, simulateur de montant (app ou desk OTC),
+   bandeau des métiers et appel final. Les appels sont de simples liens, pas
+   des boutons. Les durées reprennent celles affichées dans l'app
    (vérification en environ 5 minutes, examen généralement sous 1 jour
    ouvrable). */
 
@@ -134,79 +134,59 @@ const Entreprises = () => {
     return () => io.disconnect();
   }, []);
 
-  /* « Votre dossier est-il prêt ? » — gardé dans ce navigateur. */
-  const all = useMemo(() => READY.flatMap((g) => g.items.map((i) => i.fr)), []);
-  const [done, setDone] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("ooble.biz.ready") ?? "[]"); } catch { return []; }
-  });
-  const toggle = (k: string) => setDone((d) => {
-    const n = d.includes(k) ? d.filter((x) => x !== k) : [...d, k];
-    try { localStorage.setItem("ooble.biz.ready", JSON.stringify(n)); } catch { /* navigation privée */ }
-    return n;
-  });
-  const pct = Math.round((done.filter((k) => all.includes(k)).length / all.length) * 100);
-
   /* Simulateur : app jusqu'à 9 999 $, desk OTC au-delà. */
   const STOPS = [1000, 2500, 5000, 9999, 15000, 25000, 50000, 100000, 250000, 500000];
   const [stop, setStop] = useState(3);
   const amount = STOPS[stop];
   const inApp = amount <= TRADE_DAILY_MAX_CAD;
 
-  const Open = ({ className, light }: { className?: string; light?: boolean }) => (
-    <Button
-      asChild
-      variant={light ? "secondary" : "appSolid"}
-      shape="rounded"
-      size="lg"
-      className={cn("px-7", light && "bg-background text-foreground hover:bg-background/90 dark:bg-foreground dark:text-background dark:hover:bg-foreground/90", className)}
-    >
-      <Link to="/inscription/entreprise">
-        <Building2 className="h-4 w-4" strokeWidth={1.8} />
-        {L({ fr: "Ouvrir un compte entreprise", en: "Open a business account" })}
-      </Link>
-    </Button>
+  /* Appels : de simples liens texte avec une flèche. */
+  const linkCls = "inline-flex items-center gap-1.5 text-[15px] font-medium underline-offset-[6px] transition-colors hover:underline";
+  const Open = ({ className }: { className?: string }) => (
+    <Link to="/inscription/entreprise" className={cn(linkCls, className)}>
+      {L({ fr: "Ouvrir un compte entreprise", en: "Open a business account" })} <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
+    </Link>
   );
 
   const U = USES[use];
 
   return (
-    <div className="app-type min-h-screen bg-background tracking-[-0.015em]">
+    <div className="ink-neutral app-type min-h-screen bg-background tracking-[-0.015em]">
       <Header />
 
       <main>
-        {/* ===================== EN-TÊTE VERT ===================== */}
-        <section data-dark className="relative overflow-hidden pb-48 sm:pb-64 lg:pb-80 bg-foreground text-background dark:bg-secondary dark:text-foreground">
+        {/* ===================== EN-TÊTE ===================== */}
+        <section className="relative overflow-hidden">
           {/* formes qui flottent, comme dans la vidéo */}
-          <span aria-hidden className="ooble-float absolute left-[6%] top-[18%] h-10 w-10 rounded-full" style={{ background: CORAL }} />
-          <span aria-hidden className="ooble-float absolute right-[9%] top-[14%] h-0 w-0 border-x-[22px] border-b-[38px] border-x-transparent [animation-delay:-2s]" style={{ borderBottomColor: SUN }} />
-          <span aria-hidden className="ooble-float absolute right-[16%] top-[52%] h-9 w-9 rotate-12 rounded-lg [animation-delay:-4s]" style={{ background: MINT }} />
-          <span aria-hidden className="ooble-float absolute left-[12%] top-[60%] h-6 w-6 rounded-full [animation-delay:-1s]" style={{ background: SUN }} />
+          <span aria-hidden className="ooble-float absolute left-[6%] top-[16%] h-10 w-10 rounded-full" style={{ background: CORAL }} />
+          <span aria-hidden className="ooble-float absolute right-[9%] top-[12%] h-0 w-0 border-x-[22px] border-b-[38px] border-x-transparent [animation-delay:-2s]" style={{ borderBottomColor: SUN }} />
+          <span aria-hidden className="ooble-float absolute right-[14%] top-[44%] h-9 w-9 rotate-12 rounded-lg [animation-delay:-4s]" style={{ background: MINT }} />
+          <span aria-hidden className="ooble-float absolute left-[11%] top-[50%] h-6 w-6 rounded-full [animation-delay:-1s]" style={{ background: SUN }} />
 
-          <Wrap className="relative pt-20 text-center lg:pt-24">
-            <p className="animate-up text-[13px] font-semibold uppercase tracking-[0.18em]" style={{ color: SUN }}>
+          <Wrap className="relative pb-14 pt-20 text-center lg:pb-16 lg:pt-24">
+            <p className="animate-up text-[12px] uppercase tracking-[0.16em] text-muted-foreground">
               {L({ fr: "Ooble pour les entreprises", en: "Ooble for business" })}
             </p>
             <h1 className="animate-up mx-auto mt-6 max-w-[1050px] font-display text-[2.9rem] font-semibold leading-[0.98] tracking-[-0.05em] [animation-delay:80ms] sm:text-[4.4rem] lg:text-[5.6rem]">
               {L({ fr: "Vos USDT, au nom de votre ", en: "Your USDT, in your " })}
-              <span style={{ color: SUN }}>{L({ fr: "entreprise.", en: "company's name." })}</span>
+              <span style={{ color: CORAL }}>{L({ fr: "entreprise.", en: "company's name." })}</span>
             </h1>
-            <p className="animate-up mx-auto mt-7 max-w-[560px] text-[16px] leading-[1.7] opacity-75 [animation-delay:160ms]">
+            <p className="animate-up mx-auto mt-7 max-w-[560px] text-[16px] leading-[1.7] text-muted-foreground [animation-delay:160ms]">
               {L({
                 fr: "Achetez et vendez des USDT en dollars canadiens, payez vos fournisseurs et encaissez vos clients. La vérification se fait une seule fois.",
                 en: "Buy and sell USDT with Canadian dollars, pay suppliers and get paid by clients. Verification is done once.",
               })}
             </p>
-            <div className="animate-up mt-9 flex flex-wrap items-center justify-center gap-x-7 gap-y-4 [animation-delay:240ms]">
-              <Open light />
-              <a href="#simulateur" className="inline-flex items-center gap-1.5 text-[15px] font-medium underline-offset-4 hover:underline">
-                {L({ fr: "Quel montant ?", en: "How much?" })} <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
+            <div className="animate-up mt-9 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 [animation-delay:240ms]">
+              <Open />
+              <a href="#simulateur" className={cn(linkCls, "text-muted-foreground hover:text-foreground")}>
+                {L({ fr: "Quel montant ?", en: "How much?" })}
               </a>
             </div>
           </Wrap>
         </section>
 
-        {/* La vidéo déborde de l'en-tête */}
-        <Wrap className="relative -mt-40 sm:-mt-56 lg:-mt-72">
+        <Wrap>
           <OtcVideo
             name="biz"
             label={{ fr: "Ooble pour les entreprises en vidéo", en: "Ooble for business, the video" }}
@@ -300,60 +280,30 @@ const Entreprises = () => {
           </Wrap>
         </section>
 
-        {/* ===================== VOTRE DOSSIER EST-IL PRÊT ? ===================== */}
-        <section data-dark className="mt-24 lg:mt-32 bg-foreground text-background dark:bg-secondary dark:text-foreground">
-          <Wrap className="py-20 lg:py-24">
-            <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+        {/* ===================== À PRÉPARER ===================== */}
+        <section>
+          <Wrap className="pt-24 lg:pt-32">
+            <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
               <div>
-                <p className="text-[13px] font-semibold uppercase tracking-[0.18em]" style={{ color: SUN }}>
+                <p className="text-[13px] font-semibold uppercase tracking-[0.18em]" style={{ color: CORAL }}>
                   {L({ fr: "Avant de commencer", en: "Before you start" })}
                 </p>
                 <h2 className="mt-4 font-display text-[2.4rem] font-semibold leading-[1.02] tracking-[-0.05em] sm:text-[3.2rem]">
-                  {L({ fr: "Votre dossier est-il prêt ?", en: "Is your file ready?" })}
+                  {L({ fr: "Ce qu'il vous faut.", en: "What you'll need." })}
                 </h2>
-                <p className="mt-5 max-w-[380px] text-[15px] leading-[1.7] opacity-70">
-                  {L({ fr: "Cochez ce que vous avez sous la main. Quand tout est prêt, la vérification prend environ 5 minutes.", en: "Tick what you have at hand. When everything is ready, verification takes about 5 minutes." })}
+                <p className="mt-5 max-w-[380px] text-[15px] leading-[1.7] text-muted-foreground">
+                  {L({ fr: "Avec ces éléments sous la main, la vérification prend environ 5 minutes. Vos documents sont chiffrés et seule notre équipe conformité y a accès.", en: "With these at hand, verification takes about 5 minutes. Your documents are encrypted and only our compliance team can access them." })}
                 </p>
-                <p className="mt-10 font-display text-[6rem] font-semibold leading-none tracking-[-0.07em] tabular-nums" style={{ color: pct === 100 ? SUN : undefined }}>
-                  {pct}<span className="text-[3rem]">%</span>
-                </p>
-                <div className="mt-4 h-2 max-w-[360px] overflow-hidden rounded-full bg-background/15 dark:bg-foreground/15">
-                  <div className="h-full rounded-full transition-[width] duration-500" style={{ width: `${pct}%`, background: SUN }} />
-                </div>
-                <p className="mt-4 text-[14px] opacity-70">
-                  {pct === 100
-                    ? L({ fr: "Tout est prêt. Vous pouvez ouvrir le compte.", en: "Everything's ready. You can open the account." })
-                    : L({ fr: "Vos documents sont chiffrés et seule notre équipe conformité y a accès.", en: "Your documents are encrypted and only our compliance team can access them." })}
-                </p>
-                {pct === 100 && <Open light className="mt-6" />}
               </div>
-              <div className="flex flex-col gap-9">
+              <div className="grid gap-10 sm:grid-cols-3 sm:gap-8">
                 {READY.map((g) => (
                   <div key={g.g.fr}>
-                    <p className="text-[13px] font-semibold uppercase tracking-[0.14em] opacity-55">{L(g.g)}</p>
-                    <div className="mt-4 flex flex-wrap gap-2.5">
-                      {g.items.map((it) => {
-                        const on = done.includes(it.fr);
-                        return (
-                          <button
-                            key={it.fr}
-                            type="button"
-                            onClick={() => toggle(it.fr)}
-                            aria-pressed={on}
-                            className={cn(
-                              "inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[15px] font-medium transition-all active:scale-[0.97]",
-                              on ? "text-[#14110f]" : "bg-background/10 hover:bg-background/20 dark:bg-foreground/10 dark:hover:bg-foreground/20",
-                            )}
-                            style={on ? { background: SUN } : undefined}
-                          >
-                            <span className={cn("flex h-5 w-5 items-center justify-center rounded-full transition-colors", on ? "bg-[#14110f]" : "bg-background/20 dark:bg-foreground/20")}>
-                              {on && <Check className="h-3 w-3 text-[#ffc94d]" strokeWidth={3.2} />}
-                            </span>
-                            {L(it)}
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <p className="text-[12px] uppercase tracking-[0.16em] text-muted-foreground">{L(g.g)}</p>
+                    <ul className="mt-4">
+                      {g.items.map((it) => (
+                        <li key={it.fr} className="border-t py-3 text-[15px]">{L(it)}</li>
+                      ))}
+                    </ul>
                   </div>
                 ))}
               </div>
@@ -396,11 +346,11 @@ const Entreprises = () => {
                     : L({ fr: "Un prix ferme pour le montant entier, avec un seul interlocuteur.", en: "A firm price for the full amount, with one contact." })}
                 </p>
                 {inApp ? (
-                  <Open className="mt-7" />
+                  <Open className="mt-6" />
                 ) : (
-                  <Button asChild shape="rounded" size="lg" className="mt-7 px-7 font-semibold text-[#14110f] hover:opacity-90" style={{ background: SUN }}>
-                    <Link to="/otc"><Handshake className="h-4 w-4" strokeWidth={1.8} />{L({ fr: "Découvrir le desk OTC", en: "Discover the OTC desk" })}</Link>
-                  </Button>
+                  <Link to="/otc" className={cn(linkCls, "mt-6")}>
+                    {L({ fr: "Découvrir le desk OTC", en: "Discover the OTC desk" })} <ArrowRight className="h-4 w-4" strokeWidth={1.8} />
+                  </Link>
                 )}
               </div>
             </div>
@@ -428,11 +378,11 @@ const Entreprises = () => {
                 <span className="text-foreground/35">{L({ fr: "dans l'USDT.", en: "into USDT." })}</span>
               </h2>
             </Reveal>
-            <Reveal delay={140} className="mt-10 flex flex-wrap justify-center gap-3">
+            <Reveal delay={140} className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
               <Open />
-              <Button asChild variant="secondary" shape="rounded" size="lg" className="px-7">
-                <Link to="/contact">{L({ fr: "Nous écrire", en: "Contact us" })}</Link>
-              </Button>
+              <Link to="/contact" className={cn(linkCls, "text-muted-foreground hover:text-foreground")}>
+                {L({ fr: "Nous écrire", en: "Contact us" })}
+              </Link>
             </Reveal>
           </Wrap>
         </section>

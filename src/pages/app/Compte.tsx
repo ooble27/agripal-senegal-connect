@@ -8,6 +8,7 @@ import { LangPill } from "@/components/app/LangToggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { getMyProfile, type MyProfile } from "@/lib/profile";
+import { getBuyAllowance, type BuyAllowance } from "@/lib/orders";
 import { getMyKyc, type KycDbStatus } from "@/lib/kyc";
 import { useLang, useT } from "@/lib/i18n";
 import { getTheme, onThemeChange, setTheme, type Theme } from "@/lib/theme";
@@ -122,6 +123,8 @@ const Compte = () => {
         <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
       </Link>
 
+      <BuyLimitCard className="mt-3" />
+
       {/* ─── Interac e-Transfer ─── */}
       {profile?.interacQuestion && (
         <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-card">
@@ -192,6 +195,42 @@ const Compte = () => {
     </AppShell>
   );
 };
+
+/* ─── Limite d'achat sur 24 heures (même règle qu'en base) ─── */
+
+const nfInt = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 0 });
+
+function BuyLimitCard({ className }: { className?: string }) {
+  const t = useT();
+  const [a, setA] = useState<BuyAllowance | null>(null);
+  useEffect(() => { getBuyAllowance().then(setA); }, []);
+  if (!a) return null;
+  const pct = a.limit > 0 ? Math.min(100, (a.used / a.limit) * 100) : 0;
+  const next = a.nextAt
+    ? a.nextAt.toLocaleString("fr-CA", {
+        hour: "2-digit", minute: "2-digit",
+        ...(a.nextAt.toDateString() !== new Date().toDateString() ? { day: "numeric", month: "long" } : {}),
+      })
+    : "";
+  return (
+    <section className={cn("overflow-hidden rounded-2xl border border-border bg-card px-6 py-5", className)}>
+      <p className="text-[11.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground">{t("acct.buyLimit")}</p>
+      <p className="mt-2 font-display text-[22px] font-semibold tracking-tight tabular-nums">
+        {nfInt.format(a.limit)} $ <span className="text-[14px] font-normal text-muted-foreground">{t("acct.buyLimitPer")}</span>
+      </p>
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-secondary">
+        <div className="h-full rounded-full bg-foreground transition-[width]" style={{ width: `${pct}%` }} />
+      </div>
+      <div className="mt-3 flex justify-between gap-4 text-[13.5px]">
+        <span className="text-muted-foreground">{t("acct.buyLimitUsed")} <span className="font-medium text-foreground tabular-nums">{nfInt.format(a.used)} $</span></span>
+        <span className="text-muted-foreground">{t("acct.buyLimitLeft")} <span className="font-medium text-foreground tabular-nums">{nfInt.format(Math.floor(a.remaining))} $</span></span>
+      </div>
+      <p className="mt-3 text-[12.5px] leading-relaxed text-muted-foreground">
+        {next ? t("acct.buyLimitNext").replace("{time}", next) : t("acct.buyLimitReset")}
+      </p>
+    </section>
+  );
+}
 
 /* ─── Tablette / ordinateur : proposition A ───
    Colonne profil à gauche (identité, vérifications, actions) ; à droite,
@@ -285,6 +324,8 @@ function DesktopAccount({
             <LinkRow to="/app/entreprise" icon={Building2} label={t("acct.business")} right={pill(profile.businessStatus)} />
           )}
         </Card>
+
+        <BuyLimitCard />
 
         <div className="flex flex-wrap gap-2.5">
           {isStaff && (

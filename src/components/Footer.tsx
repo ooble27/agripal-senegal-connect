@@ -11,7 +11,6 @@ const Footer = () => {
       title: t("footer.product"),
       links: [
         { label: t("nav.home"), to: "/" },
-        { label: t("nav.networks"), to: "/#reseaux" },
         { label: t("nav.business"), to: "/entreprises" },
         { label: t("nav.otc"), to: "/otc" },
         { label: t("nav.signup"), to: "/inscription" },

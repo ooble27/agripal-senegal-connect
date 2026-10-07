@@ -20,7 +20,6 @@ const Header = ({ inverted }: { inverted?: boolean }) => {
 
   const links = [
     { to: "/", label: t("nav.home") },
-    { to: "/#reseaux", label: t("nav.networks") },
     { to: "/entreprises", label: t("nav.business") },
     { to: "/otc", label: t("nav.otc") },
     { to: "/faq", label: t("nav.faq") },

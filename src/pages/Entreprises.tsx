@@ -157,21 +157,21 @@ const Entreprises = () => {
       <main>
         {/* ===================== EN-TÊTE ===================== */}
         <section className="relative overflow-hidden">
-          {/* formes qui flottent, comme dans la vidéo */}
-          <span aria-hidden className="ooble-float absolute left-[6%] top-[16%] h-10 w-10 rounded-full" style={{ background: CORAL }} />
-          <span aria-hidden className="ooble-float absolute right-[9%] top-[12%] h-0 w-0 border-x-[22px] border-b-[38px] border-x-transparent [animation-delay:-2s]" style={{ borderBottomColor: SUN }} />
-          <span aria-hidden className="ooble-float absolute right-[14%] top-[44%] h-9 w-9 rotate-12 rounded-lg [animation-delay:-4s]" style={{ background: MINT }} />
-          <span aria-hidden className="ooble-float absolute left-[11%] top-[50%] h-6 w-6 rounded-full [animation-delay:-1s]" style={{ background: SUN }} />
+          {/* formes qui flottent, comme dans la vidéo — masquées sur mobile */}
+          <span aria-hidden className="ooble-float absolute hidden sm:block left-[6%] top-[16%] h-10 w-10 rounded-full" style={{ background: CORAL }} />
+          <span aria-hidden className="ooble-float absolute hidden sm:block right-[9%] top-[12%] h-0 w-0 border-x-[22px] border-b-[38px] border-x-transparent [animation-delay:-2s]" style={{ borderBottomColor: SUN }} />
+          <span aria-hidden className="ooble-float absolute hidden sm:block right-[14%] top-[44%] h-9 w-9 rotate-12 rounded-lg [animation-delay:-4s]" style={{ background: MINT }} />
+          <span aria-hidden className="ooble-float absolute hidden sm:block left-[11%] top-[50%] h-6 w-6 rounded-full [animation-delay:-1s]" style={{ background: SUN }} />
 
           <Wrap className="relative pb-14 pt-20 text-center lg:pb-16 lg:pt-24">
             <p className="animate-up text-[12px] uppercase tracking-[0.16em] text-muted-foreground">
               {L({ fr: "Ooble pour les entreprises", en: "Ooble for business" })}
             </p>
-            <h1 className="animate-up mx-auto mt-6 max-w-[1050px] font-display text-[2.9rem] font-semibold leading-[0.98] tracking-[-0.05em] [animation-delay:80ms] sm:text-[4.4rem] lg:text-[5.6rem]">
+            <h1 className="animate-up mx-auto mt-6 max-w-[1120px] font-display text-[2.6rem] leading-[0.98] tracking-[-0.05em] [animation-delay:80ms] sm:text-[4rem] lg:text-[5.75rem]">
               {L({ fr: "Vos USDT, au nom de votre ", en: "Your USDT, in your " })}
               <span style={{ color: CORAL }}>{L({ fr: "entreprise.", en: "company's name." })}</span>
             </h1>
-            <p className="animate-up mx-auto mt-7 max-w-[560px] text-[16px] leading-[1.7] text-muted-foreground [animation-delay:160ms]">
+            <p className="animate-up mx-auto mt-8 max-w-[480px] text-[14px] leading-[1.65] text-muted-foreground [animation-delay:160ms] sm:text-[15px]">
               {L({
                 fr: "Achetez et vendez des USDT en dollars canadiens, payez vos fournisseurs et encaissez vos clients. La vérification se fait une seule fois.",
                 en: "Buy and sell USDT with Canadian dollars, pay suppliers and get paid by clients. Verification is done once.",

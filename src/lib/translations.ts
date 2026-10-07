@@ -8,6 +8,7 @@ const dict = {
   "nav.faq": { fr: "FAQ", en: "FAQ" },
   "nav.contact": { fr: "Contact", en: "Contact" },
   "nav.otc": { fr: "Desk OTC", en: "OTC desk" },
+  "nav.business": { fr: "Entreprises", en: "Business" },
   "dash.otcSub": { fr: "à partir de 10 000 $", en: "from $10,000" },
   "trade.otcHint": { fr: "Plus de 9 999 $ ? Passez par le desk OTC", en: "Over $9,999? Use the OTC desk" },
   "nav.login": { fr: "Connexion", en: "Sign in" },

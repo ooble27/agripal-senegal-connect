@@ -4,15 +4,16 @@ import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/i18n";
 
 /**
- * Vidéo de présentation du desk OTC (motion design, voix FR / EN, sous-titres
- * incrustés). Elle tourne en boucle, sans le son, dès qu'elle est visible ;
+ * Vidéo de présentation (motion design, voix FR / EN, sous-titres incrustés) :
+ * desk OTC par défaut, ou une autre vidéo via `name` (ex. « biz » pour la
+ * page Entreprises). Elle tourne en boucle, sans le son, dès qu'elle est visible ;
  * « Écouter » la relance depuis le début avec le son et les commandes.
  * Si l'utilisateur a demandé moins d'animations, rien ne démarre seul : on
  * affiche l'image d'aperçu et un bouton de lecture.
  *
- * Fichiers : public/video/otc-{fr,en}.mp4 et otc-{fr,en}.jpg.
+ * Fichiers : public/video/{name}-{fr,en}.mp4 et {name}-{fr,en}.jpg.
  */
-const OtcVideo = ({ className }: { className?: string }) => {
+const OtcVideo = ({ className, name = "otc", label }: { className?: string; name?: string; label?: { fr: string; en: string } }) => {
   const [lang] = useLang();
   const ref = useRef<HTMLVideoElement>(null);
   const [sound, setSound] = useState(false);
@@ -49,14 +50,14 @@ const OtcVideo = ({ className }: { className?: string }) => {
         key={lang}
         ref={ref}
         className="block aspect-video w-full"
-        src={`/video/otc-${lang}.mp4`}
-        poster={`/video/otc-${lang}.jpg`}
+        src={`/video/${name}-${lang}.mp4`}
+        poster={`/video/${name}-${lang}.jpg`}
         muted={!sound}
         loop={!sound}
         playsInline
         preload="metadata"
         controls={sound}
-        aria-label={en ? "How the Ooble OTC desk works" : "Comment fonctionne le desk OTC d'Ooble"}
+        aria-label={label ? label[lang] : en ? "How the Ooble OTC desk works" : "Comment fonctionne le desk OTC d'Ooble"}
       />
       {!sound && (
         <button

@@ -5,8 +5,8 @@ import { useLang } from "@/lib/i18n";
 
 /**
  * Vidéo de présentation (motion design, voix FR / EN, sous-titres incrustés) :
- * desk OTC par défaut, ou une autre vidéo via `name` (ex. « biz » pour la
- * page Entreprises). Elle tourne en boucle, sans le son, dès qu'elle est visible ;
+ * desk OTC par défaut, ou une autre vidéo via `name`.
+ * Elle tourne en boucle, sans le son, dès qu'elle est visible ;
  * « Écouter » la relance depuis le début avec le son et les commandes.
  * Si l'utilisateur a demandé moins d'animations, rien ne démarre seul : on
  * affiche l'image d'aperçu et un bouton de lecture.

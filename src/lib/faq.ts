@@ -1,4 +1,3 @@
-import { Compass, Coins, HandCoins, Send, ShieldCheck, UserCheck, type LucideIcon } from "lucide-react";
 import type { TKey } from "./translations";
 import { GUIDES, type GuideDef } from "./guides";
 
@@ -14,9 +13,15 @@ export interface FaqItem {
   a: TKey;
 }
 
+/** Couleurs de la marque (celles des vidéos et de la page Entreprises). */
+export const HELP_COLORS = { forest: "#0f5c45", mint: "#bfe8d6", coral: "#ff7a59", sun: "#ffc94d", cream: "#f6f1e7", peach: "#ffd2c4", sage: "#7cc4a6" } as const;
+export type HelpShape = "circle" | "triangle" | "square" | "half" | "arch" | "diamond";
+
 export interface FaqCategory {
   slug: string;
-  icon: LucideIcon;
+  /** Couleur et forme du thème (repère visuel, partout dans le centre d'aide). */
+  color: string;
+  shape: HelpShape;
   title: TKey;
   desc: TKey;
   /** Guides vidéo (slugs de /guide) montrés en tête de page. */
@@ -31,7 +36,8 @@ const item = (id: string, q: string, a: string): FaqItem => ({ id, q: `faqp.${q}
 export const FAQ_CATEGORIES: FaqCategory[] = [
   {
     slug: "le-service",
-    icon: Compass,
+    color: HELP_COLORS.mint,
+    shape: "circle",
     title: "faqp.topic1",
     desc: "faqp.cat.service",
     videos: ["ooble-en-une-minute"],
@@ -44,7 +50,8 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
   },
   {
     slug: "compte",
-    icon: UserCheck,
+    color: HELP_COLORS.sun,
+    shape: "triangle",
     title: "faqp.topicAccount",
     desc: "faqp.cat.account",
     videos: ["creer-un-compte", "verifier-identite"],
@@ -56,7 +63,8 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
   },
   {
     slug: "acheter",
-    icon: Coins,
+    color: HELP_COLORS.peach,
+    shape: "square",
     title: "faqp.topic2",
     desc: "faqp.cat.buy",
     videos: ["acheter-usdt"],
@@ -69,7 +77,8 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
   },
   {
     slug: "payer-par-interac",
-    icon: Send,
+    color: HELP_COLORS.coral,
+    shape: "half",
     title: "faqp.topicPay",
     desc: "faqp.cat.pay",
     videos: ["payer-par-interac"],
@@ -85,7 +94,8 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
   },
   {
     slug: "vendre",
-    icon: HandCoins,
+    color: HELP_COLORS.sage,
+    shape: "arch",
     title: "faqp.topicSell",
     desc: "faqp.cat.sell",
     videos: ["vendre-usdt"],
@@ -97,7 +107,8 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
   },
   {
     slug: "securite",
-    icon: ShieldCheck,
+    color: HELP_COLORS.forest,
+    shape: "diamond",
     title: "faqp.topic3",
     desc: "faqp.cat.safety",
     videos: ["votre-securite"],
@@ -120,6 +131,15 @@ export const PAY_RULES: { title: TKey; body: TKey }[] = [
 /** Vidéos d'un thème qui existent vraiment dans les guides. */
 export const categoryVideos = (c: FaqCategory): GuideDef[] =>
   c.videos.map((slug) => GUIDES.find((g) => g.slug === slug)).filter((g): g is GuideDef => !!g);
+
+/** Recherches fréquentes proposées sous le champ de recherche : [thème, question]. */
+export const POPULAR: [string, string][] = [
+  ["payer-par-interac", "reference"],
+  ["payer-par-interac", "nom-expediteur"],
+  ["payer-par-interac", "en-attente"],
+  ["le-service", "limites"],
+  ["securite", "arnaques"],
+];
 
 /** Retire les accents et la casse, pour la recherche. */
 export const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();

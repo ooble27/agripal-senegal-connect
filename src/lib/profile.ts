@@ -18,10 +18,28 @@ export interface MyProfile {
   businessStatus: KycDbStatus;
 }
 
+/**
+ * Dernier profil chargé, gardé en mémoire : les pages de l'app l'affichent
+ * tout de suite au lieu d'attendre le serveur à chaque navigation (le
+ * profil est relu en arrière-plan et le cache mis à jour).
+ */
+let cached: { uid: string; profile: MyProfile } | null = null;
+
+/** Profil déjà chargé pour cet utilisateur, sans appel réseau (ou undefined). */
+export function peekMyProfile(uid: string | null | undefined): MyProfile | undefined {
+  return uid && cached?.uid === uid ? cached.profile : undefined;
+}
+
 export async function getMyProfile(): Promise<MyProfile | null> {
   const { data: auth } = await supabase.auth.getSession();
   const uid = auth.session?.user?.id;
-  if (!uid) return null;
+  if (!uid) { cached = null; return null; }
+  const profile = await fetchMyProfile(uid);
+  if (profile) cached = { uid, profile };
+  return profile;
+}
+
+async function fetchMyProfile(uid: string): Promise<MyProfile | null> {
   const { data, error } = await supabase
     .from("profiles")
     .select("full_name, email, sell_ref, interac_question, interac_answer, account_type, business_name, business_number, business_address, business_phone, business_status")

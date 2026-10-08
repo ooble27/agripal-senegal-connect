@@ -31,8 +31,11 @@ function sample(arr: number[], n: number): number[] {
  * Comme l'USDT est un stablecoin, la courbe reflète surtout le change USD/CAD.
  * Repli sur une courbe douce si l'appel échoue.
  */
+/** Historique déjà chargé : réaffiché tout de suite, relu au plus toutes les 10 minutes. */
+let historyCache: (RateHistory & { at: number }) | null = null;
+
 export function useUsdtHistory(): RateHistory {
-  const [state, setState] = useState<RateHistory>({
+  const [state, setState] = useState<RateHistory>(() => historyCache ?? {
     points: FALLBACK,
     changePct: null,
     live: false,
@@ -40,6 +43,7 @@ export function useUsdtHistory(): RateHistory {
 
   useEffect(() => {
     let alive = true;
+    if (historyCache && Date.now() - historyCache.at < 10 * 60_000) return;
     fetch("https://api.coingecko.com/api/v3/coins/tether/market_chart?vs_currency=cad&days=7&interval=hourly")
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((d) => {
@@ -47,6 +51,7 @@ export function useUsdtHistory(): RateHistory {
         if (!alive || raw.length < 4) return;
         const points = sample(raw, 32);
         const changePct = ((points[points.length - 1] - points[0]) / points[0]) * 100;
+        historyCache = { points, changePct, live: true, at: Date.now() };
         setState({ points, changePct, live: true });
       })
       .catch(() => {

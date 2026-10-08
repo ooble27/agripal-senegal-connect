@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Inbox, Coins, HandCoins, Filter } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import { ActivityRow } from "@/components/app/ActivityList";
-import { listMyOrders, type OrderRow } from "@/lib/orders";
+import { listMyOrders, peekMyOrders, type OrderRow } from "@/lib/orders";
+import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { TKey } from "@/lib/translations";
@@ -13,7 +14,8 @@ type TabFilter = "all" | "buy" | "sell";
 const Activite = () => {
   const navigate = useNavigate();
   const t = useT();
-  const [orders, setOrders] = useState<OrderRow[] | null>(null);
+  const { user } = useAuth();
+  const [orders, setOrders] = useState<OrderRow[] | null>(() => peekMyOrders(user?.id, 100));
   const [tab, setTab] = useState<TabFilter>("all");
 
   useEffect(() => {

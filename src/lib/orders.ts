@@ -154,10 +154,24 @@ export async function createOrder(input: CreateOrderInput): Promise<{ id: string
  * exactement le bug qu'on ferme. Le filtre côté client garantit qu'aucun
  * autre chemin ne peut ramener plus que « les ordres du user connecté ».
  */
+/**
+ * Derniers ordres chargés, partagés par l'accueil et la page Activité : ils
+ * s'affichent tout de suite à chaque navigation, puis sont relus en
+ * arrière-plan.
+ */
+let ordersCache: { uid: string; limit: number; rows: OrderRow[] } | null = null;
+
+/** Ordres déjà chargés (les `limit` plus récents), sans appel réseau, ou null. */
+export function peekMyOrders(uid: string | null | undefined, limit: number): OrderRow[] | null {
+  if (!uid || ordersCache?.uid !== uid) return null;
+  const complete = ordersCache.limit >= limit || ordersCache.rows.length < ordersCache.limit;
+  return complete ? ordersCache.rows.slice(0, limit) : null;
+}
+
 export async function listMyOrders(limit = 20): Promise<OrderRow[]> {
   const { data: auth } = await supabase.auth.getSession();
   const uid = auth.session?.user?.id;
-  if (!uid) return [];
+  if (!uid) { ordersCache = null; return []; }
 
   const { data, error } = await supabase
     .from("orders")
@@ -165,6 +179,10 @@ export async function listMyOrders(limit = 20): Promise<OrderRow[]> {
     .eq("user_id", uid)
     .order("created_at", { ascending: false })
     .limit(limit);
-  if (error) return [];
-  return data ?? [];
+  if (error) return peekMyOrders(uid, limit) ?? [];
+  const rows = data ?? [];
+  // On garde la liste la plus longue (sauf si elle est périmée).
+  if (!ordersCache || ordersCache.uid !== uid || limit >= ordersCache.limit) ordersCache = { uid, limit, rows };
+  else ordersCache = { uid, limit: ordersCache.limit, rows: [...rows, ...ordersCache.rows.filter((r) => !rows.some((x) => x.id === r.id))].slice(0, ordersCache.limit) };
+  return rows;
 }

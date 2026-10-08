@@ -6,13 +6,13 @@ import RateChart from "@/components/app/RateChart";
 import { NETWORKS } from "@/components/app/networks";
 import { useUsdtRate } from "@/hooks/useUsdtRate";
 import { useUsdtHistory } from "@/hooks/useUsdtHistory";
-import { listMyOrders, type OrderRow } from "@/lib/orders";
+import { listMyOrders, peekMyOrders, type OrderRow } from "@/lib/orders";
 import { ActivityRow } from "@/components/app/ActivityList";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { TRADING_ENABLED } from "@/lib/config";
-import { getMyProfile, type MyProfile } from "@/lib/profile";
+import { getMyProfile, peekMyProfile, type MyProfile } from "@/lib/profile";
 import { businessBlocked } from "@/components/app/BusinessGate";
 import BusinessMark from "@/components/app/BusinessMark";
 import { useOtcVisible } from "@/lib/otc";
@@ -22,7 +22,8 @@ const nf = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 2, minimumFra
 const RecentActivity = () => {
   const t = useT();
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<OrderRow[] | null>(null);
+  const { user } = useAuth();
+  const [orders, setOrders] = useState<OrderRow[] | null>(() => peekMyOrders(user?.id, 3));
 
   useEffect(() => {
     let active = true;
@@ -30,7 +31,7 @@ const RecentActivity = () => {
       if (active) setOrders(rows);
     });
     return () => { active = false; };
-  }, []);
+  }, [user]);
 
   return (
     <div className="rounded-2xl border border-border bg-card px-5 py-4">
@@ -77,7 +78,7 @@ const Dashboard = () => {
   const history = useUsdtHistory();
   const { user, isStaff } = useAuth();
   const otc = useOtcVisible();
-  const [profile, setProfile] = useState<MyProfile | null>(null);
+  const [profile, setProfile] = useState<MyProfile | null>(() => peekMyProfile(user?.id) ?? null);
   useEffect(() => { getMyProfile().then(setProfile); }, []);
   const kybPending = profile?.businessStatus === "pending";
   const firstName = user?.name?.trim().split(/\s+/)[0] ?? "";

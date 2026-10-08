@@ -5,7 +5,7 @@ import BusinessMark from "@/components/app/BusinessMark";
 import AppShell from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { getMyProfile, type MyProfile } from "@/lib/profile";
+import { getMyProfile, peekMyProfile, type MyProfile } from "@/lib/profile";
 import { useT } from "@/lib/i18n";
 
 /** Vrai si le compte est une entreprise dont la vérification n'est pas validée. */
@@ -14,19 +14,19 @@ export const businessBlocked = (p: MyProfile | null) => p?.accountType === "busi
 /**
  * Bloque l'achat et la vente pour un compte entreprise non vérifié (Conditions,
  * partie 5). La base refuse aussi l'ordre : cet écran évite seulement de
- * remplir un formulaire pour rien.
+ * remplir un formulaire pour rien. La page s'affiche tout de suite (profil en
+ * cache, ou page normale le temps de la lecture) : jamais d'écran vide.
  */
 const BusinessGate = ({ children }: { children: React.ReactNode }) => {
   const t = useT();
-  const { isStaff } = useAuth();
-  const [profile, setProfile] = useState<MyProfile | null | undefined>(undefined);
+  const { user, isStaff } = useAuth();
+  const [profile, setProfile] = useState<MyProfile | null | undefined>(() => peekMyProfile(user?.id));
 
   useEffect(() => {
     getMyProfile().then(setProfile);
   }, []);
 
-  if (profile === undefined) return null;
-  if (isStaff || !businessBlocked(profile)) return <>{children}</>;
+  if (profile === undefined || isStaff || !businessBlocked(profile)) return <>{children}</>;
 
   const pending = profile!.businessStatus === "pending";
   return (

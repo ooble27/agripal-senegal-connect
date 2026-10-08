@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import FAQ from "./pages/FAQ";
+import FAQCategory from "./pages/FAQCategory";
 import Guide from "./pages/Guide";
 import GuideDetail from "./pages/GuideDetail";
 import Contact from "./pages/Contact";
@@ -74,6 +75,7 @@ const App = () => (
         {/* Site public */}
         <Route path="/" element={<Index />} />
         <Route path="/faq" element={<FAQ />} />
+        <Route path="/faq/:slug" element={<FAQCategory />} />
         <Route path="/guide" element={<Guide />} />
         <Route path="/guide/:slug" element={<GuideDetail />} />
         <Route path="/contact" element={<Contact />} />

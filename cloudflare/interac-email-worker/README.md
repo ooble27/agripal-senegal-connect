@@ -23,5 +23,20 @@ Aucun argent ne bouge : un avis rapproché fait seulement passer l'achat à
 4. Cloudflare → ooble.ca → Email → Email Routing → Routing rules : modifier la
    règle `interac@ooble.ca` → action « Send to a Worker » → `ooble-interac-email`.
 
+### En ligne de commande (variante)
+
+Avec un jeton API Cloudflare (`CLOUDFLARE_API_TOKEN`, droits Workers Scripts:Edit
+et Email Routing Rules:Edit sur ooble.ca) :
+
+```sh
+cd cloudflare/interac-email-worker
+npx wrangler deploy                              # FORWARD_TO et INGEST_URL sont dans wrangler.toml
+npx wrangler secret put INTERAC_INGEST_SECRET    # coller le même secret que dans Supabase
+```
+
+La règle de routage (étape 4) se change dans le tableau de bord, ou par l'API
+Email Routing (`PUT /zones/{zone_id}/email/routing/rules/{rule_id}` avec
+l'action `{"type":"worker","value":["ooble-interac-email"]}`).
+
 Si le worker ou Supabase sont indisponibles, le courriel arrive quand même dans
 Gmail : on revient simplement au traitement manuel.

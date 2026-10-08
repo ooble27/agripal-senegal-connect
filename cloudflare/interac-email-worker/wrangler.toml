@@ -1,0 +1,10 @@
+# Email Worker de interac@ooble.ca — voir README.md.
+# Déploiement : npx wrangler deploy
+# Secret (une fois) : npx wrangler secret put INTERAC_INGEST_SECRET
+name = "ooble-interac-email"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+FORWARD_TO = "oobletechnologiesinc@gmail.com"
+INGEST_URL = "https://uukxacjjviiktmbikdwp.supabase.co/functions/v1/interac-ingest"

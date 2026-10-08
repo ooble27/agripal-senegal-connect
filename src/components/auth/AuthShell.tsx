@@ -5,9 +5,9 @@ import { HELP_COLORS } from "@/lib/faq";
 import { useLang } from "@/lib/i18n";
 
 /* Cadre des pages de connexion et d'inscription : le formulaire à gauche, un
-   panneau de couleur à droite (ordinateur seulement) avec une grande phrase,
-   les formes de la marque et une carte d'ordre terminé — même langage que
-   la page Entreprises et le centre d'aide. */
+   panneau de couleur à droite (ordinateur seulement). Le panneau est fixe et
+   tient toujours dans la hauteur de l'écran : une grande phrase, puis les
+   trois étapes qui comptent pour la page, sans animation. */
 
 type Variant = "login" | "signup" | "business" | "reset";
 type Bi = { fr: string; en: string };
@@ -15,20 +15,55 @@ type Bi = { fr: string; en: string };
 const C = HELP_COLORS;
 const INK = "#14110f";
 
-const PANELS: Record<Variant, { bg: string; ink: string; a: Bi; b: Bi; accent: string }> = {
-  login:    { bg: C.forest, ink: C.cream, a: { fr: "Bon retour.", en: "Welcome back." }, b: { fr: "Vos USDT vous attendent.", en: "Your USDT are waiting." }, accent: C.sun },
-  signup:   { bg: C.sun, ink: INK, a: { fr: "Vos USDT,", en: "Your USDT," }, b: { fr: "en dollars canadiens.", en: "in Canadian dollars." }, accent: C.coral },
-  business: { bg: C.peach, ink: INK, a: { fr: "Au nom de", en: "In your" }, b: { fr: "votre entreprise.", en: "company's name." }, accent: C.forest },
-  reset:    { bg: C.mint, ink: INK, a: { fr: "Un nouveau", en: "A fresh" }, b: { fr: "mot de passe.", en: "password." }, accent: C.coral },
+const PANELS: Record<Variant, { bg: string; ink: string; accent: string; a: Bi; b: Bi; steps: [Bi, Bi][] }> = {
+  login: {
+    bg: C.forest, ink: C.cream, accent: C.sun,
+    a: { fr: "Bon retour.", en: "Welcome back." },
+    b: { fr: "Vos USDT vous attendent.", en: "Your USDT are waiting." },
+    steps: [
+      [{ fr: "Payez par Interac", en: "Pay by Interac" }, { fr: "Montant exact, référence en message", en: "Exact amount, reference in the message" }],
+      [{ fr: "Vérification automatique", en: "Automatic check" }, { fr: "Dès que le virement arrive", en: "As soon as the transfer lands" }],
+      [{ fr: "USDT dans votre wallet", en: "USDT in your wallet" }, { fr: "En quelques minutes", en: "Within minutes" }],
+    ],
+  },
+  signup: {
+    bg: C.sun, ink: INK, accent: C.coral,
+    a: { fr: "Vos USDT,", en: "Your USDT," },
+    b: { fr: "en dollars canadiens.", en: "in Canadian dollars." },
+    steps: [
+      [{ fr: "Créez votre compte", en: "Create your account" }, { fr: "Gratuit, en une minute", en: "Free, in a minute" }],
+      [{ fr: "Vérifiez votre identité", en: "Verify your identity" }, { fr: "Une seule fois", en: "Just once" }],
+      [{ fr: "Achetez ou vendez", en: "Buy or sell" }, { fr: "Réglé par Interac", en: "Settled by Interac" }],
+    ],
+  },
+  business: {
+    bg: C.peach, ink: INK, accent: C.coral,
+    a: { fr: "Au nom de", en: "In your" },
+    b: { fr: "votre entreprise.", en: "company's name." },
+    steps: [
+      [{ fr: "Compte de l'entreprise", en: "Company account" }, { fr: "Raison sociale et coordonnées", en: "Legal name and details" }],
+      [{ fr: "Vérification", en: "Verification" }, { fr: "De la société et de son représentant", en: "Of the company and its representative" }],
+      [{ fr: "Virements de l'entreprise", en: "Company transfers" }, { fr: "Depuis son propre compte bancaire", en: "From its own bank account" }],
+    ],
+  },
+  reset: {
+    bg: C.mint, ink: INK, accent: C.sage,
+    a: { fr: "Un nouveau", en: "A fresh" },
+    b: { fr: "mot de passe.", en: "password." },
+    steps: [
+      [{ fr: "Un lien par courriel", en: "A link by email" }, { fr: "Envoyé à votre adresse", en: "Sent to your address" }],
+      [{ fr: "Au moins 8 caractères", en: "At least 8 characters" }, { fr: "Une phrase, c'est encore mieux", en: "A passphrase is even better" }],
+      [{ fr: "Jamais partagé", en: "Never shared" }, { fr: "Ooble ne vous le demandera jamais", en: "Ooble will never ask for it" }],
+    ],
+  },
 };
 
 const AuthShell = ({ variant, children }: { variant: Variant; children: React.ReactNode }) => {
   const [lang] = useLang();
   const P = PANELS[variant];
-  const en = lang === "en";
 
   return (
-    <div className="ink-neutral app-type grid min-h-screen bg-background tracking-[-0.015em] lg:grid-cols-[1fr_minmax(0,0.95fr)]">
+    <div className="ink-neutral app-type grid min-h-screen bg-background tracking-[-0.015em] lg:grid-cols-[1fr_minmax(0,0.9fr)]">
       <div className="flex min-h-screen flex-col">
         <header className="flex items-center justify-between px-6 pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-10">
           <Logo />
@@ -42,37 +77,43 @@ const AuthShell = ({ variant, children }: { variant: Variant; children: React.Re
         </main>
       </div>
 
-      <aside className="relative hidden overflow-hidden lg:block" style={{ background: P.bg, color: P.ink }} aria-hidden>
-        {/* formes de la marque */}
-        <span className="ooble-float absolute right-[12%] top-[10%] h-24 w-24 rounded-full" style={{ background: P.accent }} />
-        <span className="ooble-float absolute left-[10%] top-[38%] h-0 w-0 border-x-[34px] border-b-[58px] border-x-transparent [animation-delay:-2s]" style={{ borderBottomColor: variant === "signup" ? C.forest : C.sun }} />
-        <span className="ooble-float absolute left-[34%] top-[11%] h-14 w-14 rotate-12 rounded-lg [animation-delay:-4s]" style={{ background: variant === "reset" ? C.forest : C.mint }} />
-        <svg viewBox="0 0 120 60" className="ooble-float absolute bottom-[30%] left-[16%] w-28 [animation-delay:-1s]">
-          <path d="M0 60a60 60 0 0 1 120 0z" fill={variant === "business" ? C.coral : C.peach} />
-        </svg>
+      {/* Panneau fixe : hauteur de l'écran, rien ne défile ni ne bouge. */}
+      <aside
+        className="relative hidden h-[100dvh] overflow-hidden lg:sticky lg:top-0 lg:block lg:self-start"
+        style={{ background: P.bg, color: P.ink }}
+        aria-hidden
+      >
+        <span
+          className="absolute -right-[16vh] -top-[16vh] h-[52vh] w-[52vh] rounded-full"
+          style={{ background: P.accent }}
+        />
 
-        <div className="relative flex h-full flex-col justify-between p-12 xl:p-16">
+        <div className="relative flex h-full flex-col justify-between px-12 py-[6vh] xl:px-16">
           <p className="text-[12px] uppercase tracking-[0.18em] opacity-70">Ooble · USDT ⇄ CAD</p>
 
-          {/* carte d'ordre terminé */}
-          <div className="mx-auto w-full max-w-[340px] rotate-[-3deg] rounded-lg bg-white p-5 text-[#14110f] shadow-[0_40px_80px_-30px_rgba(0,0,0,0.45)]">
-            <div className="flex items-center justify-between text-[12px] text-[#6e6e73]">
-              <span className="font-mono">OOB-7K2Q9C4M</span>
-              <span className="rounded-[4px] bg-[#ecf8f1] px-2 py-0.5 font-medium text-[#157a43]">{en ? "Completed" : "Terminé"}</span>
-            </div>
-            <p className="mt-4 font-display text-[2rem] font-semibold leading-none tracking-[-0.05em]">+172,41 <span className="text-[1rem] text-[#6e6e73]">USDT</span></p>
-            <div className="mt-4 space-y-1.5 border-t border-[#ececea] pt-3 text-[12.5px]">
-              <p className="flex justify-between"><span className="text-[#6e6e73]">{en ? "Paid" : "Payé"}</span><span>250,00 $ · Interac</span></p>
-              <p className="flex justify-between"><span className="text-[#6e6e73]">{en ? "Network" : "Réseau"}</span><span>Tron · TRC20</span></p>
-              <p className="flex justify-between"><span className="text-[#6e6e73]">{en ? "Delivered in" : "Livré en"}</span><span>2 min</span></p>
-            </div>
-          </div>
+          <div>
+            <h2 className="max-w-[560px] font-display text-[clamp(2.4rem,6.2vh,4.4rem)] font-semibold leading-[0.98] tracking-[-0.055em]">
+              {P.a[lang]}
+              <br />
+              <span style={{ opacity: 0.55 }}>{P.b[lang]}</span>
+            </h2>
 
-          <h2 className="max-w-[520px] font-display text-[3.6rem] font-semibold leading-[0.98] tracking-[-0.055em] xl:text-[4.4rem]">
-            {P.a[lang]}
-            <br />
-            <span style={{ opacity: 0.55 }}>{P.b[lang]}</span>
-          </h2>
+            <ol className="mt-[5vh] max-w-[520px]">
+              {P.steps.map(([title, sub], i) => (
+                <li
+                  key={i}
+                  className="grid grid-cols-[2.25rem_1fr] items-baseline gap-x-3 border-t py-[1.6vh] last:border-b"
+                  style={{ borderColor: `${P.ink}2e` }}
+                >
+                  <span className="font-display text-[1.05rem] font-semibold tabular-nums opacity-50">{i + 1}</span>
+                  <span className="flex flex-col gap-0.5">
+                    <span className="font-display text-[1.15rem] font-semibold tracking-[-0.025em] xl:text-[1.25rem]">{title[lang]}</span>
+                    <span className="text-[13.5px] opacity-65">{sub[lang]}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
       </aside>
     </div>

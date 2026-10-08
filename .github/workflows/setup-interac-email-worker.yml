@@ -1,0 +1,113 @@
+name: Configuration Email Worker interac@
+
+# Met en place le chemin des avis Interac (voir cloudflare/interac-email-worker) :
+#   1. génère un secret partagé et le pose dans Supabase (INTERAC_INGEST_SECRET) ;
+#   2. déploie le Worker Cloudflare et lui donne le même secret ;
+#   3. bascule la règle Email Routing de interac@ooble.ca vers le Worker ;
+#   4. vérifie la chaîne (autotest, requête non signée refusée, requête signée acceptée).
+# Lancement manuel. Le jeton Cloudflare vient du secret CLOUDFLARE_API_TOKEN du
+# dépôt, ou à défaut de l'entrée cf_token, lue dans le fichier d'événement pour
+# ne jamais apparaître dans les journaux. Aucun secret n'est affiché.
+
+on:
+  workflow_dispatch:
+    inputs:
+      cf_token:
+        description: "Jeton API Cloudflare (vide si le secret CLOUDFLARE_API_TOKEN existe)"
+        required: false
+
+concurrency:
+  group: setup-interac-email-worker
+  cancel-in-progress: false
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PROJECT_REF: uukxacjjviiktmbikdwp
+      WORKER: ooble-interac-email
+      INGEST_URL: https://uukxacjjviiktmbikdwp.supabase.co/functions/v1/interac-ingest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Jetons et secret partagé
+        env:
+          REPO_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          T="$REPO_TOKEN"
+          [ -n "$T" ] || T=$(jq -r '.inputs.cf_token // empty' "$GITHUB_EVENT_PATH")
+          [ -n "$T" ] || { echo "Aucun jeton Cloudflare fourni."; exit 1; }
+          echo "::add-mask::$T"
+          echo "CLOUDFLARE_API_TOKEN=$T" >> "$GITHUB_ENV"
+          S=$(openssl rand -hex 32)
+          echo "::add-mask::$S"
+          echo "INGEST_SECRET=$S" >> "$GITHUB_ENV"
+
+      - name: Compte et zone Cloudflare
+        run: |
+          api() { curl -sS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" "$@"; }
+          echo "Jeton :"; api https://api.cloudflare.com/client/v4/user/tokens/verify | jq -c '{success, status: .result.status, errors}'
+          Z=$(api "https://api.cloudflare.com/client/v4/zones?name=ooble.ca")
+          echo "$Z" | jq -c '{success, errors, zones: [.result[] | {name, status}]}'
+          ZONE_ID=$(echo "$Z" | jq -r '.result[0].id // empty')
+          ACCOUNT_ID=$(echo "$Z" | jq -r '.result[0].account.id // empty')
+          [ -n "$ZONE_ID" ] && [ -n "$ACCOUNT_ID" ] || { echo "Zone ooble.ca introuvable avec ce jeton."; exit 1; }
+          echo "ZONE_ID=$ZONE_ID" >> "$GITHUB_ENV"
+          echo "CLOUDFLARE_ACCOUNT_ID=$ACCOUNT_ID" >> "$GITHUB_ENV"
+          echo "Règles Email Routing actuelles (pour retour arrière) :"
+          api "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/email/routing/rules?per_page=50" \
+            | jq -c '{success, errors, rules: [.result[]? | {id, name, enabled, matchers, actions}]}'
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Secret Supabase INTERAC_INGEST_SECRET
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase secrets set "INTERAC_INGEST_SECRET=$INGEST_SECRET" --project-ref "$PROJECT_REF"
+
+      - name: Déploiement du Worker et de son secret
+        working-directory: cloudflare/interac-email-worker
+        run: |
+          npx --yes wrangler@3.114.0 deploy
+          printf '%s' "$INGEST_SECRET" | npx --yes wrangler@3.114.0 secret put INTERAC_INGEST_SECRET
+
+      - name: Règle interac@ooble.ca → Worker
+        run: |
+          api() { curl -sS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Content-Type: application/json" "$@"; }
+          RULES=$(api "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/email/routing/rules?per_page=50")
+          RULE=$(echo "$RULES" | jq -c '[.result[]? | select(any(.matchers[]?; .field == "to" and ((.value // "") | ascii_downcase) == "interac@ooble.ca"))][0]')
+          if [ "$RULE" = "null" ] || [ -z "$RULE" ]; then
+            echo "Aucune règle pour interac@ooble.ca : création."
+            BODY=$(jq -nc --arg w "$WORKER" '{name: "interac@ooble.ca → Ooble", enabled: true,
+              matchers: [{type: "literal", field: "to", value: "interac@ooble.ca"}],
+              actions: [{type: "worker", value: [$w]}]}')
+            api -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/email/routing/rules" -d "$BODY" | jq -c '{success, errors, result: .result | {id, actions}}'
+          else
+            ID=$(echo "$RULE" | jq -r '.id')
+            BODY=$(echo "$RULE" | jq -c --arg w "$WORKER" '{name: (.name // "interac@ooble.ca"), enabled: true, matchers, priority,
+              actions: [{type: "worker", value: [$w]}]}')
+            api -X PUT "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/email/routing/rules/$ID" -d "$BODY" | jq -c '{success, errors, result: .result | {id, actions}}'
+          fi
+
+      - name: Vérifications
+        run: |
+          echo "5a. Autotest :"
+          curl -sS -X POST "$INGEST_URL" -H "Content-Type: application/json" -d '{"selftest":true}'; echo
+          echo "5b. Requête non signée (attendu 401) :"
+          curl -sS -o /dev/stdout -w "  → HTTP %{http_code}\n" -X POST "$INGEST_URL" -H "Content-Type: message/rfc822" --data-binary "From: test@example.com"
+          echo "5c. Requête signée comme le Worker, courriel ordinaire (attendu 200 « pas un avis Interac ») :"
+          printf 'From: Test <test@example.com>\r\nTo: interac@ooble.ca\r\nSubject: Verification\r\n\r\nbonjour\r\n' > msg.eml
+          for i in 1 2 3 4 5 6; do
+            TS=$(date +%s)
+            SIG=$( { printf '%s.' "$TS"; cat msg.eml; } | openssl dgst -sha256 -hmac "$INGEST_SECRET" -hex | awk '{print $NF}')
+            CODE=$(curl -sS -o out.json -w "%{http_code}" -X POST "$INGEST_URL" -H "Content-Type: message/rfc822" \
+              -H "X-Ooble-Timestamp: $TS" -H "X-Ooble-Signature: $SIG" --data-binary @msg.eml)
+            echo "  essai $i → HTTP $CODE $(cat out.json)"
+            [ "$CODE" = "200" ] && exit 0
+            sleep 15
+          done
+          echo "La requête signée n'est pas acceptée : secret pas encore propagé côté Supabase ?"
+          exit 1

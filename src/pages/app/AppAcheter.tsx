@@ -368,7 +368,10 @@ const AppAcheter = () => {
         <CopyRow label={t("buy.exactAmount")} value={`${nfCad.format(cad)} CAD`} />
         <CopyRow label={t("buy.reference")} value={savedRef} mono />
       </div>
-      <p className="mt-3 px-1 text-[12.5px] leading-relaxed text-muted-foreground">{t("buy.autoNote")}</p>
+      <p className="mt-3 px-1 text-[12.5px] leading-relaxed text-muted-foreground">
+        {t("buy.autoNote")}{" "}
+        <Link to="/faq#regles-interac" className="font-medium text-foreground underline underline-offset-2">{t("buy.rulesLink")}</Link>
+      </p>
 
       <div className="mt-6 flex justify-end gap-2.5">
         <Button variant="ghost" shape="soft" className="h-auto px-[22px] py-[13px] text-sm" onClick={() => { setStep("amount"); setAmount(""); setNet(null); setAddress(""); setSavedRef(""); setErr(null); }}>

@@ -185,8 +185,8 @@ const dict = {
   },
   "faq.6q": { fr: "Comment payer ou être payé ?", en: "How do I pay or get paid?" },
   "faq.6a": {
-    fr: "Par Interac e-Transfer, dans les deux sens, depuis votre compte bancaire canadien.",
-    en: "Via Interac e-Transfer, both ways, from your Canadian bank account.",
+    fr: "Par Interac e-Transfer, dans les deux sens, depuis un compte bancaire canadien à votre nom.",
+    en: "Via Interac e-Transfer, both ways, from a Canadian bank account in your name.",
   },
 
   // ── Landing — CTA ──
@@ -330,9 +330,45 @@ const dict = {
   "faqp.kicker": { fr: "Centre d'aide", en: "Help centre" },
   "faqp.title1": { fr: "Questions", en: "Frequently" },
   "faqp.title2": { fr: "fréquentes", en: "asked questions" },
+
+  // Encadré : les règles du virement Interac (achat).
+  "faqp.rules.kicker": { fr: "Avant de payer un achat", en: "Before you pay for a purchase" },
+  "faqp.rules.title": {
+    fr: "Quatre règles pour recevoir vos USDT en quelques minutes",
+    en: "Four rules to get your USDT within minutes",
+  },
+  "faqp.rules.sub": {
+    fr: "Votre virement est lu et vérifié automatiquement. S'il respecte ces quatre règles, vos USDT partent seuls, de jour comme de nuit. Sinon, il attend une vérification par notre équipe.",
+    en: "Your transfer is read and checked automatically. If it follows these four rules, your USDT go out on their own, day or night. If not, it waits for a check by our team.",
+  },
+  "faqp.rules.r1": { fr: "Destinataire : interac@ooble.ca", en: "Recipient: interac@ooble.ca" },
+  "faqp.rules.r1d": {
+    fr: "Ajoutez cette adresse comme destinataire Interac, et seulement celle-ci. Aucune question de sécurité ne vous sera demandée.",
+    en: "Add this address as your Interac recipient, and only this one. You won't be asked for a security question.",
+  },
+  "faqp.rules.r2": { fr: "La référence dans le message", en: "The reference in the message" },
+  "faqp.rules.r2d": {
+    fr: "Copiez la référence de votre ordre (OOB- suivi de 8 caractères) dans le champ « Message » du virement. Une seule référence, rien d'autre.",
+    en: "Copy your order reference (OOB- followed by 8 characters) into the transfer's “Message” field. One reference, nothing else.",
+  },
+  "faqp.rules.r3": { fr: "Le montant exact, au cent près", en: "The exact amount, to the cent" },
+  "faqp.rules.r3d": {
+    fr: "Un seul virement par ordre, du montant affiché. Ni arrondi, ni paiement en plusieurs fois, ni plusieurs ordres dans un même virement.",
+    en: "One transfer per order, for the amount shown. No rounding, no split payments, no several orders in one transfer.",
+  },
+  "faqp.rules.r4": { fr: "Un compte bancaire à votre nom", en: "A bank account in your name" },
+  "faqp.rules.r4d": {
+    fr: "Le nom de l'expéditeur du virement doit être celui de votre compte Ooble, tel que vérifié avec votre pièce d'identité. Pour un compte entreprise : le compte bancaire de l'entreprise.",
+    en: "The sender name on the transfer must match your Ooble account, as verified with your ID. For a business account: the company's bank account.",
+  },
+
   "faqp.topic1": { fr: "Le service", en: "The service" },
-  "faqp.topic2": { fr: "Acheter et vendre", en: "Buying and selling" },
+  "faqp.topicAccount": { fr: "Compte et vérification", en: "Account and verification" },
+  "faqp.topic2": { fr: "Acheter des USDT", en: "Buying USDT" },
+  "faqp.topicPay": { fr: "Payer par Interac", en: "Paying with Interac" },
+  "faqp.topicSell": { fr: "Vendre des USDT", en: "Selling USDT" },
   "faqp.topic3": { fr: "Sécurité et conformité", en: "Security and compliance" },
+
   "faqp.1q": { fr: "Qu'est-ce qu'Ooble ?", en: "What is Ooble?" },
   "faqp.1a": {
     fr: "Une plateforme non-custodial pour acheter et vendre des USDT en dollars canadiens, réglés par Interac e-Transfer. Chaque ordre part directement vers votre wallet ou votre compte.",
@@ -345,39 +381,115 @@ const dict = {
   },
   "faqp.3q": { fr: "Combien de temps le taux est-il garanti ?", en: "How long is the rate guaranteed?" },
   "faqp.3a": {
-    fr: "Quinze minutes à partir de la création de l'ordre — le temps d'effectuer votre virement sans subir les variations du marché.",
-    en: "Fifteen minutes from order creation — enough time to complete your transfer without market fluctuations.",
+    fr: "Quinze minutes à partir de la création de l'ordre. Envoyez votre virement dans ce délai pour profiter du taux affiché.",
+    en: "Fifteen minutes from order creation. Send your transfer within that time to get the displayed rate.",
   },
+  "faqp.limitsQ": { fr: "Y a-t-il des montants minimum et maximum ?", en: "Are there minimum and maximum amounts?" },
+  "faqp.limitsA": {
+    fr: "100 $ minimum par ordre, et jusqu'à 9 999 $ sur 24 heures pour les achats (les ventes sont comptées à part). Votre banque fixe aussi son propre plafond d'envoi Interac par jour : vérifiez-le avant un gros achat. Au-delà, notre desk OTC traite les gros volumes.",
+    en: "$100 minimum per order, and up to $9,999 over 24 hours for purchases (sales are counted separately). Your bank also sets its own daily Interac sending limit: check it before a large purchase. Beyond that, our OTC desk handles large volumes.",
+  },
+
+  "faqp.9q": { fr: "Pourquoi une vérification d'identité ?", en: "Why is identity verification required?" },
+  "faqp.9a": {
+    fr: "C'est une exigence réglementaire canadienne : aucun ordre n'est possible avant. Elle se fait une seule fois : pièce d'identité et selfie. Vos documents servent uniquement à la conformité.",
+    en: "It's a Canadian regulatory requirement: no order is possible before it. It's done once: photo ID and selfie. Your documents are used solely for compliance.",
+  },
+  "faqp.nameQ": { fr: "Quel nom utiliser pour mon compte ?", en: "Which name should I use for my account?" },
+  "faqp.nameA": {
+    fr: "Votre nom légal complet, tel qu'il apparaît sur votre pièce d'identité et sur votre compte bancaire. Une fois votre identité vérifiée, le nom du compte est verrouillé : c'est lui que nous comparons au nom de l'expéditeur de vos virements. Pour le corriger, écrivez au support.",
+    en: "Your full legal name, as it appears on your ID and on your bank account. Once your identity is verified, the account name is locked: it's the name we compare with the sender of your transfers. To correct it, write to support.",
+  },
+  "faqp.bizQ": { fr: "J'achète pour mon entreprise : comment faire ?", en: "I'm buying for my company: how does it work?" },
+  "faqp.bizA": {
+    fr: "Créez un compte entreprise et faites vérifier l'entreprise. Payez ensuite depuis le compte bancaire de l'entreprise : le nom de l'expéditeur doit être la raison sociale enregistrée chez Ooble. Un paiement depuis le compte personnel d'un dirigeant n'est pas accepté pour un compte entreprise.",
+    en: "Create a business account and have the company verified. Then pay from the company's bank account: the sender name must be the legal business name registered with Ooble. A payment from a director's personal account isn't accepted for a business account.",
+  },
+
   "faqp.4q": { fr: "Comment acheter des USDT ?", en: "How to buy USDT?" },
   "faqp.4a": {
-    fr: "Indiquez le montant, choisissez le réseau de réception et collez votre adresse. Envoyez votre e-Transfer : vos USDT partent dès réception du paiement.",
-    en: "Enter the amount, choose the receiving network and paste your address. Send your e-Transfer: your USDT is sent upon payment receipt.",
-  },
-  "faqp.5q": { fr: "Comment vendre des USDT ?", en: "How to sell USDT?" },
-  "faqp.5a": {
-    fr: "Entrez le montant et le courriel Interac sur lequel recevoir vos dollars. Vous envoyez vos USDT à l'adresse indiquée ; dès confirmation, nous vous versons le montant en CAD.",
-    en: "Enter the amount and the Interac email where you want to receive your dollars. You send your USDT to the given address; upon confirmation, we transfer the CAD amount to you.",
+    fr: "Entrez le montant, choisissez le réseau et collez l'adresse de votre wallet, puis validez. L'écran suivant vous donne trois informations : le destinataire (interac@ooble.ca), le montant exact et la référence de l'ordre. Envoyez votre virement Interac avec ces informations : vos USDT partent dès que le paiement est reçu.",
+    en: "Enter the amount, choose the network and paste your wallet address, then confirm. The next screen gives you three details: the recipient (interac@ooble.ca), the exact amount and the order reference. Send your Interac transfer with these details: your USDT go out as soon as the payment arrives.",
   },
   "faqp.6q": { fr: "Quels réseaux sont pris en charge ?", en: "Which networks are supported?" },
   "faqp.6a": {
-    fr: "Tron (TRC20), Ethereum (ERC20), BNB Chain (BEP20), Polygon, Solana et Avalanche (C-Chain). Vérifiez toujours que l'adresse correspond au réseau choisi.",
-    en: "Tron (TRC20), Ethereum (ERC20), BNB Chain (BEP20), Polygon, Solana and Avalanche (C-Chain). Always verify the address matches the chosen network.",
+    fr: "Tron (TRC20), Ethereum (ERC20), BNB Chain (BEP20), Polygon, Solana et Avalanche (C-Chain). L'adresse doit correspondre au réseau choisi : une adresse Tron commence par T, une adresse Ethereum, BNB Chain, Polygon ou Avalanche par 0x. Une transaction blockchain ne peut pas être annulée : vérifiez deux fois.",
+    en: "Tron (TRC20), Ethereum (ERC20), BNB Chain (BEP20), Polygon, Solana and Avalanche (C-Chain). The address must match the chosen network: a Tron address starts with T, an Ethereum, BNB Chain, Polygon or Avalanche address with 0x. A blockchain transaction can't be reversed: check twice.",
   },
-  "faqp.7q": { fr: "Combien de temps pour recevoir ?", en: "How long to receive?" },
+  "faqp.7q": { fr: "Combien de temps pour recevoir mes USDT ?", en: "How long until I receive my USDT?" },
   "faqp.7a": {
-    fr: "Quelques minutes après réception du paiement, aux heures d'ouverture. Les très gros volumes passent par notre desk OTC.",
-    en: "A few minutes after payment receipt, during business hours. Very large volumes go through our OTC desk.",
+    fr: "En général quelques minutes après votre virement, à toute heure, quand les quatre règles du virement sont respectées. Interac met parfois quelques minutes à nous prévenir. Les gros montants et les virements qui ne respectent pas les règles sont vérifiés par notre équipe, aux heures d'ouverture.",
+    en: "Usually a few minutes after your transfer, at any hour, when the four transfer rules are followed. Interac sometimes takes a few minutes to notify us. Large amounts and transfers that don't follow the rules are checked by our team during business hours.",
   },
+  "faqp.trackQ": { fr: "Comment savoir que mes USDT sont partis ?", en: "How do I know my USDT were sent?" },
+  "faqp.trackA": {
+    fr: "Vous recevez un courriel à chaque étape : paiement reçu, puis transaction terminée. Le dernier courriel et le détail de l'ordre dans votre espace contiennent un lien vers la transaction sur l'explorateur de la blockchain (BscScan, Tronscan, Etherscan…), qui prouve l'envoi.",
+    en: "You get an email at each step: payment received, then transaction completed. The last email and the order detail in your account include a link to the transaction on the blockchain explorer (BscScan, Tronscan, Etherscan…), which proves it was sent.",
+  },
+
+  "faqp.payRefQ": { fr: "Où trouver la référence et où l'écrire ?", en: "Where do I find the reference and where do I put it?" },
+  "faqp.payRefA": {
+    fr: "La référence s'affiche après la validation de l'ordre, et dans le détail de l'ordre (Activité). Elle ressemble à OOB-3C62CEB6. Dans votre banque, au moment d'envoyer le virement Interac, collez-la dans le champ « Message » (parfois « Note » ou « Message au destinataire »). N'ajoutez pas d'autre texte et n'y mettez pas la référence d'un autre ordre.",
+    en: "The reference appears after you confirm the order, and in the order detail (Activity). It looks like OOB-3C62CEB6. In your bank, when sending the Interac transfer, paste it into the “Message” field (sometimes “Note” or “Message to recipient”). Don't add other text, and don't put another order's reference.",
+  },
+  "faqp.payNameQ": { fr: "Pourquoi le nom de l'expéditeur doit-il être le mien ?", en: "Why must the sender name be mine?" },
+  "faqp.payNameA": {
+    fr: "La loi nous oblige à savoir qui paie. Le virement doit donc venir d'un compte bancaire à votre nom, le même que celui de votre compte Ooble vérifié. Un compte conjoint est accepté si votre nom y figure. Le paiement d'une autre personne (conjoint, ami, parent, employeur) est refusé et remboursé à son expéditeur, même si la référence est correcte.",
+    en: "The law requires us to know who is paying. The transfer must come from a bank account in your name, the same as your verified Ooble account. A joint account is accepted if your name is on it. A payment from someone else (spouse, friend, relative, employer) is refused and refunded to its sender, even with the right reference.",
+  },
+  "faqp.payQuestionQ": { fr: "Dois-je créer une question de sécurité ?", en: "Do I need to set a security question?" },
+  "faqp.payQuestionA": {
+    fr: "Non. interac@ooble.ca est en dépôt automatique : l'argent est déposé dès l'envoi, sans question ni réponse. Si votre banque vous en demande une, c'est que l'adresse du destinataire est mal écrite : vérifiez-la.",
+    en: "No. interac@ooble.ca uses autodeposit: the money is deposited as soon as it's sent, with no question or answer. If your bank asks for one, the recipient address is mistyped: check it.",
+  },
+  "faqp.payMistakeQ": { fr: "J'ai oublié la référence ou envoyé un autre montant : que se passe-t-il ?", en: "I forgot the reference or sent a different amount: what happens?" },
+  "faqp.payMistakeA": {
+    fr: "Votre argent n'est pas perdu. Le virement n'est simplement pas traité automatiquement : notre équipe le rapproche à la main aux heures d'ouverture, ce qui prend plus de temps. Si le montant ne correspond pas, nous vous contactons pour ajuster l'ordre ou vous rembourser. N'envoyez pas de second virement pour « corriger » : écrivez plutôt au support avec la référence de l'ordre.",
+    en: "Your money isn't lost. The transfer just isn't processed automatically: our team matches it by hand during business hours, which takes longer. If the amount doesn't match, we contact you to adjust the order or refund you. Don't send a second transfer to “fix” it: write to support with the order reference instead.",
+  },
+  "faqp.paySplitQ": { fr: "Puis-je payer plusieurs ordres en un seul virement ?", en: "Can I pay several orders with one transfer?" },
+  "faqp.paySplitA": {
+    fr: "Non : un virement par ordre, et un ordre par virement. Ne combinez pas plusieurs ordres et ne divisez pas un paiement en plusieurs virements. Si votre plafond bancaire est trop bas, créez plusieurs ordres plus petits et payez chacun séparément, avec sa propre référence.",
+    en: "No: one transfer per order, and one order per transfer. Don't combine several orders and don't split a payment into several transfers. If your bank limit is too low, create several smaller orders and pay each one separately, with its own reference.",
+  },
+  "faqp.payDelayQ": { fr: "J'ai payé, mais l'ordre est toujours « en attente »", en: "I paid, but the order still says “pending”" },
+  "faqp.payDelayA": {
+    fr: "Attendez quelques minutes : Interac nous prévient parfois avec un peu de retard, et certaines banques retiennent un premier virement vers un nouveau destinataire (votre banque vous en informe alors). Au-delà de 30 minutes, vérifiez dans votre banque que le virement est bien parti vers interac@ooble.ca, avec la référence et le bon montant, puis écrivez au support en indiquant la référence de l'ordre.",
+    en: "Wait a few minutes: Interac sometimes notifies us with a short delay, and some banks hold a first transfer to a new recipient (your bank will tell you). After 30 minutes, check in your bank that the transfer went to interac@ooble.ca, with the reference and the right amount, then write to support with the order reference.",
+  },
+
+  "faqp.5q": { fr: "Comment vendre des USDT ?", en: "How to sell USDT?" },
+  "faqp.5a": {
+    fr: "Entrez le montant, choisissez le réseau et indiquez le courriel Interac où recevoir vos dollars. Envoyez ensuite le montant exact d'USDT à l'adresse de dépôt affichée, sur le réseau choisi, puis confirmez l'envoi. Dès que la blockchain confirme la réception, nous vous versons les dollars par Interac.",
+    en: "Enter the amount, choose the network and give the Interac email where you want your dollars. Then send the exact USDT amount to the deposit address shown, on the chosen network, and confirm the transfer. As soon as the blockchain confirms receipt, we pay you the dollars via Interac.",
+  },
+  "faqp.sellExchangeQ": { fr: "J'envoie mes USDT depuis une plateforme d'échange", en: "I'm sending my USDT from an exchange" },
+  "faqp.sellExchangeA": {
+    fr: "Les plateformes retirent souvent des frais de retrait du montant envoyé. Le montant qui arrive à notre adresse doit être le montant exact de l'ordre : ajoutez les frais au montant retiré si nécessaire. Choisissez bien le même réseau que dans l'ordre. Un envoi sur un autre réseau peut être perdu définitivement.",
+    en: "Exchanges often deduct a withdrawal fee from the amount sent. The amount that reaches our address must be the exact order amount: add the fee to the withdrawal if needed. Pick the same network as in the order. A transfer on another network can be lost for good.",
+  },
+  "faqp.sellPayoutQ": { fr: "Comment est-ce que je reçois mes dollars ?", en: "How do I receive my dollars?" },
+  "faqp.sellPayoutA": {
+    fr: "Par virement Interac, au courriel indiqué dans l'ordre, au nom de votre compte vérifié. Si votre banque n'est pas en dépôt automatique, utilisez la réponse à la question de sécurité affichée dans votre ordre pour déposer le virement. Les ventes sont vérifiées par notre équipe, aux heures d'ouverture.",
+    en: "By Interac transfer, to the email given in the order, in the name of your verified account. If your bank isn't on autodeposit, use the security answer shown in your order to deposit the transfer. Sales are checked by our team during business hours.",
+  },
+
   "faqp.8q": { fr: "Ooble conserve-t-il mes fonds ?", en: "Does Ooble hold my funds?" },
   "faqp.8a": {
     fr: "Non. Aucun solde client, aucun portefeuille interne. Chaque ordre est réglé individuellement, puis clos.",
     en: "No. No client balance, no internal wallet. Each order is settled individually, then closed.",
   },
-  "faqp.9q": { fr: "Pourquoi une vérification d'identité ?", en: "Why is identity verification required?" },
-  "faqp.9a": {
-    fr: "C'est une exigence réglementaire canadienne. Elle se fait une seule fois : courriel, pièce d'identité, selfie. Vos documents servent uniquement à la conformité.",
-    en: "It's a Canadian regulatory requirement. It's done once: email, photo ID, selfie. Your documents are used solely for compliance.",
+  "faqp.scamQ": { fr: "Quelqu'un me demande d'acheter des USDT pour lui", en: "Someone is asking me to buy USDT for them" },
+  "faqp.scamA": {
+    fr: "Refusez. N'achetez que pour vous, vers un wallet qui vous appartient. Les fraudeurs demandent souvent d'acheter des cryptos pour « payer une amende », « débloquer un colis », « récupérer un placement » ou rembourser un inconnu rencontré en ligne. Aucune administration ne se fait payer en cryptos. En cas de doute, arrêtez et écrivez-nous.",
+    en: "Say no. Only buy for yourself, to a wallet you own. Scammers often ask you to buy crypto to “pay a fine”, “release a parcel”, “recover an investment” or pay back a stranger met online. No government agency takes payment in crypto. If in doubt, stop and write to us.",
   },
+  "faqp.contactQ": { fr: "Ooble peut-il me demander mes codes ou ma phrase secrète ?", en: "Can Ooble ask for my codes or my seed phrase?" },
+  "faqp.contactA": {
+    fr: "Jamais. Personne chez Ooble ne vous demandera votre mot de passe, un code reçu par courriel, votre phrase de récupération (seed) ou la clé privée de votre wallet. Nos courriels viennent uniquement de @ooble.ca. Ne répondez à aucune demande de ce type.",
+    en: "Never. No one at Ooble will ask for your password, a code sent by email, your recovery (seed) phrase or your wallet's private key. Our emails only come from @ooble.ca. Don't answer any such request.",
+  },
+
   "faqp.notFound": { fr: "Vous ne trouvez pas votre réponse ?", en: "Can't find your answer?" },
   "faqp.notFoundSub": {
     fr: "Notre équipe répond en français comme en anglais.",
@@ -470,6 +582,7 @@ const dict = {
     fr: "Écrivez la référence dans le message du virement et payez depuis un compte bancaire à votre nom, au montant exact : vos USDT vous sont alors envoyés dès la réception du paiement.",
     en: "Put the reference in the transfer message and pay from a bank account in your name, for the exact amount: your USDT are then sent as soon as the payment arrives.",
   },
+  "buy.rulesLink": { fr: "Les règles du virement", en: "Transfer rules" },
   "buy.newOrder": { fr: "Nouvel ordre", en: "New order" },
   "buy.done": { fr: "Terminé", en: "Done" },
   "buy.toPay": { fr: "À payer", en: "To pay" },
@@ -1001,8 +1114,8 @@ const dict = {
   },
   "guide.buy.s5": { fr: "Payez par Interac", en: "Pay with Interac" },
   "guide.buy.s5d": {
-    fr: "Envoyez un virement Interac e-Transfer à l'adresse indiquée, avec le montant exact et la référence de l'ordre dans le message.",
-    en: "Send an Interac e-Transfer to the address shown, with the exact amount and the order reference in the message.",
+    fr: "Envoyez un virement Interac e-Transfer à interac@ooble.ca, depuis un compte bancaire à votre nom, avec le montant exact et la référence de l'ordre dans le message.",
+    en: "Send an Interac e-Transfer to interac@ooble.ca, from a bank account in your name, with the exact amount and the order reference in the message.",
   },
   "guide.buy.s6": { fr: "Recevez vos USDT", en: "Receive your USDT" },
   "guide.buy.s6d": {
@@ -1010,8 +1123,8 @@ const dict = {
     en: "As soon as the payment arrives, your USDT is sent straight to your wallet. Ooble holds no balance.",
   },
   "guide.buy.tip1": {
-    fr: "Envoyez toujours le montant exact affiché, avec la référence de l'ordre.",
-    en: "Always send the exact amount shown, with the order reference.",
+    fr: "Envoyez toujours le montant exact affiché, avec la référence de l'ordre, depuis un compte à votre nom : le paiement d'une autre personne est remboursé.",
+    en: "Always send the exact amount shown, with the order reference, from an account in your name: a payment from someone else is refunded.",
   },
   "guide.buy.tip2": {
     fr: "Vérifiez deux fois l'adresse et le réseau : une transaction blockchain ne peut pas être annulée.",

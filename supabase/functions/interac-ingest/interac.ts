@@ -6,7 +6,8 @@
 // réunies :
 //   • la référence OOB-XXXXXXXX de l'ordre figure dans le message ;
 //   • le montant reçu est exactement celui de l'ordre ;
-//   • le nom de l'expéditeur correspond au client (ou à son entreprise).
+//   • le nom de l'expéditeur correspond au client (raison sociale pour un
+//     compte entreprise).
 // L'ordre passe alors à « paiement reçu », le client est prévenu, et l'envoi
 // automatique des USDT est demandé à `usdt-payout` si les réglages le
 // permettent. Dans tous les autres cas, rien ne bouge : l'avis attend
@@ -134,7 +135,11 @@ export async function handleInterac(db: SupabaseClient, m: InteracMail, supabase
     return { status: await save("mismatch", `Montant reçu ${amount} $ ≠ montant de l'ordre ${order.cad_amount} $.`, order.id) };
   }
   const { data: prof } = await db.from("profiles").select("email, full_name, business_name, account_type").eq("id", order.user_id).maybeSingle();
-  const okName = !!sender && (namesMatch(sender, prof?.full_name ?? "") || namesMatch(sender, prof?.business_name ?? ""));
+  // Compte entreprise : le virement doit venir du compte de l'entreprise (raison
+  // sociale). Compte personnel : du compte bancaire du client (nom vérifié).
+  const okName = !!sender && (prof?.account_type === "business"
+    ? namesMatch(sender, prof?.business_name ?? "")
+    : namesMatch(sender, prof?.full_name ?? ""));
   if (!okName) {
     return { status: await save("mismatch", `Expéditeur « ${sender || "?"} » différent du client « ${prof?.business_name || prof?.full_name || "?"} » (paiement d'un tiers ?).`, order.id) };
   }

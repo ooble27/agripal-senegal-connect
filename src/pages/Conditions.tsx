@@ -63,7 +63,7 @@ const PARTS: Part[] = [
             Les présentes conditions d'utilisation (les « Conditions ») régissent l'accès et
             l'utilisation de la plateforme Ooble, exploitée par{" "}
             <Fill>[raison sociale complète, ex. Ooble Technologies Inc.]</Fill>, société{" "}
-            <Fill>[constituée en vertu de la loi de — province ou fédérale]</Fill>, dont le siège
+            <Fill>[constituée en vertu de la loi de : province ou fédérale]</Fill>, dont le siège
             est situé à <Fill>[adresse complète]</Fill> (« Ooble », « nous »). Ooble permet
             l'achat et la vente de Tether (USDT) contre des dollars canadiens (CAD), réglés
             directement vers le portefeuille numérique ou le compte bancaire du client par virement
@@ -101,7 +101,7 @@ const PARTS: Part[] = [
             These terms of use (the "Terms") govern access to and use of the Ooble platform,
             operated by{" "}
             <Fill>[full corporate name, e.g. Ooble Technologies Inc.]</Fill>, a corporation{" "}
-            <Fill>[incorporated under the laws of — province or federal]</Fill>, with its head
+            <Fill>[incorporated under the laws of: province or federal]</Fill>, with its head
             office located at <Fill>[full address]</Fill> ("Ooble," "we"). Ooble enables the
             purchase and sale of Tether (USDT) against Canadian dollars (CAD), settled directly to
             the customer's digital wallet or bank account via Interac transfer.
@@ -311,7 +311,7 @@ const PARTS: Part[] = [
             constitue une violation substantielle des présentes Conditions.
           </P>
 
-          <H3>Comptes entreprise — bénéficiaires effectifs</H3>
+          <H3>Comptes entreprise · bénéficiaires effectifs</H3>
           <P>
             Pour tout compte ouvert au nom d'une entité, Ooble doit identifier et vérifier
             l'identité de chaque personne physique détenant, directement ou indirectement, 25 % ou
@@ -334,7 +334,7 @@ const PARTS: Part[] = [
             constitutes a material breach of these Terms.
           </P>
 
-          <H3>Business accounts — beneficial owners</H3>
+          <H3>Business accounts · beneficial owners</H3>
           <P>
             For any account opened in the name of an entity, Ooble must identify and verify the
             identity of every individual who owns or controls, directly or indirectly, 25% or more
@@ -614,7 +614,7 @@ const PARTS: Part[] = [
           </P>
           <P>
             Le taux affiché correspond au cours du marché USDT/CAD majoré d'une marge de 2 %, déjà
-            incluse dans le prix affiché — aucun frais additionnel n'est appliqué. Ce taux est
+            incluse dans le prix affiché : aucun frais additionnel n'est appliqué. Ce taux est
             verrouillé pendant {RATE_LOCK_MINUTES} minutes à compter de la création de l'ordre.
             Passé ce délai sans règlement complet de votre part, Ooble peut annuler l'ordre et vous
             inviter à en créer un nouveau au taux courant.
@@ -637,7 +637,7 @@ const PARTS: Part[] = [
           </P>
           <P>
             The displayed rate corresponds to the USDT/CAD market rate plus a 2% margin, already
-            included in the displayed price — no additional fees apply. This rate is locked for{" "}
+            included in the displayed price: no additional fees apply. This rate is locked for{" "}
             {RATE_LOCK_MINUTES} minutes from the creation of the order. After this period without
             complete settlement on your part, Ooble may cancel the order and invite you to create
             a new one at the current rate.
@@ -834,7 +834,7 @@ const PARTS: Part[] = [
       fr: (
         <P>
           Les présentes Conditions sont régies par les lois applicables dans{" "}
-          <Fill>[province — ex. la province de Québec]</Fill> et les lois fédérales du Canada qui
+          <Fill>[province : ex. la province de Québec]</Fill> et les lois fédérales du Canada qui
           s'y appliquent. Tout litige relève de la compétence exclusive des tribunaux de{" "}
           <Fill>[province]</Fill>, sous réserve des pouvoirs d'enquête et de sanction reconnus à
           CANAFE et aux autres autorités de réglementation compétentes.
@@ -843,7 +843,7 @@ const PARTS: Part[] = [
       en: (
         <P>
           These Terms are governed by the laws applicable in{" "}
-          <Fill>[province — e.g. the Province of Quebec]</Fill> and the federal laws of Canada
+          <Fill>[province: e.g. the Province of Quebec]</Fill> and the federal laws of Canada
           that apply there. Any dispute is subject to the exclusive jurisdiction of the courts of{" "}
           <Fill>[province]</Fill>, subject to the powers of investigation and sanction recognized
           for FINTRAC and other competent regulatory authorities.
@@ -863,9 +863,9 @@ const PARTS: Part[] = [
             conformité, y compris pour joindre notre agent de conformité :
           </P>
           <Ul>
-            <li>Courriel — support@ooble.ca</li>
-            <li>Interac e-Transfer (paiements) — {OOBLE_INTERAC_EMAIL}</li>
-            <li>Adresse postale — <Fill>[adresse complète de l'entreprise]</Fill></li>
+            <li>Courriel : support@ooble.ca</li>
+            <li>Interac e-Transfer (paiements) : {OOBLE_INTERAC_EMAIL}</li>
+            <li>Adresse postale : <Fill>[adresse complète de l'entreprise]</Fill></li>
           </Ul>
         </>
       ),
@@ -876,9 +876,9 @@ const PARTS: Part[] = [
             to reach our compliance officer:
           </P>
           <Ul>
-            <li>Email — support@ooble.ca</li>
-            <li>Interac e-Transfer (payments) — {OOBLE_INTERAC_EMAIL}</li>
-            <li>Postal address — <Fill>[full company address]</Fill></li>
+            <li>Email: support@ooble.ca</li>
+            <li>Interac e-Transfer (payments): {OOBLE_INTERAC_EMAIL}</li>
+            <li>Postal address: <Fill>[full company address]</Fill></li>
           </Ul>
         </>
       ),

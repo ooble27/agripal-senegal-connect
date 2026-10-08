@@ -102,7 +102,7 @@ const SNIPPETS: Snippet[] = [
     id: "kyc-followup",
     name: "Relance KYC",
     description: "Le client n'a pas fini sa vérification d'identité.",
-    subject: "Votre vérification d'identité — Ooble",
+    subject: "Votre vérification d'identité · Ooble",
     body: `Bonjour {{prenom}},
 
 Nous n'avons pas encore reçu tous les documents nécessaires à la validation de votre compte Ooble.
@@ -110,7 +110,7 @@ Nous n'avons pas encore reçu tous les documents nécessaires à la validation d
 Pour finaliser votre vérification, vous pouvez reprendre depuis votre espace :
 [Reprendre la vérification](https://ooble.ca/app/verification)
 
-Un membre de l'équipe reste disponible si vous avez la moindre question — répondez simplement à ce message.
+Un membre de l'équipe reste disponible si vous avez la moindre question : répondez simplement à ce message.
 
 À bientôt,`,
   },
@@ -118,7 +118,7 @@ Un membre de l'équipe reste disponible si vous avez la moindre question — ré
     id: "kyc-complement",
     name: "Demande de complément KYC",
     description: "Un document est illisible ou manque.",
-    subject: "Complément d'information pour votre dossier — Ooble",
+    subject: "Complément d'information pour votre dossier · Ooble",
     body: `Bonjour {{prenom}},
 
 Nous avons bien reçu votre dossier de vérification et il nous manque **{{piece}}** pour finaliser.
@@ -139,7 +139,7 @@ Bienvenue chez Ooble. Votre compte est actif : vous pouvez dès maintenant achet
 Quelques repères pour bien démarrer :
 
 - Le taux est verrouillé pendant 15 minutes après création d'un ordre.
-- Vos paiements Interac utilisent une question de sécurité personnelle — visible dans votre compte.
+- Vos paiements Interac utilisent une question de sécurité personnelle, visible dans votre compte.
 - Pour toute question, cet e-mail est le bon canal : nous vous répondons dans la journée.
 
 Bienvenue à bord,`,
@@ -148,7 +148,7 @@ Bienvenue à bord,`,
     id: "compliance-info",
     name: "Demande CANAFE",
     description: "Demande d'information pour une opération importante.",
-    subject: "Vérification d'une opération — Ooble",
+    subject: "Vérification d'une opération · Ooble",
     body: `Bonjour {{prenom}},
 
 Dans le cadre de nos obligations réglementaires (LRPCFAT / CANAFE), nous avons besoin de quelques précisions sur votre opération **{{ref}}** :
@@ -180,7 +180,7 @@ Restez à l'écoute et n'hésitez pas si autre chose,`,
     id: "kyc-approved",
     name: "KYC approuvé",
     description: "Notification de vérification d'identité réussie.",
-    subject: "Votre identité est vérifiée — Ooble",
+    subject: "Votre identité est vérifiée · Ooble",
     body: `Bonjour {{prenom}},
 
 Bonne nouvelle : votre vérification d'identité est **approuvée**. Vous pouvez désormais acheter et vendre sans limite quotidienne réduite.
@@ -193,14 +193,14 @@ Bonne journée,`,
     id: "kyc-rejected",
     name: "KYC refusé",
     description: "Rejet KYC avec explication et prochaine étape.",
-    subject: "Votre vérification d'identité — action requise",
+    subject: "Votre vérification d'identité · action requise",
     body: `Bonjour {{prenom}},
 
 Après examen de votre dossier de vérification, nous ne pouvons pas l'approuver en l'état pour la raison suivante :
 
 > {{raison}}
 
-Vous pouvez recommencer la démarche depuis votre espace, avec les corrections nécessaires. Répondez à ce mail si vous avez besoin d'accompagnement — nous sommes là pour vous aider à finaliser.
+Vous pouvez recommencer la démarche depuis votre espace, avec les corrections nécessaires. Répondez à ce mail si vous avez besoin d'accompagnement. Nous sommes là pour vous aider à finaliser.
 
 [Reprendre la vérification](https://ooble.ca/app/verification)
 
@@ -210,7 +210,7 @@ Cordialement,`,
     id: "payment-confirmed-manual",
     name: "Paiement reçu (manuel)",
     description: "Confirmation manuelle après réception d'un Interac.",
-    subject: "Paiement reçu — ordre {{ref}}",
+    subject: "Paiement reçu · ordre {{ref}}",
     body: `Bonjour {{prenom}},
 
 Nous confirmons la réception de votre paiement Interac pour l'ordre **{{ref}}**.
@@ -225,7 +225,7 @@ Merci de votre confiance,`,
     id: "order-completed-manual",
     name: "Transaction terminée",
     description: "Confirmation manuelle après envoi USDT.",
-    subject: "Transaction terminée — ordre {{ref}}",
+    subject: "Transaction terminée · ordre {{ref}}",
     body: `Bonjour {{prenom}},
 
 Votre transaction **{{ref}}** est terminée. Voici le hash de transaction blockchain :
@@ -242,7 +242,7 @@ Vous pouvez le retrouver dans votre historique à tout moment.
     id: "security-alert",
     name: "Alerte sécurité",
     description: "Signaler une activité inhabituelle sur le compte.",
-    subject: "Activité inhabituelle sur votre compte — Ooble",
+    subject: "Activité inhabituelle sur votre compte · Ooble",
     body: `Bonjour {{prenom}},
 
 Nous avons détecté une activité inhabituelle sur votre compte Ooble : **{{detail}}**.
@@ -258,7 +258,7 @@ L'équipe sécurité Ooble`,
     id: "delay-apology",
     name: "Excuses délai",
     description: "Message d'excuse pour un traitement plus long que prévu.",
-    subject: "Traitement de votre ordre {{ref}} — Ooble",
+    subject: "Traitement de votre ordre {{ref}} · Ooble",
     body: `Bonjour {{prenom}},
 
 Le traitement de votre ordre **{{ref}}** prend plus de temps qu'habituellement en raison de **{{cause}}**. Nous en sommes désolés.
@@ -273,10 +273,10 @@ Merci pour votre patience,`,
     id: "commercial-outreach",
     name: "Prise de contact commerciale",
     description: "Premier contact avec un client entreprise.",
-    subject: "Ooble pour {{entreprise}} — un mot rapide",
+    subject: "Ooble pour {{entreprise}} · un mot rapide",
     body: `Bonjour {{prenom}},
 
-Je suis {{agent}} chez Ooble. Nous accompagnons plusieurs entreprises comme {{entreprise}} dans leurs opérations USDT/CAD au Canada — règlement par Interac, tarification transparente, aucune garde des fonds.
+Je suis {{agent}} chez Ooble. Nous accompagnons plusieurs entreprises comme {{entreprise}} dans leurs opérations USDT/CAD au Canada : règlement par Interac, tarification transparente, aucune garde des fonds.
 
 Auriez-vous 15 minutes cette semaine pour un rapide échange sur vos besoins ? Je peux vous proposer des créneaux ou vous laisser choisir.
 
@@ -286,7 +286,7 @@ Bien à vous,`,
     id: "limit-increase-info",
     name: "Info limite quotidienne",
     description: "Répondre à une question sur les plafonds.",
-    subject: "Votre limite quotidienne — Ooble",
+    subject: "Votre limite quotidienne · Ooble",
     body: `Bonjour {{prenom}},
 
 Votre limite quotidienne actuelle est de **{{limite}} CAD**.
@@ -304,7 +304,7 @@ Cordialement,`,
     id: "interac-not-received",
     name: "Interac non reçu",
     description: "Le client dit avoir envoyé un Interac que nous n'avons pas reçu.",
-    subject: "Votre virement Interac — ordre {{ref}}",
+    subject: "Votre virement Interac · ordre {{ref}}",
     body: `Bonjour {{prenom}},
 
 Nous n'avons pas encore reçu votre virement Interac pour l'ordre **{{ref}}**. Les virements Interac prennent généralement quelques minutes mais peuvent parfois durer jusqu'à 30 minutes.
@@ -324,7 +324,7 @@ Cordialement,`,
     id: "wrong-network",
     name: "Mauvais réseau USDT",
     description: "Le client a envoyé USDT sur le mauvais réseau blockchain.",
-    subject: "Réseau blockchain — action requise sur votre vente",
+    subject: "Réseau blockchain · action requise sur votre vente",
     body: `Bonjour {{prenom}},
 
 Nous détectons que le dépôt USDT associé à votre ordre **{{ref}}** a été effectué sur le réseau **{{reseauRecu}}**, alors que l'ordre était configuré pour **{{reseauAttendu}}**.
@@ -344,7 +344,7 @@ Cordialement,`,
     id: "address-format",
     name: "Adresse wallet invalide",
     description: "L'adresse de réception fournie n'est pas valide pour le réseau choisi.",
-    subject: "Vérification de votre adresse USDT — ordre {{ref}}",
+    subject: "Vérification de votre adresse USDT · ordre {{ref}}",
     body: `Bonjour {{prenom}},
 
 Avant d'envoyer vos USDT pour l'ordre **{{ref}}**, nous vérifions systématiquement le format de l'adresse de réception. Celle que vous avez fournie ne correspond pas au format attendu pour le réseau **{{reseau}}**.
@@ -355,9 +355,9 @@ Cordialement,`,
   },
   {
     id: "canafe-doimv",
-    name: "CANAFE — DOIMV (opération importante)",
+    name: "CANAFE · DOIMV (opération importante)",
     description: "Notification de déclaration d'opération importante MV (≥ 10 000 $).",
-    subject: "Déclaration réglementaire — votre opération {{ref}}",
+    subject: "Déclaration réglementaire · votre opération {{ref}}",
     body: `Bonjour {{prenom}},
 
 Nous vous informons qu'en application de la Loi sur le recyclage des produits de la criminalité et le financement des activités terroristes (LRPCFAT), votre opération **{{ref}}** d'un montant de **{{montant}} CAD** a fait l'objet d'une déclaration d'opération importante en monnaie virtuelle (DOIMV) transmise au CANAFE.
@@ -372,7 +372,7 @@ Cordialement,`,
     id: "refund-processed",
     name: "Remboursement traité",
     description: "Notification qu'un remboursement Interac a été émis.",
-    subject: "Remboursement traité — ordre {{ref}}",
+    subject: "Remboursement traité · ordre {{ref}}",
     body: `Bonjour {{prenom}},
 
 Nous confirmons l'émission d'un remboursement de **{{montant}} CAD** pour votre ordre **{{ref}}**. Vous recevrez le virement Interac à l'adresse **{{email}}** dans un délai de 30 minutes à 24 heures selon votre banque.
@@ -385,9 +385,9 @@ Cordialement,`,
   },
   {
     id: "account-frozen",
-    name: "Compte gelé — conformité",
+    name: "Compte gelé · conformité",
     description: "Notification de gel de compte le temps d'une revue.",
-    subject: "Suspension temporaire de votre compte — Ooble",
+    subject: "Suspension temporaire de votre compte · Ooble",
     body: `Bonjour {{prenom}},
 
 Dans le cadre de nos obligations de conformité, votre compte Ooble est temporairement suspendu le temps d'une revue de dossier.
@@ -402,7 +402,7 @@ Cordialement,`,
     id: "rate-locked-reminder",
     name: "Rappel taux verrouillé",
     description: "Rappeler que le taux expire bientôt sur un ordre.",
-    subject: "Votre taux expire bientôt — ordre {{ref}}",
+    subject: "Votre taux expire bientôt · ordre {{ref}}",
     body: `Bonjour {{prenom}},
 
 Petit rappel : le taux verrouillé pour votre ordre **{{ref}}** expire dans quelques minutes. Passé ce délai, l'ordre sera automatiquement annulé et il faudra en recréer un nouveau au taux du moment.
@@ -413,9 +413,9 @@ Cordialement,`,
   },
   {
     id: "welcome-business",
-    name: "Bienvenue — compte entreprise",
+    name: "Bienvenue · compte entreprise",
     description: "Accueil personnalisé d'un nouveau compte entreprise.",
-    subject: "Bienvenue chez Ooble, {{prenom}} — compte entreprise",
+    subject: "Bienvenue chez Ooble, {{prenom}} · compte entreprise",
     body: `Bonjour {{prenom}},
 
 Merci d'avoir créé un compte entreprise chez Ooble pour **{{entreprise}}**. Nous accompagnons vos opérations USDT/CAD avec une tarification adaptée aux volumes professionnels.
@@ -451,7 +451,7 @@ Merci de votre confiance,`,
     id: "maintenance-notice",
     name: "Maintenance planifiée",
     description: "Prévenir d'une fenêtre de maintenance à venir.",
-    subject: "Maintenance planifiée — Ooble",
+    subject: "Maintenance planifiée · Ooble",
     body: `Bonjour {{prenom}},
 
 Nous vous informons qu'une opération de maintenance est programmée le **{{date}}** de **{{heureDebut}}** à **{{heureFin}}** (heure de l'Est).
@@ -652,7 +652,7 @@ function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, rep
     } else {
       setFeedback({
         kind: "err",
-        text: `${ok} envoyé(s), ${failed} en échec — ${lastError ?? "cause inconnue"}.`,
+        text: `${ok} envoyé(s), ${failed} en échec (${lastError ?? "cause inconnue"}).`,
       });
     }
   };
@@ -832,7 +832,7 @@ function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, rep
           <button
             type="button"
             onClick={() => setAiOpen((v) => !v)}
-            title="Assistant IA — rédiger un draft"
+            title="Assistant IA · rédiger un draft"
             style={{
               display: "inline-flex", alignItems: "center", gap: 5,
               height: 30, padding: "0 10px", borderRadius: 7, border: "none",
@@ -894,7 +894,7 @@ function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, rep
                 <span style={{ fontSize: 10.5, color: C.t3 }}>
                   {recipients.find((r) => r.id)
                     ? `Contexte : ${recipients.find((r) => r.id)?.fullName} sera utilisé pour personnaliser.`
-                    : "Aucun contexte client — sélectionnez un destinataire pour un draft plus fin."}
+                    : "Aucun contexte client. Sélectionnez un destinataire pour un draft plus fin."}
                   {" · "}
                   <kbd style={{ fontFamily: FONT, fontSize: 10 }}>⌘</kbd>+<kbd style={{ fontFamily: FONT, fontSize: 10 }}>Entrée</kbd> pour lancer.
                 </span>
@@ -950,7 +950,7 @@ function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, rep
             color: C.warnText,
             fontSize: 11.5, lineHeight: 1.5,
           }}>
-            Variable{remainingVars.length > 1 ? "s" : ""} non remplie{remainingVars.length > 1 ? "s" : ""} —
+            Variable{remainingVars.length > 1 ? "s" : ""} non remplie{remainingVars.length > 1 ? "s" : ""} :
             partira{remainingVars.length > 1 ? "ont" : ""} telle{remainingVars.length > 1 ? "s" : ""} quelle{remainingVars.length > 1 ? "s" : ""} :
             {" "}
             {remainingVars.map((v) => (
@@ -1024,8 +1024,8 @@ function ComposeView({ onSent, initial, onConsumed, clients, clientsLoading, rep
           </div>
           <PreviewFrame
             from="Ooble <bonjour@ooble.ca>"
-            to={previewRecipient?.email ?? (recipients[0]?.email ?? "—")}
-            subject={previewSubject || "—"}
+            to={previewRecipient?.email ?? (recipients[0]?.email ?? "N/D")}
+            subject={previewSubject || "N/D"}
             html={renderedHtml}
           />
         </div>
@@ -1332,7 +1332,7 @@ function PreviewFrame({ from, to, subject, html }: { from: string; to: string; s
           {html.trim() ? (
             <div dangerouslySetInnerHTML={{ __html: html }} />
           ) : (
-            <em style={{ color: "#8b8b8b" }}>Aucun contenu — commencez à écrire à gauche.</em>
+            <em style={{ color: "#8b8b8b" }}>Aucun contenu. Commencez à écrire à gauche.</em>
           )}
         </div>
       </div>

@@ -225,7 +225,7 @@ export const ACTION_LABELS: Record<string, { fr: string; en: string }> = {
   "team.invite":                    { fr: "Invitation d'un membre",     en: "Member invited" },
   "compliance.take_charge":         { fr: "Alerte prise en charge",     en: "Alert taken" },
   "compliance.classify":            { fr: "Alerte classée",             en: "Alert closed" },
-  "compliance.declaration_draft":   { fr: "Déclaration — brouillon",    en: "Declaration draft" },
+  "compliance.declaration_draft":   { fr: "Déclaration · brouillon",    en: "Declaration draft" },
   "compliance.declaration_submit":  { fr: "Déclaration soumise",        en: "Declaration submitted" },
 };
 

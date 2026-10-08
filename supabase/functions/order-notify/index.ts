@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
   const sideLabel = side === "buy" ? "Achat" : "Vente";
   const statusLabel = STATUS_FR[newStatus] ?? newStatus;
   const title = `${sideLabel} ${ref}`;
-  const body = `Statut : ${statusLabel} — ${usdtAmount} USDT / ${cadAmount} $ CAD`;
+  const body = `Statut : ${statusLabel} · ${usdtAmount} USDT / ${cadAmount} $ CAD`;
 
   // Envoyer la notification push via push-notify
   try {

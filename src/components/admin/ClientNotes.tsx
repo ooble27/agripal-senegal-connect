@@ -94,7 +94,7 @@ const ClientNotes = ({ userId }: { userId: string }) => {
             rows={3}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Détail interne — visible uniquement par l'équipe."
+            placeholder="Détail interne, visible uniquement par l'équipe."
             style={{ ...inputStyle, resize: "vertical", minHeight: 72 }}
           />
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 10 }}>

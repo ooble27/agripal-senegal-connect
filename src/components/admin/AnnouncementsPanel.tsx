@@ -161,7 +161,7 @@ function AnnouncementEditor({
             <input type="checkbox" className="h-4 w-4 accent-foreground" checked={draft.dismissible} onChange={(e) => patch({ dismissible: e.target.checked })} />
             <div>
               <p className="text-[13px] font-medium"><T en="Dismissible">Fermable</T></p>
-              <p className="text-[11.5px] text-muted-foreground"><T en="Users can close it — the choice is remembered.">Les clients peuvent la fermer — le choix est mémorisé.</T></p>
+              <p className="text-[11.5px] text-muted-foreground"><T en="Users can close it. The choice is remembered.">Les clients peuvent la fermer. Le choix est mémorisé.</T></p>
             </div>
           </label>
           <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card px-3.5 py-3">
@@ -391,7 +391,7 @@ function MaintenanceEditor({
         </Row>
 
         <Row>
-          <Field label={<T en="Starts at">Début</T>} hint={<T en="Optional — leave empty to start immediately">Facultatif — vide = commence tout de suite</T>}>
+          <Field label={<T en="Starts at">Début</T>} hint={<T en="Optional, leave empty to start immediately">Facultatif, vide = commence tout de suite</T>}>
             <input
               type="datetime-local"
               className={inputCn}
@@ -399,7 +399,7 @@ function MaintenanceEditor({
               onChange={(e) => patch({ starts_at: localInputToIso(e.target.value) })}
             />
           </Field>
-          <Field label={<T en="Ends at (ETA)">Fin prévue (ETA)</T>} hint={<T en="Optional — shown to customers">Facultatif — affiché aux clients</T>}>
+          <Field label={<T en="Ends at (ETA)">Fin prévue (ETA)</T>} hint={<T en="Optional, shown to customers">Facultatif, affiché aux clients</T>}>
             <input
               type="datetime-local"
               className={inputCn}
@@ -476,7 +476,7 @@ function MaintenanceList({
   }
 
   const fmt = (iso: string | null) =>
-    iso ? new Date(iso).toLocaleString("fr-CA", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—";
+    iso ? new Date(iso).toLocaleString("fr-CA", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "N/D";
 
   return (
     <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">

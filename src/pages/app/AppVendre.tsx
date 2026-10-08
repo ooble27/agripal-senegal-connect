@@ -169,7 +169,7 @@ const AppVendre = () => {
           ref,
           usdtAmount: nfUsdt.format(usdt),
           cadAmount: nfCad.format(cad),
-          network: network ? `${network.name} · ${network.tag}` : "—",
+          network: network ? `${network.name} · ${network.tag}` : "N/D",
           depositAddress: depositAddr,
           orderUrl: `${window.location.origin}/app`,
         },
@@ -181,7 +181,7 @@ const AppVendre = () => {
       side: "sell",
       cadAmount: nfCad.format(cad),
       usdtAmount: nfUsdt.format(usdt),
-      network: network ? `${network.name} · ${network.tag}` : "—",
+      network: network ? `${network.name} · ${network.tag}` : "N/D",
       address: depositAddr,
       clientEmail: user?.email ?? email,
       clientName: user?.name ?? "",
@@ -412,7 +412,7 @@ const AppVendre = () => {
         {[
           { label: t("sell.youSend"), value: `${nfUsdt.format(usdt)} USDT` },
           { label: t("sell.youReceive"), value: `${nfCad.format(cad)} CAD` },
-          { label: t("sell.network"), value: network ? `${network.name} · ${network.tag}` : "—" },
+          { label: t("sell.network"), value: network ? `${network.name} · ${network.tag}` : "N/D" },
           { label: t("sell.rate"), value: `1 USDT = ${nfCad.format(sellRate)} CAD` },
           { label: t("sell.receivedByInterac"), value: email, mono: true },
         ].map((r, i, arr) => (

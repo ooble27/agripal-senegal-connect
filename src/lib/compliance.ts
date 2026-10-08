@@ -183,11 +183,11 @@ export function daysUntil(dateStr: string): number {
 // ────────────────────────────────────────────────────────────
 
 export const CLASSIFICATION_REASONS = [
-  "Faux positif — le client ou l'opération ne présente aucun risque",
+  "Faux positif : le client ou l'opération ne présente aucun risque",
   "Information insuffisante pour soumettre une déclaration",
-  "Doublon — déjà couvert par une autre alerte",
+  "Doublon : déjà couvert par une autre alerte",
   "Opération annulée ou non complétée",
-  "Vérification effectuée — aucun comportement suspect",
+  "Vérification effectuée : aucun comportement suspect",
   "Opération de test interne (équipe Ooble)",
 ] as const;
 

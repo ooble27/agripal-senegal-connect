@@ -19,7 +19,7 @@ export const Channel = ({ order }: { order: AdminOrder }) => {
     return <span className="text-[13px] text-muted-foreground">Interac e-Transfer</span>;
   }
   const net = NETWORKS.find((n) => n.id === order.network);
-  if (!net) return <span className="text-[13px] text-muted-foreground">—</span>;
+  if (!net) return <span className="text-[13px] text-muted-foreground">N/D</span>;
   return (
     <span className="inline-flex items-center gap-2">
       <img src={`/coins/${net.id}.svg`} alt="" className="h-5 w-5 rounded-full" draggable={false} />

@@ -129,7 +129,7 @@ function buildEvents(profile: ClientProfile, orders: ClientOrder[], userId: stri
       at: o.createdAt,
       icon: Icon,
       title: (
-        <>{buy ? "Achat" : "Vente"} — {nfUsdt.format(o.usdtAmount)} USDT</>
+        <>{buy ? "Achat" : "Vente"} · {nfUsdt.format(o.usdtAmount)} USDT</>
       ),
       meta: (
         <>{orderRef(o.id)} · {nfCad.format(o.cadAmount)} CAD · {statusLabel}</>

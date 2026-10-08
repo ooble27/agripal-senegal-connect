@@ -189,7 +189,7 @@ async function notifyClient(orderId: string, newStatus: "recu" | "termine") {
 
   const ref = orderRef(row.id);
   const net = NETWORKS.find((n) => n.id === DB_TO_NET[row.network]);
-  const networkLabel = net ? `${net.name} · ${net.tag}` : "—";
+  const networkLabel = net ? `${net.name} · ${net.tag}` : "N/D";
   const orderUrl = `${window.location.origin}/app`;
 
   if (newStatus === "recu" && row.side === "sell") {
@@ -203,7 +203,7 @@ async function notifyClient(orderId: string, newStatus: "recu" | "termine") {
         cadAmount: nfCad.format(Number(row.cad_amount)),
         network: networkLabel,
         interacEmail: row.interac_email ?? to,
-        txLinkHtml: "—",
+        txLinkHtml: "En attente",
         orderUrl,
       },
     });
@@ -233,8 +233,8 @@ async function notifyClient(orderId: string, newStatus: "recu" | "termine") {
           ? `${nfUsdt.format(Number(row.usdt_amount))} USDT`
           : `${nfCad.format(Number(row.cad_amount))} CAD`,
         network: networkLabel,
-        txHash: "—",
-        txLinkHtml: "—",
+        txHash: "En attente",
+        txLinkHtml: "En attente",
         orderUrl,
       },
     });

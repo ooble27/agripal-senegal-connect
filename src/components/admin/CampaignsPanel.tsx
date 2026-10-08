@@ -119,7 +119,7 @@ const CampaignsPanel = () => {
           unit={campaigns.length > 1 ? "campagnes" : "campagne"}
           stats={[
             { label: "E-mails envoyés", value: successful },
-            { label: "Taux de succès", value: totalSent > 0 ? `${Math.round((successful / totalSent) * 100)}%` : "—" },
+            { label: "Taux de succès", value: totalSent > 0 ? `${Math.round((successful / totalSent) * 100)}%` : "N/D" },
             { label: "Contacts", value: clientsLoading ? "…" : clients.length },
           ]}
           actions={[
@@ -491,7 +491,7 @@ function CampaignComposer({ clients, clientsLoading, onSent }: ComposerProps) {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); generateWithAI(); }
               }}
-              placeholder="Décrivez votre campagne en quelques mots — l'IA génère le contenu complet (objet, titre, corps, bouton d'action) automatiquement."
+              placeholder="Décrivez votre campagne en quelques mots, l'IA génère le contenu complet (objet, titre, corps, bouton d'action) automatiquement."
               rows={3}
               style={{
                 display: "block", width: "100%", boxSizing: "border-box",
@@ -571,7 +571,7 @@ function CampaignComposer({ clients, clientsLoading, onSent }: ComposerProps) {
                 value={`${body.split(/\s+/).length} mots · ${body.split("\n").filter(Boolean).length} paragraphes`}
               />
               {ctaLabel && (
-                <SummaryRow icon={Zap} label="CTA" value={`${ctaLabel} → ${ctaUrl || "—"}`} />
+                <SummaryRow icon={Zap} label="CTA" value={`${ctaLabel} → ${ctaUrl || "N/D"}`} />
               )}
             </div>
           </div>

@@ -33,7 +33,7 @@ const initials = (email: string | null) => {
   return first.slice(0, 2).toUpperCase();
 };
 
-const shortenId = (id: string | null) => (id ? `${id.slice(0, 6)}…${id.slice(-4)}` : "—");
+const shortenId = (id: string | null) => (id ? `${id.slice(0, 6)}…${id.slice(-4)}` : "N/D");
 
 // ────────────────────────────────────────────────────────────
 // Badges & primitives
@@ -56,7 +56,7 @@ const ActionBadge = ({ action }: { action: string }) => {
 
 const EntityBadge = ({ kind }: { kind: string | null }) => {
   const [lang] = useLang();
-  if (!kind) return <span className="text-[12px] text-muted-foreground">—</span>;
+  if (!kind) return <span className="text-[12px] text-muted-foreground">N/D</span>;
   const meta = ENTITY_LABELS[kind];
   const label = meta ? (lang === "en" ? meta.en : meta.fr) : kind;
   return (
@@ -70,7 +70,7 @@ const JsonBlock = ({ value }: { value: unknown }) => {
   const isEmpty = value === null || value === undefined ||
     (typeof value === "object" && !Array.isArray(value) && Object.keys(value as object).length === 0);
   if (isEmpty) {
-    return <pre className="rounded-lg border border-dashed border-border bg-secondary/40 px-3 py-2 text-[11.5px] text-muted-foreground">—</pre>;
+    return <pre className="rounded-lg border border-dashed border-border bg-secondary/40 px-3 py-2 text-[11.5px] text-muted-foreground">N/D</pre>;
   }
   return (
     <pre className="overflow-x-auto rounded-lg border border-border bg-secondary/40 px-3 py-2.5 font-mono text-[11.5px] leading-snug text-foreground/90">
@@ -159,7 +159,7 @@ const Row = ({ entry, expanded, onToggle }: {
             <span className="font-mono text-[11px] text-muted-foreground">{shortenId(entry.entityId)}</span>
           </div>
           <p className="mt-1 truncate text-[12.5px] text-muted-foreground">
-            <span className="text-foreground/80">{entry.actorEmail ?? "—"}</span>
+            <span className="text-foreground/80">{entry.actorEmail ?? "N/D"}</span>
             {entry.actorRole && <span> · {entry.actorRole}</span>}
             <span> · {dateText}</span>
           </p>
@@ -275,7 +275,7 @@ const AuditLogPanel = () => {
             { label: <T en="Page">Page</T>, value: `${page + 1} / ${totalPages}` },
             {
               label: <T en="Filters">Filtres</T>,
-              value: hasFilters ? <T en="Active">Actifs</T> : "—",
+              value: hasFilters ? <T en="Active">Actifs</T> : "N/D",
             },
           ]}
           actions={[
@@ -354,7 +354,7 @@ const AuditLogPanel = () => {
                 onChange={(e) => setAction(e.target.value)}
                 className={cn(inputCn, "appearance-none pr-8")}
               >
-                <option value="">— —</option>
+                <option value="">Tous</option>
                 {actionOptions.map((a) => (
                   <option key={a} value={a}>{a}</option>
                 ))}
@@ -372,7 +372,7 @@ const AuditLogPanel = () => {
                 onChange={(e) => setEntityKind(e.target.value)}
                 className={cn(inputCn, "appearance-none pr-8")}
               >
-                <option value="">— —</option>
+                <option value="">Tous</option>
                 {entityOptions.map((k) => (
                   <option key={k} value={k}>{k}</option>
                 ))}

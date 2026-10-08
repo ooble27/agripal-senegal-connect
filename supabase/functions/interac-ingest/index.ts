@@ -72,7 +72,7 @@ async function verifyInterac(raw: Uint8Array, resolver = dohTxt): Promise<{ ok: 
     && !r.status?.underSized && !r.canonBodyLengthLimited);
   if (good && isInteracSender(from)) return { ok: true, detail: `DKIM valide (${good.signingDomain})`, from };
   const seen = res.results.map((r) => `${r.signingDomain ?? "?"}: ${r.status?.result ?? "?"}${r.status?.comment ? ` (${r.status.comment})` : ""}`).join(", ");
-  return { ok: false, detail: `DKIM non valide pour interac.ca — ${seen || "aucune signature"}`, from };
+  return { ok: false, detail: `DKIM non valide pour interac.ca : ${seen || "aucune signature"}`, from };
 }
 
 async function selftest() {

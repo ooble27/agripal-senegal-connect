@@ -97,7 +97,7 @@ const ClientProfile = ({ userId, clientName, onBack, onOpenOrder }: Props) => {
     <div className="flex items-start justify-between gap-4 px-5 py-3.5">
       <span className="shrink-0 text-[14px] text-muted-foreground">{label}</span>
       <span className="flex min-w-0 items-center gap-2">
-        <span className={cn("break-all text-right text-[14px] font-medium", mono && "font-mono text-[12px]")}>{value || "—"}</span>
+        <span className={cn("break-all text-right text-[14px] font-medium", mono && "font-mono text-[12px]")}>{value || "N/D"}</span>
         {copyKey && value && (
           <button onClick={() => copy(value, copyKey)} className="shrink-0 text-muted-foreground transition-colors hover:text-foreground" aria-label="Copier">
             {copied === copyKey ? <Check className="h-[14px] w-[14px] text-primary" /> : <Copy className="h-[14px] w-[14px]" />}
@@ -155,7 +155,7 @@ const ClientProfile = ({ userId, clientName, onBack, onOpenOrder }: Props) => {
                   color: C.t3, fontSize: 11.5, margin: "2px 0 0",
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}>
-                  {profile?.email || "—"}
+                  {profile?.email || "N/D"}
                 </p>
               </div>
               {profile?.accountType === "business" && (
@@ -172,7 +172,7 @@ const ClientProfile = ({ userId, clientName, onBack, onOpenOrder }: Props) => {
             {/* Volume — le grand chiffre */}
             <p style={{ ...sH, marginBottom: 10 }}>Volume traité</p>
             <p style={heroNumber(40)}>
-              {profile ? nfCad.format(profile.totalCad) : "—"}
+              {profile ? nfCad.format(profile.totalCad) : "N/D"}
               <span style={heroUnit}>CAD</span>
             </p>
 
@@ -219,8 +219,8 @@ const ClientProfile = ({ userId, clientName, onBack, onOpenOrder }: Props) => {
                 <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Compte</p>
               </div>
               <Row label="Type" value={profile?.accountType === "business" ? "Entreprise" : "Individuel"} />
-              <Row label="Statut KYC" value={profile ? KYC_LABEL[profile.kycStatus] : "—"} />
-              <Row label="Limite quotidienne" value={profile ? `${nfCad.format(profile.dailyLimitCad)} CAD` : "—"} />
+              <Row label="Statut KYC" value={profile ? KYC_LABEL[profile.kycStatus] : "N/D"} />
+              <Row label="Limite quotidienne" value={profile ? `${nfCad.format(profile.dailyLimitCad)} CAD` : "N/D"} />
               {profile?.interacQuestion && <Row label="Question Interac" value={profile.interacQuestion} />}
               {profile?.interacAnswer && <Row label="Réponse Interac" value={profile.interacAnswer} />}
             </div>
@@ -363,7 +363,7 @@ const ClientProfile = ({ userId, clientName, onBack, onOpenOrder }: Props) => {
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[14px] font-medium">
-                          {buy ? "Achat" : "Vente"} — {nfUsdt.format(o.usdtAmount)} USDT
+                          {buy ? "Achat" : "Vente"} · {nfUsdt.format(o.usdtAmount)} USDT
                         </p>
                         <p className="truncate text-[12px] text-muted-foreground">
                           {orderRef(o.id)} · {STATUS_FR[o.status] ?? o.status}

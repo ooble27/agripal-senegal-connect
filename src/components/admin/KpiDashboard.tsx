@@ -238,14 +238,14 @@ const KpiDashboard = ({ onNavigate }: KpiDashboardProps) => {
           <AdminHero
             eyebrow={<T en={`Volume · last ${periodLabel}`}>{`Volume · ${periodLabel}`}</T>}
             loading={loading || !volume}
-            value={volume ? compact(volume.totalCad) : "—"}
+            value={volume ? compact(volume.totalCad) : "N/D"}
             unit="CAD"
             stats={volume ? [
               { label: "USDT", value: nfUsdt.format(volume.totalUsdt) },
               { label: <T en="Orders">Commandes</T>, value: volume.count },
               {
                 label: <T en="Variation">Variation</T>,
-                value: signedPct(volume.changePct) ?? "—",
+                value: signedPct(volume.changePct) ?? "N/D",
               },
             ] : []}
             actions={[
@@ -322,7 +322,7 @@ const KpiDashboard = ({ onNavigate }: KpiDashboardProps) => {
             </div>
             {loading || !statuses ? (
               <div style={{ padding: "40px 20px", textAlign: "center" }}>
-                <p style={{ fontSize: 12, color: C.t3, margin: 0 }}>—</p>
+                <p style={{ fontSize: 12, color: C.t3, margin: 0 }}>N/D</p>
               </div>
             ) : (() => {
               const rows: Array<{ label: string; en: string; count: number }> = [
@@ -366,7 +366,7 @@ const KpiDashboard = ({ onNavigate }: KpiDashboardProps) => {
             </div>
             {loading || !funnel ? (
               <div style={{ padding: "40px 20px", textAlign: "center" }}>
-                <p style={{ fontSize: 12, color: C.t3, margin: 0 }}>—</p>
+                <p style={{ fontSize: 12, color: C.t3, margin: 0 }}>N/D</p>
               </div>
             ) : (() => {
               const steps: Array<{ label: string; en: string; count: number }> = [

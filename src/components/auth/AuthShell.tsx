@@ -8,7 +8,7 @@ import AuthArt from "./AuthArt";
 /* Cadre des pages de connexion et d'inscription : le formulaire à gauche, un
    panneau de couleur à droite (ordinateur seulement). Le panneau est fixe et
    tient toujours dans la hauteur de l'écran : une illustration propre à la
-   page (porte, personne, immeuble, cadenas), une grande phrase, puis les
+   page (personnages Humaaans de Pablo Stanley, aux couleurs de la marque), une grande phrase, puis les
    trois étapes qui comptent pour la page, sans animation. */
 
 type Variant = "login" | "signup" | "individual" | "business" | "reset";
@@ -85,23 +85,27 @@ const AuthShell = ({ variant, children }: { variant: Variant; children: React.Re
         style={{ background: P.bg, color: P.ink }}
         aria-hidden
       >
-        <AuthArt kind={variant} className="absolute right-[7%] top-[5vh] h-[34vh] w-[34vh]" />
-
-        <div className="relative flex h-full flex-col justify-between px-12 py-[6vh] xl:px-16">
+        <div className="relative flex h-full flex-col px-12 py-[5vh] xl:px-16">
           <p className="text-[12px] uppercase tracking-[0.18em] opacity-70">Ooble · USDT ⇄ CAD</p>
 
-          <div>
-            <h2 className="max-w-[560px] font-display text-[clamp(2.4rem,6.2vh,4.4rem)] font-semibold leading-[0.98] tracking-[-0.055em]">
+          {/* L'illustration prend la place libre entre le haut et le texte :
+              elle rétrécit sur un petit écran et ne passe jamais dessus. */}
+          <div className="flex min-h-0 flex-1 items-center justify-center py-[3vh]">
+            <AuthArt kind={variant} className="h-full max-h-[420px] w-full max-w-[560px] object-contain" />
+          </div>
+
+          <div className="shrink-0">
+            <h2 className="max-w-[560px] font-display text-[clamp(2.1rem,5.2vh,3.8rem)] font-semibold leading-[0.98] tracking-[-0.055em]">
               {P.a[lang]}
               <br />
               <span style={{ opacity: 0.55 }}>{P.b[lang]}</span>
             </h2>
 
-            <ol className="mt-[5vh] max-w-[520px]">
+            <ol className="mt-[3.5vh] max-w-[520px]">
               {P.steps.map(([title, sub], i) => (
                 <li
                   key={i}
-                  className="grid grid-cols-[2.25rem_1fr] items-baseline gap-x-3 border-t py-[1.6vh] last:border-b"
+                  className="grid grid-cols-[2.25rem_1fr] items-baseline gap-x-3 border-t py-[1.3vh] last:border-b"
                   style={{ borderColor: `${P.ink}2e` }}
                 >
                   <span className="font-display text-[1.05rem] font-semibold tabular-nums opacity-50">{i + 1}</span>

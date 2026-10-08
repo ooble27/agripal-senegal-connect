@@ -23,7 +23,7 @@ import AdminHero from "./AdminHero";
 
 const dateFmt = new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 const nf = (n: number, d = 2) => new Intl.NumberFormat("fr-CA", { maximumFractionDigits: d }).format(n);
-const ref = (id: string | null) => (id ? `OOB-${id.slice(0, 8).toUpperCase()}` : "—");
+const ref = (id: string | null) => (id ? `OOB-${id.slice(0, 8).toUpperCase()}` : "N/D");
 const inputCn = "w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-[13px] outline-none focus:border-foreground";
 
 const RECEIPT: Record<InteracReceipt["status"], { label: string; cls: string }> = {
@@ -272,14 +272,14 @@ const SettlementPanel = () => {
               <button type="button" className="flex w-full items-center gap-3 px-5 py-3.5 text-left hover:bg-secondary/40" onClick={() => setOpen(open === r.id ? null : r.id)}>
                 <Pill m={RECEIPT[r.status]} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-medium">{r.sender_name || "Expéditeur inconnu"} · {r.amount_cad != null ? `${nf(r.amount_cad)} $` : "—"}</span>
-                  <span className="block truncate text-[12px] text-muted-foreground">{r.order_ref ?? "Sans référence"} — {r.reason}</span>
+                  <span className="block truncate text-[13px] font-medium">{r.sender_name || "Expéditeur inconnu"} · {r.amount_cad != null ? `${nf(r.amount_cad)} $` : "N/D"}</span>
+                  <span className="block truncate text-[12px] text-muted-foreground">{r.order_ref ?? "Sans référence"} · {r.reason}</span>
                 </span>
                 <span className="shrink-0 text-[12px] text-muted-foreground">{dateFmt.format(new Date(r.received_at))}</span>
               </button>
               {open === r.id && (
                 <div className="space-y-2 border-t border-border bg-secondary/30 px-5 py-4 text-[12px]">
-                  <p><span className="text-muted-foreground">Réf. Interac :</span> {r.interac_ref ?? "—"} · <span className="text-muted-foreground">Avis authentifié :</span> {r.authenticated ? "oui" : "non"}</p>
+                  <p><span className="text-muted-foreground">Réf. Interac :</span> {r.interac_ref ?? "N/D"} · <span className="text-muted-foreground">Avis authentifié :</span> {r.authenticated ? "oui" : "non"}</p>
                   <pre className="max-h-64 overflow-auto whitespace-pre-wrap font-sans text-[12px] text-muted-foreground">{r.body_text}</pre>
                 </div>
               )}
@@ -315,7 +315,7 @@ const SettlementPanel = () => {
                 {open === d.id && (
                   <div className="border-t border-border bg-secondary/30 px-5 py-4 text-[12px] text-muted-foreground">
                     <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span>Expéditeur : <span className="font-mono text-foreground">{d.from_address ?? "—"}</span></span>
+                      <span>Expéditeur : <span className="font-mono text-foreground">{d.from_address ?? "N/D"}</span></span>
                       {txUrl(d.network, d.tx_hash) && (
                         <a href={txUrl(d.network, d.tx_hash)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-foreground underline-offset-4 hover:underline">
                           Voir la transaction <ExternalLink className="h-3 w-3" />

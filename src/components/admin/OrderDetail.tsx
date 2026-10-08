@@ -68,7 +68,7 @@ const Timeline = ({ order, events }: { order: AdminOrder; events: OrderEvent[] |
               <div className={cn(i < steps.length - 1 ? "pb-5" : "pb-0")}>
                 <p className="text-[13px] font-medium text-foreground">
                   {st.label}
-                  {st.actor && <span className="font-normal text-muted-foreground"> — {st.actor}</span>}
+                  {st.actor && <span className="font-normal text-muted-foreground"> · {st.actor}</span>}
                 </p>
                 {st.hint && <p className="mt-0.5 text-[12px] text-muted-foreground">{st.hint}</p>}
               </div>
@@ -207,7 +207,7 @@ const SellBox = ({ order }: { order: AdminOrder }) => {
     <div className="flex items-center justify-between gap-4 py-2.5">
       <span className="text-[13px] text-muted-foreground">{label}</span>
       <span className="flex min-w-0 items-center gap-2">
-        <span className="break-all text-right text-[14px] font-medium">{value || "—"}</span>
+        <span className="break-all text-right text-[14px] font-medium">{value || "N/D"}</span>
         {value && (
           <button type="button" onClick={() => copy(value, k)} className="shrink-0 text-muted-foreground hover:text-foreground" aria-label="Copier">
             {copied === k ? <Check className="h-[14px] w-[14px]" /> : <Copy className="h-[14px] w-[14px]" />}
@@ -324,7 +324,7 @@ const OrderDetail = ({ order, onBack, onPatch, onDelete, onShowClient, onRefresh
     <div className="flex items-start justify-between gap-4 px-5 py-3.5">
       <span className="shrink-0 text-[14px] text-muted-foreground">{label}</span>
       <span className="flex min-w-0 items-center gap-2">
-        <span className={cn("break-all text-right text-[14px] font-medium", mono && "font-mono text-[12px]")}>{value || "—"}</span>
+        <span className={cn("break-all text-right text-[14px] font-medium", mono && "font-mono text-[12px]")}>{value || "N/D"}</span>
         {copyKey && value && (
           <button onClick={() => copy(value, copyKey)} className="shrink-0 text-muted-foreground transition-colors hover:text-foreground" aria-label="Copier">
             {copied === copyKey ? <Check className="h-[14px] w-[14px] text-primary" /> : <Copy className="h-[14px] w-[14px]" />}
@@ -406,7 +406,7 @@ const OrderDetail = ({ order, onBack, onPatch, onDelete, onShowClient, onRefresh
             <Row label="Nom complet" value={order.clientName} />
             <Row label="E-mail" value={order.clientEmail} mono copyKey="email" />
             <Row label="Téléphone" value={null} />
-            <Row label="ID utilisateur" value={order.userId ? order.userId.slice(0, 12) + "…" + order.userId.slice(-4) : "—"} mono copyKey="uid" />
+            <Row label="ID utilisateur" value={order.userId ? order.userId.slice(0, 12) + "…" + order.userId.slice(-4) : "N/D"} mono copyKey="uid" />
             <button
               onClick={() => order.userId && onShowClient?.(order.userId)}
               className="flex w-full items-center justify-between px-5 py-3.5 text-left transition-colors hover:bg-secondary/40"
@@ -443,7 +443,7 @@ const OrderDetail = ({ order, onBack, onPatch, onDelete, onShowClient, onRefresh
         )}
         {active === "destination" && order.type === "buy" && (
           <>
-            <Row label="Réseau" value={(() => { const n = NETWORKS.find((x) => x.id === order.network); return n ? `${n.name} · ${n.tag}` : "—"; })()} />
+            <Row label="Réseau" value={(() => { const n = NETWORKS.find((x) => x.id === order.network); return n ? `${n.name} · ${n.tag}` : "N/D"; })()} />
             <Row label="Adresse de réception" value={order.address} mono copyKey="addr" />
           </>
         )}

@@ -109,7 +109,7 @@ const TeamPanel = () => {
           </div>
 
           <p className="mt-3 text-[12px] text-muted-foreground">
-            {inviteRole} — {roleDesc(inviteRole)}
+            {inviteRole} · {roleDesc(inviteRole)}
           </p>
 
           <input

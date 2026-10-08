@@ -357,7 +357,7 @@ const DeclarationWorkflow = ({ sourceRef, dueDate, form, onChange, onSubmit, onB
         <div className="min-w-0 flex-1">
           <h3 className="font-display text-[17px] font-semibold tracking-tight">Déclarer au CANAFE</h3>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
-            {DECL_TYPE_META[form.type].full} — {sourceRef}
+            {DECL_TYPE_META[form.type].full} · {sourceRef}
           </p>
         </div>
       </div>
@@ -390,7 +390,7 @@ const DeclarationWorkflow = ({ sourceRef, dueDate, form, onChange, onSubmit, onB
                   <input type="text" inputMode="decimal" value={form.amountCad} onChange={(e) => set("amountCad", e.target.value)} className={inputCn} />
                 </Field>
                 <Field label="Montant USDT" hint="Facultatif">
-                  <input type="text" inputMode="decimal" value={form.amountUsdt} onChange={(e) => set("amountUsdt", e.target.value)} placeholder="—" className={inputCn} />
+                  <input type="text" inputMode="decimal" value={form.amountUsdt} onChange={(e) => set("amountUsdt", e.target.value)} placeholder="0" className={inputCn} />
                 </Field>
               </div>
 
@@ -470,7 +470,7 @@ const DeclarationWorkflow = ({ sourceRef, dueDate, form, onChange, onSubmit, onB
                 <Field label="Province" required>
                   <SelectWrap>
                     <select value={form.clientProvince} onChange={(e) => set("clientProvince", e.target.value)} className={cn(inputCn, "appearance-none pr-10")}>
-                      <option value="">—</option>
+                      <option value="">Aucun</option>
                       {PROVINCES.map((p) => <option key={p.code} value={p.code}>{p.code}</option>)}
                     </select>
                   </SelectWrap>
@@ -884,7 +884,7 @@ const SignalerView = ({ orders, onSubmit, onBack, busy }: {
         <FormSection label="Type d'alerte">
           <div className="space-y-2">
             {MANUAL_TYPES.map((t) => (
-              <RadioCard key={t} label={`${ALERT_TYPE_META[t].label} — ${ALERT_TYPE_META[t].full}`} active={type === t} onClick={() => setType(t)} />
+              <RadioCard key={t} label={`${ALERT_TYPE_META[t].label} · ${ALERT_TYPE_META[t].full}`} active={type === t} onClick={() => setType(t)} />
             ))}
           </div>
         </FormSection>
@@ -1115,7 +1115,7 @@ const DeclarationsView = ({ declarations, onOpen }: {
               <span className="hidden md:block"><TypeBadge type={d.type} /></span>
               <span className="hidden tabular-nums text-[13px] md:block">{nfCad.format(d.amount)} $</span>
               <span className={cn("hidden text-[12.5px] md:block", urgent ? "font-semibold text-destructive" : "text-muted-foreground")}>
-                {d.status === "brouillon" ? dueText(d.type, d.dueDate) : d.submittedAt ? `Soumise le ${d.submittedAt}` : "—"}
+                {d.status === "brouillon" ? dueText(d.type, d.dueDate) : d.submittedAt ? `Soumise le ${d.submittedAt}` : "N/D"}
               </span>
               <span className={cn("text-[13px] font-semibold", DECL_STATUS_META[d.status].text)}>
                 {DECL_STATUS_META[d.status].label}
@@ -1195,7 +1195,7 @@ const DossiersView = ({ stats, onExport, busyKind }: {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <SummaryCard label="Opérations" value={stats ? String(stats.operations) : "…"} sub="Payées, au registre" />
         <SummaryCard label="Conservation" value={`${RECORD_RETENTION_YEARS} ans`} sub="Obligation LRPCFAT" />
-        <SummaryCard label="Plus ancienne" value={oldest ? monthFr(oldest) : "—"} sub={purge ? `Conservée jusqu'en ${monthFr(purge)}` : undefined} />
+        <SummaryCard label="Plus ancienne" value={oldest ? monthFr(oldest) : "N/D"} sub={purge ? `Conservée jusqu'en ${monthFr(purge)}` : undefined} />
         <SummaryCard label="Journal d'audit" value={stats ? String(stats.journal) : "…"} sub="Actions de l'équipe" />
       </div>
 
@@ -1423,7 +1423,7 @@ const CompliancePanel = ({ orders }: { orders: AdminOrder[] }) => {
     const previous = alerts.find((a) => a.id === id) ?? null;
     await takeAlert(id);
     setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, status: "en_cours", assignedTo: "Vous" } : a)));
-    setSuccessMsg("Alerte prise en charge — vous en êtes responsable.");
+    setSuccessMsg("Alerte prise en charge. Vous en êtes responsable.");
     void logAdminAction({
       action: "compliance.take_charge",
       entityKind: "compliance_case",

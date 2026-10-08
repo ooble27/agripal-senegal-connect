@@ -414,7 +414,7 @@ const AddressForm = ({ initial, onSubmit, onBack }: {
           </Field>
         </div>
 
-        <Field label="Adresse" required hint="Publique — pas de clé privée">
+        <Field label="Adresse" required hint="Publique, pas de clé privée">
           <input
             type="text" value={address} onChange={(e) => setAddress(e.target.value)}
             placeholder="T…, 0x…, …" className={cn(inputCn, "font-mono text-[13px]")}
@@ -466,8 +466,8 @@ const SnapshotForm = ({ address, onSubmit, onBack }: {
             <T en="Record a balance snapshot">Enregistrer un snapshot de solde</T>
           </h3>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
-            <T en="Manual entry — on-chain fetch will replace this later.">
-              Saisie manuelle — le rapatriement on-chain le remplacera plus tard.
+            <T en="Manual entry. On-chain fetch will replace this later.">
+              Saisie manuelle. Le rapatriement on-chain le remplacera plus tard.
             </T>
           </p>
         </div>
@@ -543,8 +543,8 @@ const MovementForm = ({ addresses, onSubmit, onBack }: {
             <T en="Record a treasury movement">Enregistrer un mouvement de trésorerie</T>
           </h3>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
-            <T en="Rebalancing, liquidation, top-up — at least one endpoint is required.">
-              Rééquilibrage, liquidation, approvisionnement — au moins une extrémité requise.
+            <T en="Rebalancing, liquidation, top-up: at least one endpoint is required.">
+              Rééquilibrage, liquidation, approvisionnement : au moins une extrémité requise.
             </T>
           </p>
         </div>
@@ -555,7 +555,7 @@ const MovementForm = ({ addresses, onSubmit, onBack }: {
           <Field label="Depuis" hint="Vide si entrée externe">
             <SelectWrap>
               <select value={fromId} onChange={(e) => setFromId(e.target.value)} className={cn(inputCn, "appearance-none pr-10")}>
-                <option value="">—</option>
+                <option value="">Aucun</option>
                 {addresses.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.label} ({NETWORKS.find((n) => n.id === a.network)?.tag})
@@ -567,7 +567,7 @@ const MovementForm = ({ addresses, onSubmit, onBack }: {
           <Field label="Vers" hint="Vide si sortie externe">
             <SelectWrap>
               <select value={toId} onChange={(e) => setToId(e.target.value)} className={cn(inputCn, "appearance-none pr-10")}>
-                <option value="">—</option>
+                <option value="">Aucun</option>
                 {addresses.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.label} ({NETWORKS.find((n) => n.id === a.network)?.tag})
@@ -757,7 +757,7 @@ const ReconciliationView = ({ addresses, outflows }: {
         <SummaryCard
           label="Marge"
           value={`${totalGap >= 0 ? "" : "−"}${nfUsdt.format(Math.abs(totalGap))} USDT`}
-          sub={totalGap >= 0 ? "Couverture OK" : "Découvert — réapprovisionner"}
+          sub={totalGap >= 0 ? "Couverture OK" : "Découvert : réapprovisionner"}
           urgent={totalGap < 0}
         />
       </div>

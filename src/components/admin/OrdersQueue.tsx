@@ -49,8 +49,8 @@ const OrdersQueue = ({ orders, onOpen, onPatch }: Props) => {
   const others = active.filter((o) => o.assignedTo && o.assignedTo !== CURRENT_OPERATOR);
 
   const TABS: { id: SubTab; label: string; count: number; empty: string }[] = [
-    { id: "queue",  label: "File d'attente", count: unassigned.length, empty: "File vide — aucune commande à traiter pour le moment." },
-    { id: "mine",   label: "Mes commandes",  count: mine.length,       empty: "Aucune commande en charge — prenez-en une dans la file d'attente." },
+    { id: "queue",  label: "File d'attente", count: unassigned.length, empty: "File vide : aucune commande à traiter pour le moment." },
+    { id: "mine",   label: "Mes commandes",  count: mine.length,       empty: "Aucune commande en charge. Prenez-en une dans la file d'attente." },
     { id: "others", label: "Par l'équipe",   count: others.length,     empty: "Aucune commande traitée par un autre membre." },
   ];
   const list = tab === "queue" ? unassigned : tab === "mine" ? mine : others;

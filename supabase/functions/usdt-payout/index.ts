@@ -88,7 +88,7 @@ async function complete(db: SupabaseClient, payoutId: string) {
   const { data: o } = await db.from("orders").update({ status: "completed" })
     .eq("id", p.order_id).eq("status", "settling").select("id, user_id, usdt_amount, network").maybeSingle();
   if (!o) return; // déjà terminé
-  await event(db, o.id, "settling", "completed", `USDT envoyés — ${p.tx_hash}`);
+  await event(db, o.id, "settling", "completed", `USDT envoyés : ${p.tx_hash}`);
   const { data: prof } = await db.from("profiles").select("email").eq("id", o.user_id).maybeSingle();
   await email(prof?.email, "order-completed", {
     ref: ref(o.id),

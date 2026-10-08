@@ -159,7 +159,7 @@ export async function fetchPlatformContext(): Promise<PlatformContext> {
     if ((o.status === "cancelled" || o.status === "expired") && isToday) cancelledToday++;
   }
 
-  if (pendingOrders > 5) alerts.push(`${pendingOrders} commandes en attente — possible engorgement.`);
+  if (pendingOrders > 5) alerts.push(`${pendingOrders} commandes en attente : possible engorgement.`);
   if (inProgressOrders > 3) alerts.push(`${inProgressOrders} commandes en traitement simultané.`);
 
   const pendingKyc = kycCountRes.count ?? 0;

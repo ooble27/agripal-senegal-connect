@@ -295,7 +295,7 @@ async function handleContact(c: ContactPayload, req: Request, apiKey: string, fr
   if ((count ?? 0) >= 3) return json({ error: "Trop de messages envoyés. Réessayez dans une heure." }, 429);
 
   const { data: profile } = await admin.from("profiles").select("id, full_name").eq("email", email).maybeSingle();
-  const threadSubject = otc ? subject : `${subject} — formulaire de contact`;
+  const threadSubject = otc ? subject : `${subject} · formulaire de contact`;
 
   const { data: thread, error: threadErr } = await admin
     .from("mail_threads")

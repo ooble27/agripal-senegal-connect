@@ -148,7 +148,7 @@ const PARTS: Part[] = [
           </P>
           <Ul>
             <li>une photo de votre pièce d'identité avec photo délivrée par un gouvernement (passeport,
-              permis de conduire ou carte d'identité nationale) — recto et, si applicable, verso ;</li>
+              permis de conduire ou carte d'identité nationale), recto et, si applicable, verso ;</li>
             <li>une photo de vous-même (selfie) prise en temps réel, pour confirmer que vous êtes le
               titulaire du document.</li>
           </Ul>
@@ -201,7 +201,7 @@ const PARTS: Part[] = [
           </P>
           <Ul>
             <li>a photo of your government-issued photo ID (passport, driver's license, or national
-              ID card) — front and, if applicable, back;</li>
+              ID card), front and, if applicable, back;</li>
             <li>a photo of yourself (selfie) taken in real time, to confirm that you are the holder
               of the document.</li>
           </Ul>
@@ -285,19 +285,19 @@ const PARTS: Part[] = [
           <H3>Fournisseurs de services techniques</H3>
           <Ul>
             <li>
-              <strong className="text-foreground">Supabase Inc.</strong> — héberge notre base de
+              <strong className="text-foreground">Supabase Inc.</strong> : héberge notre base de
               données, notre système d'authentification et le stockage de vos documents de
               vérification d'identité. Les données sont hébergées sur des serveurs sécurisés. Supabase
               agit en tant que sous-traitant et ne peut utiliser vos données qu'aux fins de nous
               fournir le service.
             </li>
             <li>
-              <strong className="text-foreground">Vercel Inc.</strong> — héberge l'interface de notre
+              <strong className="text-foreground">Vercel Inc.</strong> : héberge l'interface de notre
               site web (ooble.ca). Vercel ne stocke pas vos renseignements personnels ; il sert
               uniquement le code de la plateforme à votre navigateur.
             </li>
             <li>
-              <strong className="text-foreground">Google (OAuth)</strong> — si vous choisissez de vous
+              <strong className="text-foreground">Google (OAuth)</strong> : si vous choisissez de vous
               connecter via Google, l'authentification est traitée par Google. Nous recevons uniquement
               votre nom et votre adresse courriel. Google ne reçoit aucune information sur vos
               transactions Ooble.
@@ -335,18 +335,18 @@ const PARTS: Part[] = [
           <H3>Technical service providers</H3>
           <Ul>
             <li>
-              <strong className="text-foreground">Supabase Inc.</strong> — hosts our database,
+              <strong className="text-foreground">Supabase Inc.</strong>: hosts our database,
               authentication system, and the storage of your identity verification documents. Data is
               hosted on secure servers. Supabase acts as a subprocessor and may only use your data for
               the purpose of providing us with the service.
             </li>
             <li>
-              <strong className="text-foreground">Vercel Inc.</strong> — hosts our website interface
+              <strong className="text-foreground">Vercel Inc.</strong>: hosts our website interface
               (ooble.ca). Vercel does not store your personal information; it only serves the
               platform's code to your browser.
             </li>
             <li>
-              <strong className="text-foreground">Google (OAuth)</strong> — if you choose to sign in
+              <strong className="text-foreground">Google (OAuth)</strong>: if you choose to sign in
               via Google, authentication is processed by Google. We only receive your name and email
               address. Google does not receive any information about your Ooble transactions.
             </li>
@@ -507,27 +507,27 @@ const PARTS: Part[] = [
           </P>
           <Ul>
             <li>
-              <strong className="text-foreground">Droit d'accès</strong> — vous pouvez demander à
+              <strong className="text-foreground">Droit d'accès</strong> : vous pouvez demander à
               connaître quels renseignements personnels nous détenons à votre sujet.
             </li>
             <li>
-              <strong className="text-foreground">Droit de rectification</strong> — vous pouvez
+              <strong className="text-foreground">Droit de rectification</strong> : vous pouvez
               demander la correction de renseignements inexacts ou incomplets. Vous pouvez modifier
               votre nom et votre adresse courriel directement depuis votre compte.
             </li>
             <li>
-              <strong className="text-foreground">Droit de retrait du consentement</strong> — vous
+              <strong className="text-foreground">Droit de retrait du consentement</strong> : vous
               pouvez retirer votre consentement à la collecte et à l'utilisation de vos renseignements,
               sous réserve des obligations légales de conservation imposées par la LRPCFAT.
             </li>
             <li>
-              <strong className="text-foreground">Droit de suppression</strong> — vous pouvez demander
+              <strong className="text-foreground">Droit de suppression</strong> : vous pouvez demander
               la suppression de votre compte et de vos données. Les données soumises à une obligation
               légale de conservation (dossiers KYC et registres de transactions) seront conservées
               pendant la durée requise par la loi, puis supprimées.
             </li>
             <li>
-              <strong className="text-foreground">Droit de plainte</strong> — si vous estimez que vos
+              <strong className="text-foreground">Droit de plainte</strong> : si vous estimez que vos
               droits n'ont pas été respectés, vous pouvez déposer une plainte auprès du Commissariat à
               la protection de la vie privée du Canada.
             </li>
@@ -545,27 +545,27 @@ const PARTS: Part[] = [
           </P>
           <Ul>
             <li>
-              <strong className="text-foreground">Right of access</strong> — you may request to know
+              <strong className="text-foreground">Right of access</strong>: you may request to know
               what personal information we hold about you.
             </li>
             <li>
-              <strong className="text-foreground">Right of correction</strong> — you may request the
+              <strong className="text-foreground">Right of correction</strong>: you may request the
               correction of inaccurate or incomplete information. You can update your name and email
               address directly from your account.
             </li>
             <li>
-              <strong className="text-foreground">Right to withdraw consent</strong> — you may
+              <strong className="text-foreground">Right to withdraw consent</strong>: you may
               withdraw your consent to the collection and use of your information, subject to legal
               retention obligations imposed by PCMLTFA.
             </li>
             <li>
-              <strong className="text-foreground">Right to deletion</strong> — you may request the
+              <strong className="text-foreground">Right to deletion</strong>: you may request the
               deletion of your account and data. Data subject to legal retention obligations (KYC
               records and transaction records) will be retained for the period required by law, then
               deleted.
             </li>
             <li>
-              <strong className="text-foreground">Right to complain</strong> — if you believe your
+              <strong className="text-foreground">Right to complain</strong>: if you believe your
               rights have not been respected, you may file a complaint with the Office of the Privacy
               Commissioner of Canada.
             </li>
@@ -638,9 +638,9 @@ const PARTS: Part[] = [
             traitement de vos renseignements personnels :
           </P>
           <Ul>
-            <li>Courriel — {OOBLE_SUPPORT_EMAIL}</li>
+            <li>Courriel : {OOBLE_SUPPORT_EMAIL}</li>
             <li>
-              Page de contact —{" "}
+              Page de contact :{" "}
               <Link to="/contact" className="text-foreground underline underline-offset-2">
                 ooble.ca/contact
               </Link>
@@ -655,9 +655,9 @@ const PARTS: Part[] = [
             personal information:
           </P>
           <Ul>
-            <li>Email — {OOBLE_SUPPORT_EMAIL}</li>
+            <li>Email: {OOBLE_SUPPORT_EMAIL}</li>
             <li>
-              Contact page —{" "}
+              Contact page:{" "}
               <Link to="/contact" className="text-foreground underline underline-offset-2">
                 ooble.ca/contact
               </Link>

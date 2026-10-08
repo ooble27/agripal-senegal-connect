@@ -182,7 +182,7 @@ const PersonKycPanel = () => {
           fontSize: 12, fontFamily: FONT,
         }}>
           <span style={{ color: C.t3 }}>Document :</span>
-          <span style={{ color: C.t1, fontWeight: 500 }}>{detail.docType || "—"}</span>
+          <span style={{ color: C.t1, fontWeight: 500 }}>{detail.docType || "N/D"}</span>
           <span style={{ marginLeft: "auto", color: C.t3 }}>{timeAgo(detail.submittedMinsAgo)}</span>
         </div>
 

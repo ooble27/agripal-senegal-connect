@@ -108,7 +108,7 @@ export const OrderDetailContent = ({ o }: { o: OrderRow }) => {
         {[
           { label: t("act.ref"), value: orderRef(o.id), copy: true },
           { label: t("act.rate"), value: `1 USDT = ${nf.format(Number(o.locked_rate))} CAD` },
-          { label: t("act.network"), value: network ? `${network.name} · ${network.tag}` : "—" },
+          { label: t("act.network"), value: network ? `${network.name} · ${network.tag}` : "N/D" },
           ...(buy && o.wallet_address && o.wallet_address !== "à générer"
             ? [{ label: t("act.recvAddr"), value: o.wallet_address, mono: true, copy: true }]
             : []),

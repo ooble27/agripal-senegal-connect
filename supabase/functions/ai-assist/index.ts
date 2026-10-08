@@ -3,12 +3,12 @@
 // Une seule fonction héberge tous les agents pour simplifier le déploiement.
 // Chaque agent = un handler avec un « system prompt » et une transformation
 // entrée→sortie spécifique. Chaque appel est journalisé dans `ai_calls`
-// (audit + coût). Auth : le staff appelle en tant qu'utilisateur connecté
-// (JWT du browser), l'edge function vérifie is_staff() via un lookup sur
+// (audit + coût). Auth : le staff appelle en tant qu’utilisateur connecté
+// (JWT du browser), l’edge function vérifie is_staff() via un lookup sur
 // la table user_roles.
 //
 // Agents implémentés (dans ce commit) :
-//   - draft-mail        : rédige un mail à partir d'une intention staff
+//   - draft-mail        : rédige un mail à partir d’une intention staff
 //   - summarize-client  : résume un dossier client 360° en 3-5 puces
 //
 // Agents à venir dans les prochains commits :
@@ -180,7 +180,7 @@ async function callClaudeWithTools(
  */
 const SYSTEM_DRAFT_MAIL = `Tu es l'assistant de rédaction mail de Ooble, une plateforme canadienne d'échange USDT/CAD non-custodial réglementée par CANAFE.
 
-Tu produis des mails en français québécois professionnel — jamais familier, jamais corporate creux. Ton : direct, précis, chaleureux mais sans effusion. On dit « vous », pas « tu ».
+Tu produis des mails en français québécois professionnel, jamais familier, jamais corporate creux. Ton : direct, précis, chaleureux mais sans effusion. On dit « vous », pas « tu ».
 
 Tu as accès au contexte en temps réel de la plateforme (commandes, KYC, messagerie, trésorerie). Utilise ces informations pour rédiger des mails précis et personnalisés sans que le staff ait besoin de tout t'expliquer. Par exemple :
 - Si le staff dit « dis-lui qu'on a reçu son paiement », cherche dans les commandes récentes pour trouver la commande du client et mentionne le bon montant et la bonne référence.
@@ -189,13 +189,14 @@ Tu as accès au contexte en temps réel de la plateforme (commandes, KYC, messag
 - Tu connais les adresses de dépôt Ooble par réseau et les adresses wallet des clients (affichées dans les commandes). Ne demande JAMAIS au client une information que tu as déjà dans le contexte (adresse wallet, montant, référence, réseau).
 
 Contraintes strictes :
-- Structure : salutation « Bonjour {{prenom}}, » — ne remplace PAS {{prenom}}, garde le placeholder — puis 2-4 paragraphes courts, puis une signature en 2 lignes (« Cordialement, » suivi de la marque au moment de l'insertion).
+- Structure : salutation « Bonjour {{prenom}}, », ne remplace PAS {{prenom}}, garde le placeholder, puis 2-4 paragraphes courts, puis une signature en 2 lignes (« Cordialement, » suivi de la marque au moment de l'insertion).
 - Utilise du markdown simple : **gras** pour souligner un élément critique (référence, montant), * ou - pour les listes.
 - Pour les appels à l'action, écris le lien seul sur sa ligne : \`[Reprendre la vérification](https://ooble.ca/app/verification)\`. Le composer le rendra en bouton.
 - Quand tu TROUVES les vrais chiffres dans le contexte (montant, référence d'ordre, taux), utilise-les. Sinon, utilise des placeholders {{ref}}, {{montant}}, {{date}}.
 - Vocabulaire Ooble : « USDT », « Interac e-Transfer », « CANAFE », « KYC », « ordre » (pas « transaction »), « réseau » (pas « blockchain » quand on parle à un client).
 - Longueur : 80-180 mots. Un mail court est plus lu.
-- Ne signe PAS le mail — la signature est ajoutée par le composer.
+- Ne signe PAS le mail, la signature est ajoutée par le composer.
+- N'utilise JAMAIS de tiret long (—) ni de tiret moyen (–) : remplace-les par une virgule, deux-points ou un point.
 
 Ne produis QUE le corps du mail (sujet + corps), sans commentaire méta.
 
@@ -392,6 +393,7 @@ Contraintes :
 - N'invente pas de chiffres précis (taux, prix) sauf si le staff les a donnés.
 - Le CTA (bouton) doit pointer vers une URL crédible d'Ooble (https://ooble.ca/app/acheter, https://ooble.ca/app, etc.).
 - Ne signe PAS le mail.
+- N'utilise JAMAIS de tiret long (—) ni de tiret moyen (–).
 
 Format de sortie EXACT (JSON) :
 {"subject":"...","preheader":"...","eyebrow":"...","headline":"...","body":"...","ctaLabel":"...","ctaUrl":"..."}
@@ -605,7 +607,7 @@ async function executeOrderStatusChange(
     previous_status: order.status,
     new_status: newStatus,
     actor: staffId,
-    note: note ?? `Via assistant IA — ${ORDER_ACTION_LABELS[action]}`,
+    note: note ?? `Via assistant IA, ${ORDER_ACTION_LABELS[action]}`,
   });
 
   const ref = orderRefDisplay(order.id);
@@ -679,24 +681,25 @@ async function executeReleaseOrder(
 // Agent 4 — Assistant contextuel temps réel (chat)
 // ────────────────────────────────────────────────────────────
 
-const SYSTEM_CONTEXT_CHAT = `Tu es l'assistant IA du back-office Ooble — une plateforme canadienne d'échange USDT/CAD non-custodial réglementée par CANAFE.
+const SYSTEM_CONTEXT_CHAT = `Tu es l'assistant IA du back-office Ooble, une plateforme canadienne d'échange USDT/CAD non-custodial réglementée par CANAFE.
 
 Tu assistes le staff en temps réel avec l'état actuel de la plateforme (commandes, KYC, messagerie, trésorerie, taux).
 
-RÈGLE ABSOLUE — OUTILS :
-Quand le staff te demande d'effectuer une action (envoyer un email, modifier une commande, prendre en charge un ordre, etc.), tu DOIS appeler l'outil correspondant dans ta réponse. Ne te contente JAMAIS de décrire l'action verbalement sans appeler l'outil — le texte seul ne déclenche rien. L'action sera présentée au staff pour confirmation avant exécution — tu n'as pas besoin de demander confirmation toi-même, appelle directement l'outil.
+RÈGLE ABSOLUE, OUTILS :
+Quand le staff te demande d'effectuer une action (envoyer un email, modifier une commande, prendre en charge un ordre, etc.), tu DOIS appeler l'outil correspondant dans ta réponse. Ne te contente JAMAIS de décrire l'action verbalement sans appeler l'outil, le texte seul ne déclenche rien. L'action sera présentée au staff pour confirmation avant exécution, tu n'as pas besoin de demander confirmation toi-même, appelle directement l'outil.
 
 Quand tu appelles un outil :
 - Écris 1 phrase courte expliquant ce que tu fais, puis appelle l'outil dans la même réponse.
-- Utilise les données du contexte (email du client, montants, références, taux) — ne demande pas au staff ce que tu peux trouver toi-même.
+- Utilise les données du contexte (email du client, montants, références, taux), ne demande pas au staff ce que tu peux trouver toi-même.
 - Pour les emails : ton Ooble (professionnel, chaleureux mais pas corporate), vocabulaire Ooble. Commence par « Bonjour [prénom], ». Pas de signature.
 - Pour les commandes : utilise la référence OOB-XXXXXXXX visible dans les commandes récentes. Ne demande pas la référence si tu la vois dans le contexte.
 
-Style de réponse — RÈGLES STRICTES :
+Style de réponse, RÈGLES STRICTES :
 Tu parles comme un collègue compétent, en phrases naturelles et fluides. JAMAIS en listes.
 
 INTERDIT absolument :
 - Les tirets (-) ou puces (•, *, >) pour structurer tes réponses. Écris des phrases et des paragraphes.
+- Les tirets longs (—) et moyens (–), même au milieu d'une phrase.
 - Les titres (pas de #, ##, ###).
 - Le gras sur des mots ordinaires. Réserve **gras** uniquement aux chiffres clés (montants, nombres).
 - Les formules creuses : « Voici », « En résumé », « N'hésitez pas », « Bien sûr ! ».
@@ -866,7 +869,7 @@ function platformContextToText(ctx: PlatformContext): string {
   }
 
   if (ctx.recentThreads && ctx.recentThreads.length > 0) {
-    lines.push(`\nMESSAGERIE — CONVERSATIONS RÉCENTES (${ctx.recentThreads.length}) :`);
+    lines.push(`\nMESSAGERIE, CONVERSATIONS RÉCENTES (${ctx.recentThreads.length}) :`);
     for (const t of ctx.recentThreads) {
       const badge = t.hasUnread ? " 🔴 NON LU" : "";
       lines.push(`- ${t.clientName} (${t.clientEmail}) · « ${t.subject} » · ${t.messageCount} msg · ${t.lastMessageAt}${badge}`);
@@ -949,15 +952,15 @@ function platformContextToText(ctx: PlatformContext): string {
   if (ctx.recentOrderEvents && ctx.recentOrderEvents.length > 0) {
     lines.push(`\nHISTORIQUE D'ÉVÉNEMENTS COMMANDES (${ctx.recentOrderEvents.length} derniers) :`);
     for (const ev of ctx.recentOrderEvents) {
-      const note = ev.note ? ` — "${ev.note}"` : "";
-      lines.push(`- ${ev.orderRef} · ${ev.previousStatus || "—"} → ${ev.newStatus} · par ${ev.actor}${note} · ${ev.createdAt}`);
+      const note = ev.note ? `, "${ev.note}"` : "";
+      lines.push(`- ${ev.orderRef} · ${ev.previousStatus || "N/D"} → ${ev.newStatus} · par ${ev.actor}${note} · ${ev.createdAt}`);
     }
   }
 
   if (ctx.activeAnnouncements && ctx.activeAnnouncements.length > 0) {
     lines.push(`\nANNONCES ACTIVES (${ctx.activeAnnouncements.length}) :`);
     for (const a of ctx.activeAnnouncements) {
-      lines.push(`- [${a.kind.toUpperCase()}] ${a.titleFr} — ${a.bodyFr} · ${a.createdAt}`);
+      lines.push(`- [${a.kind.toUpperCase()}] ${a.titleFr} · ${a.bodyFr} · ${a.createdAt}`);
     }
   }
 
@@ -965,7 +968,7 @@ function platformContextToText(ctx: PlatformContext): string {
     lines.push(`\nFENÊTRES DE MAINTENANCE :`);
     for (const mw of ctx.maintenanceWindows) {
       const status = mw.active ? "ACTIVE" : "planifiée";
-      lines.push(`- ${mw.titleFr} · ${status} · du ${mw.startsAt} au ${mw.endsAt} — ${mw.bodyFr}`);
+      lines.push(`- ${mw.titleFr} · ${status} · du ${mw.startsAt} au ${mw.endsAt}, ${mw.bodyFr}`);
     }
   }
 
@@ -973,7 +976,7 @@ function platformContextToText(ctx: PlatformContext): string {
     lines.push(`\nMOUVEMENTS TRÉSORERIE RÉCENTS (${ctx.recentTreasuryMovements.length}) :`);
     for (const tm of ctx.recentTreasuryMovements) {
       const txInfo = tm.txHash ? ` · TX: ${tm.txHash.slice(0, 16)}…` : "";
-      const notes = tm.notes ? ` — ${tm.notes}` : "";
+      const notes = tm.notes ? `, ${tm.notes}` : "";
       lines.push(`- ${tm.fromLabel} → ${tm.toLabel} · ${nf.format(tm.amountUsdt)} USDT · ${tm.reason}${txInfo}${notes} · ${tm.createdAt}`);
     }
   }

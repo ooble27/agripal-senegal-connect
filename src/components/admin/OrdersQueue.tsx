@@ -128,7 +128,7 @@ const OrdersQueue = ({ orders, onOpen, onPatch }: Props) => {
                   variant="appSolid"
                   shape="rounded"
                   className="h-auto gap-1.5 rounded-[9px] px-3 py-[7px] text-[12.5px] font-bold"
-                  onClick={() => onPatch(o.id, { status: "cours", assignedTo: CURRENT_OPERATOR })}
+                  onClick={() => onPatch(o.id, { assignedTo: CURRENT_OPERATOR })}
                 >
                   <Hand className="h-[13px] w-[13px]" /> Prendre
                 </Button>
@@ -139,7 +139,7 @@ const OrdersQueue = ({ orders, onOpen, onPatch }: Props) => {
                     variant="appOutline"
                     shape="rounded"
                     className="hidden h-auto rounded-[9px] px-3 py-[7px] text-[12.5px] md:inline-flex"
-                    onClick={() => onPatch(o.id, { status: "recu", assignedTo: null })}
+                    onClick={() => onPatch(o.id, { assignedTo: null })}
                   >
                     Libérer
                   </Button>

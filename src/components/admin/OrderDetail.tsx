@@ -21,6 +21,8 @@ interface Props {
   onPatch: (id: string, changes: Partial<AdminOrder>) => void;
   onDelete: (id: string) => void;
   onShowClient?: (userId: string) => void;
+  /** Relit les commandes (après un envoi d'USDT, le statut change côté serveur). */
+  onRefresh?: () => void;
 }
 
 type SectionId = "client" | "transaction" | "paiement" | "destination" | "historique";
@@ -122,18 +124,15 @@ const SegmentedTabs = ({ sections, active, onSelect }: { sections: { id: Section
  * Le bouton n'apparaît qu'à « paiement reçu » et sans envoi déjà en cours :
  * la base refuse de toute façon un second envoi pour le même ordre.
  */
-const PayoutBox = ({ order }: { order: AdminOrder }) => {
-  const [list, setList] = useState<UsdtPayout[] | null>(null);
+/** Réseaux où l'envoi des USDT part du portefeuille d'envoi (Solana : à la main). */
+const AUTO_NETWORKS = new Set(["trx", "bnb", "matic", "avax", "eth"]);
+
+const PayoutBox = ({ order, list, onChanged }: { order: AdminOrder; list: UsdtPayout[] | null; onChanged: () => void }) => {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string; url?: string } | null>(null);
-  useEffect(() => {
-    let on = true;
-    fetchPayouts(order.id, 5).then((l) => { if (on) setList(l); });
-    return () => { on = false; };
-  }, [order.id, order.status]);
   const active = (list ?? []).find((p) => p.status !== "failed");
   const last = list?.[0];
-  const canSend = order.status === "recu" && !active && list !== null;
+  const canSend = order.status === "recu" && !active && list !== null && AUTO_NETWORKS.has(order.network ?? "");
   if (!last && !canSend) return null;
 
   const go = async () => {
@@ -144,7 +143,7 @@ const PayoutBox = ({ order }: { order: AdminOrder }) => {
     setMsg(r.ok
       ? { ok: true, text: r.status === "confirmed" ? "USDT envoyés et confirmés. Le client a reçu son courriel." : "Transaction diffusée, confirmation en cours.", url: r.url }
       : { ok: false, text: r.error ?? "Échec de l'envoi.", url: r.url });
-    setList(await fetchPayouts(order.id, 5));
+    onChanged();
   };
 
   return (
@@ -183,8 +182,14 @@ const PayoutBox = ({ order }: { order: AdminOrder }) => {
   );
 };
 
-const OrderDetail = ({ order, onBack, onPatch, onDelete, onShowClient }: Props) => {
+const OrderDetail = ({ order, onBack, onPatch, onDelete, onShowClient, onRefresh }: Props) => {
   const { isAdmin } = useAuth();
+  const [payouts, setPayouts] = useState<UsdtPayout[] | null>(null);
+  const loadPayouts = useCallback(() => {
+    if (order.type !== "buy") { setPayouts([]); return; }
+    fetchPayouts(order.id, 5).then(setPayouts);
+  }, [order.id, order.type]);
+  useEffect(() => { loadPayouts(); }, [loadPayouts, order.status]);
   const [section, setSection] = useState<SectionId>("client");
   const [copied, setCopied] = useState<string | null>(null);
   const [events, setEvents] = useState<OrderEvent[] | null>(null);
@@ -206,6 +211,13 @@ const OrderDetail = ({ order, onBack, onPatch, onDelete, onShowClient }: Props) 
     setCopied(key);
     setTimeout(() => setCopied((c) => (c === key ? null : c)), 1200);
   };
+
+  // De l'argent est parti (ou part) vers le client : la commande est figée.
+  const activePayout = (payouts ?? []).find((p) => p.status !== "failed");
+  const finished = order.status === "termine" || order.status === "rembourse";
+  const locked = !!activePayout || finished;
+  // Suppression : seulement une commande sans aucun mouvement d'argent.
+  const canDelete = (order.status === "attente" || order.status === "annule") && (payouts ?? []).length === 0;
 
   const refundAmount = order.type === "buy"
     ? `${nfCad.format(order.cad)} CAD`
@@ -360,7 +372,7 @@ const OrderDetail = ({ order, onBack, onPatch, onDelete, onShowClient }: Props) 
         {active === "historique" && <Timeline order={order} events={events} />}
       </div>
 
-      {order.type === "buy" && <PayoutBox order={order} />}
+      {order.type === "buy" && <PayoutBox order={order} list={payouts} onChanged={() => { loadPayouts(); onRefresh?.(); }} />}
 
       {/* Barre d'actions */}
       {lockedByOther ? (
@@ -372,27 +384,28 @@ const OrderDetail = ({ order, onBack, onPatch, onDelete, onShowClient }: Props) 
         </div>
       ) : (
         <div className="flex flex-wrap gap-2.5">
-          {order.status === "cours" && (
+          {/*
+            Règles :
+            • des USDT sont partis (ou en cours d'envoi) ou la commande est
+              terminée / remboursée → aucune action : rien à marquer, rien à
+              rembourser, rien à rouvrir ;
+            • en attente → marquer le paiement reçu, ou annuler ;
+            • paiement reçu → envoyer (achat, bloc ci-dessus), terminer à la
+              main (vente, ou réseau sans envoi automatique), ou rembourser ;
+              plus d'annulation : l'argent est là, on rembourse ;
+            • annulée → rouvrir, par erreur d'annulation.
+          */}
+          {!locked && (order.status === "attente" || order.status === "cours") && (
             <Button variant="appSolid" shape="rounded" className="h-auto gap-2 rounded-[10px] px-4 py-[11px] text-sm font-bold" onClick={() => onPatch(order.id, { status: "recu" })}>
-              <Check className="h-[17px] w-[17px]" /> Marquer reçu
+              <Check className="h-[17px] w-[17px]" /> {order.type === "buy" ? "Marquer le paiement reçu" : "Marquer les USDT reçus"}
             </Button>
           )}
-          {order.status === "recu" && (
+          {!locked && order.status === "recu" && (order.type === "sell" || !AUTO_NETWORKS.has(order.network ?? "")) && (
             <Button variant="appSolid" shape="rounded" className="h-auto gap-2 rounded-[10px] px-4 py-[11px] text-sm font-bold" onClick={() => onPatch(order.id, { status: "termine" })}>
-              <Check className="h-[17px] w-[17px]" /> Marquer terminé
+              <Check className="h-[17px] w-[17px]" /> {order.type === "sell" ? "Marquer terminé (virement envoyé)" : "Marquer terminé (envoi fait à la main)"}
             </Button>
           )}
-          {(order.status === "cours" || order.status === "recu") && (
-            <Button variant="appOutline" shape="rounded" className="h-auto gap-2 rounded-[10px] px-4 py-[11px] text-sm" onClick={() => onPatch(order.id, { status: "attente", assignedTo: null })}>
-              Libérer
-            </Button>
-          )}
-          {order.status !== "termine" && order.status !== "annule" && order.status !== "rembourse" && (
-            <Button variant="appOutline" shape="rounded" className="h-auto gap-2 rounded-[10px] px-4 py-[11px] text-sm" onClick={() => onPatch(order.id, { status: "annule" })}>
-              <Ban className="h-[17px] w-[17px]" /> Annuler
-            </Button>
-          )}
-          {(order.status === "recu" || order.status === "cours" || order.status === "termine") && (
+          {!locked && order.status === "recu" && (
             <Button
               variant="appOutline"
               shape="rounded"
@@ -402,9 +415,19 @@ const OrderDetail = ({ order, onBack, onPatch, onDelete, onShowClient }: Props) 
               <Banknote className="h-[17px] w-[17px]" /> Rembourser
             </Button>
           )}
-          {(order.status === "termine" || order.status === "annule" || order.status === "rembourse") && (
+          {!locked && (order.status === "attente" || order.status === "cours") && (
+            <Button variant="appOutline" shape="rounded" className="h-auto gap-2 rounded-[10px] px-4 py-[11px] text-sm" onClick={() => onPatch(order.id, { status: "annule" })}>
+              <Ban className="h-[17px] w-[17px]" /> Annuler
+            </Button>
+          )}
+          {!locked && order.status === "annule" && (
             <Button variant="appOutline" shape="rounded" className="h-auto gap-2 rounded-[10px] px-4 py-[11px] text-sm" onClick={() => onPatch(order.id, { status: "attente", assignedTo: null })}>
               <RotateCcw className="h-[17px] w-[17px]" /> Rouvrir
+            </Button>
+          )}
+          {!finished && order.assignedTo === CURRENT_OPERATOR && (
+            <Button variant="appOutline" shape="rounded" className="h-auto gap-2 rounded-[10px] px-4 py-[11px] text-sm" onClick={() => onPatch(order.id, { assignedTo: null })}>
+              Libérer
             </Button>
           )}
         </div>
@@ -448,10 +471,11 @@ const OrderDetail = ({ order, onBack, onPatch, onDelete, onShowClient }: Props) 
 
       <p className="pt-1 text-center text-[13px] text-muted-foreground">
         Cette commande est <span className="text-foreground">{STATUS_META[order.status].label.toLowerCase()}</span>.
+        {activePayout && !finished && " Les USDT sont partis : la commande se termine seule à la confirmation."}
       </p>
 
-      {/* Zone admin : suppression définitive */}
-      {isAdmin && (
+      {/* Zone admin : suppression définitive (jamais une commande payée : registres à conserver) */}
+      {isAdmin && canDelete && (
         <div className="mt-2 flex items-center justify-center gap-2.5 border-t border-border pt-4">
           {confirmDel ? (
             <>

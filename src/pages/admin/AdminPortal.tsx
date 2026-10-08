@@ -133,7 +133,12 @@ const AdminPortal = () => {
   const badgeLabel = ROLE_LABEL[topRole] ?? "Staff";
   const BadgeIcon = ROLE_ICON[topRole] ?? BadgeCheck;
 
-  const refresh = () => fetchAdminOrders().then((rows) => { setOrders(rows); setLoading(false); });
+  const refresh = () => fetchAdminOrders().then((rows) => {
+    setOrders(rows);
+    // La commande ouverte suit aussi les changements faits côté serveur.
+    setSelected((s) => (s ? rows.find((r) => r.id === s.id) ?? s : s));
+    setLoading(false);
+  });
 
   useEffect(() => {
     refresh();
@@ -237,7 +242,7 @@ const AdminPortal = () => {
         ) : selected ? (
           <div>
             {/* Pastilles de navigation — masquées quand une commande est ouverte */}
-            <OrderDetail order={selected} onBack={() => setSelected(null)} onPatch={patch} onDelete={remove} onShowClient={showClient} />
+            <OrderDetail order={selected} onBack={() => setSelected(null)} onPatch={patch} onDelete={remove} onShowClient={showClient} onRefresh={refresh} />
           </div>
         ) : (
           <>

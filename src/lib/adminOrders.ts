@@ -47,7 +47,7 @@ export interface AdminOrder {
 export const STATUS_META: Record<OrderStatus, { label: string; text: string }> = {
   attente: { label: "En attente", text: "text-muted-foreground" },
   recu:    { label: "À traiter",  text: "text-foreground" },
-  cours:   { label: "En cours",   text: "text-foreground" },
+  cours:   { label: "Envoi en cours", text: "text-foreground" },
   termine: { label: "Terminée",   text: "text-muted-foreground/60" },
   annule:    { label: "Annulée",     text: "text-destructive" },
   rembourse: { label: "Remboursée", text: "text-amber-500" },

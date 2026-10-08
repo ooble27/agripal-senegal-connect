@@ -123,9 +123,14 @@ export async function handleInterac(db: SupabaseClient, m: InteracMail, supabase
   if (refs.length === 0) return { status: await save("unmatched", "Aucune référence OOB- dans le message du virement.") };
   if (refs.length > 1) return { status: await save("mismatch", "Plusieurs références dans le message.") };
 
+  // La référence est le début de l'identifiant de l'ordre : recherche directe
+  // par intervalle d'identifiants (index primaire), quel que soit le volume
+  // d'ordres, au lieu de charger tous les achats récents.
   const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
   const { data: cands } = await db.from("orders").select("id, user_id, side, status, cad_amount, usdt_amount")
-    .eq("side", "buy").gt("created_at", since);
+    .eq("side", "buy").gt("created_at", since)
+    .gte("id", `${refs[0]}-0000-0000-0000-000000000000`).lte("id", `${refs[0]}-ffff-ffff-ffff-ffffffffffff`)
+    .limit(2);
   const order = (cands ?? []).find((o) => o.id.startsWith(refs[0]));
   if (!order) return { status: await save("unmatched", `Aucun achat récent ${base.order_ref}.`) };
   if (!["created", "awaiting_payment"].includes(order.status)) {

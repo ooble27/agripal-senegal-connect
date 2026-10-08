@@ -40,6 +40,34 @@ import {
   eyebrow, heading, lead, dataRows, primaryButton,
 } from "./layout.ts";
 
+
+/**
+ * Envoi à Resend avec reprise : quand beaucoup de courriels partent en même
+ * temps (rafale de commandes), Resend répond 429 au-delà de son débit ; on
+ * réessaie alors après le délai indiqué (ou 1 s, 2 s, 4 s). La même clé
+ * d'idempotence évite tout doublon si une réponse se perd en route.
+ */
+async function resendPost(apiKey: string, payload: unknown): Promise<Response> {
+  const idem = crypto.randomUUID();
+  let res: Response | null = null;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "Idempotency-Key": idem },
+        body: JSON.stringify(payload),
+      });
+      if (res.status !== 429 && res.status < 500) return res;
+    } catch (e) {
+      if (attempt === 3) throw e;
+    }
+    if (attempt === 3) break;
+    const after = Number(res?.headers.get("retry-after"));
+    await new Promise((r) => setTimeout(r, after > 0 ? Math.min(after, 10) * 1000 : 1000 * 2 ** attempt));
+  }
+  return res!;
+}
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -218,11 +246,7 @@ Deno.serve(async (req) => {
   if (bcc?.length) body.bcc = bcc;
   if (replyTo) body.reply_to = replyTo;
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  const res = await resendPost(apiKey, body);
 
   const result = await res.json().catch(() => ({} as Record<string, unknown>));
   if (!res.ok) {
@@ -339,17 +363,13 @@ async function handleContact(c: ContactPayload, req: Request, apiKey: string, fr
       <p style="margin:0"><b>${escHtml(name)}</b> · ${escHtml(email)}${profile ? " · client Ooble" : ""}</p>
       <p style="margin:16px 0;padding:16px;border:1px solid #e5e5e5;border-radius:10px;white-space:pre-wrap">${escHtml(message)}</p>
       <p style="margin:0"><a href="${site}/admin" style="color:#141414">Répondre depuis la messagerie Ooble</a></p></div>`;
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from,
-        to: staffTo,
-        reply_to: email,
-        subject: `${otc ? "OTC" : "Contact"} · ${subject} · ${name}`,
-        html,
-        text: `${subject}\n${name} <${email}>\n\n${message}`,
-      }),
+    const res = await resendPost(apiKey, {
+      from,
+      to: staffTo,
+      reply_to: email,
+      subject: `${otc ? "OTC" : "Contact"} · ${subject} · ${name}`,
+      html,
+      text: `${subject}\n${name} <${email}>\n\n${message}`,
     }).catch((e) => { console.warn("contact: alerte non envoyée", e); return null; });
     if (res && !res.ok) console.warn("contact: alerte non envoyée", res.status, await res.text().catch(() => ""));
   }

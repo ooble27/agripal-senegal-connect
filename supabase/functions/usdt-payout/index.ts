@@ -14,12 +14,17 @@
 //   { action: "status" }          adresses et soldes du portefeuille chaud,
 //                                 réglages (équipe uniquement).
 //   { action: "health" }          diagnostic des réseaux, sans clé ni envoi.
+//   { action: "drain" }           file d'attente : reprend chaque minute les
+//                                 achats payés dont l'envoi automatique
+//                                 n'a pas pu partir (réseau occupé, solde),
+//                                 avec les mêmes contrôles que « send ».
 //   { action: "reconcile" }       vérifie sur la blockchain les envois en
 //                                 cours et termine les ordres confirmés. Sans
 //                                 effet de bord risqué : appelé par une tâche
 //                                 planifiée, sans authentification.
 //
-// Garde-fous : un seul envoi actif par ordre (index unique en base), plafond
+// Garde-fous : un seul envoi actif par ordre (index unique en base), un seul
+// envoi à la fois par réseau (verrou atomique en base), plafond
 // sur 24 heures, solde vérifié avant l'envoi, hash enregistré AVANT la
 // diffusion. Une issue incertaine passe l'envoi en « review » : personne ne
 // le relance sans vérification humaine.
@@ -106,7 +111,7 @@ async function review(db: SupabaseClient, payoutId: string, msg: string) {
   await db.from("usdt_payouts").update({ status: "review", error: msg, updated_at: new Date().toISOString() }).eq("id", payoutId);
 }
 
-async function send(db: SupabaseClient, orderId: string, trigger: "auto" | "staff", by: string | null) {
+async function send(db: SupabaseClient, orderId: string, trigger: "auto" | "staff", by: string | null, wait = true) {
   const { data: settings } = await db.from("settlement_settings").select("*").eq("id", 1).single();
   const { data: o } = await db.from("orders")
     .select("id, user_id, side, status, network, wallet_address, usdt_amount, cad_amount").eq("id", orderId).maybeSingle();
@@ -145,18 +150,53 @@ async function send(db: SupabaseClient, orderId: string, trigger: "auto" | "staf
   if (used + amount > Number(settings?.daily_payout_max_usdt ?? 0)) {
     return { ok: false, error: `Plafond de ${settings?.daily_payout_max_usdt} USDT sur 24 h atteint (${nfUsdt(used)} déjà envoyés).` };
   }
-  // Un envoi à la fois par réseau (le numéro de transaction suivant en dépend).
-  const twoMin = Date.now() - 2 * 60 * 1000;
-  if ((recent ?? []).some((r) => r.network === net && r.status === "sending" && new Date(r.created_at).getTime() > twoMin)) {
-    return { ok: false, error: "Un autre envoi est en cours sur ce réseau. Réessayez dans une minute." };
+  // Un envoi à la fois par réseau (le numéro de transaction suivant en
+  // dépend) : verrou atomique en base, tenu jusqu'à la diffusion. Sous forte
+  // charge, les autres ordres attendent leur tour (file `drain`).
+  const holder = crypto.randomUUID();
+  const { data: gotLock } = await db.rpc("claim_payout_lock", { _net: net, _holder: holder, _seconds: 90 });
+  if (!gotLock) return { ok: false, busy: true, error: "Un autre envoi est en cours sur ce réseau. Réessayez dans une minute." };
+  let released = false;
+  const release = async () => {
+    if (released) return;
+    released = true;
+    await db.rpc("release_payout_lock", { _net: net, _holder: holder });
+  };
+  try {
+    return await sendLocked(db, o, net, amount, trigger, by, wait, settings, release);
+  } finally {
+    await release();
   }
+}
 
+type OrderRow = { id: string; user_id: string; network: string; wallet_address: string; usdt_amount: number; cad_amount: number };
+type RecentRow = { usdt_amount: number; network: string; status: string; created_at: string };
+
+async function sendLocked(
+  db: SupabaseClient, o: OrderRow, net: Net, amount: number, trigger: "auto" | "staff", by: string | null,
+  wait: boolean, settings: { daily_payout_max_usdt?: number } | null, release: () => Promise<void>,
+) {
+  // Relu sous verrou : plafond et envois en cours sont exacts même quand
+  // plusieurs envois arrivent ensemble.
+  const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+  const { data: recentRows } = await db.from("usdt_payouts").select("usdt_amount, network, status, created_at")
+    .neq("status", "failed").gt("created_at", since);
+  const recent: RecentRow[] = recentRows ?? [];
+  const used = recent.reduce((t, r) => t + Number(r.usdt_amount), 0);
+  if (used + amount > Number(settings?.daily_payout_max_usdt ?? 0)) {
+    return { ok: false, error: `Plafond de ${settings?.daily_payout_max_usdt} USDT sur 24 h atteint (${nfUsdt(used)} déjà envoyés).` };
+  }
   let from: string;
   try {
     validateAddress(net, o.wallet_address);
     from = fromAddress(net);
     const b = await balances(net);
-    if (b.usdt < amount) return { ok: false, error: `Solde USDT insuffisant sur ${NET_LABEL[net]} : ${nfUsdt(b.usdt)} disponibles, ${nfUsdt(amount)} requis.` };
+    // Les envois diffusés mais pas encore confirmés ne sont pas encore
+    // déduits du solde lu sur la blockchain : on les retire nous-mêmes.
+    const inFlight = recent.filter((r) => r.network === net && (r.status === "sending" || r.status === "broadcast"))
+      .reduce((t, r) => t + Number(r.usdt_amount), 0);
+    const free = b.usdt - inFlight;
+    if (free < amount) return { ok: false, error: `Solde USDT insuffisant sur ${NET_LABEL[net]} : ${nfUsdt(free)} disponibles, ${nfUsdt(amount)} requis.` };
     if (b.gas < b.minGas) return { ok: false, error: `Pas assez de ${b.gasSymbol} pour les frais : ${b.gas} (minimum ${b.minGas}).` };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
@@ -205,9 +245,14 @@ async function send(db: SupabaseClient, orderId: string, trigger: "auto" | "staf
   }
 
   await db.from("usdt_payouts").update({ status: "broadcast", updated_at: new Date().toISOString() }).eq("id", p.id);
+  // Diffusée : le réseau est libre pour l'envoi suivant.
+  await release();
   await db.from("blockchain_transactions").insert({
     order_id: o.id, direction: "outbound", network: net, tx_hash: tx.hash, usdt_amount: amount, confirmations: 0, confirmed: false,
   });
+  // File d'attente : on n'attend pas la confirmation, `reconcile` termine
+  // l'ordre dès que la transaction est dans un bloc.
+  if (!wait) return { ok: true, status: "broadcast", hash: tx.hash, url: explorerUrl(net, tx.hash) };
 
   // Attente de l'inclusion dans un bloc (quelques secondes en général).
   for (let i = 0; i < 12; i++) {
@@ -238,6 +283,57 @@ async function reconcile(db: SupabaseClient) {
   return { ok: true, checked: out };
 }
 
+/**
+ * File d'attente des envois automatiques. Quand beaucoup de virements
+ * arrivent en même temps, un seul envoi part à la fois par réseau : les
+ * autres échouent proprement (« réseau occupé ») et restent « paiement
+ * reçu ». Appelée chaque minute, cette action les reprend, du plus ancien au
+ * plus récent, sans attendre les confirmations (`reconcile` s'en charge).
+ * `send` refait tous les contrôles : rien ne part qui n'aurait pas pu partir
+ * dès l'arrivée du virement. Après 3 tentatives échouées, l'ordre est laissé
+ * à l'équipe.
+ */
+async function drain(db: SupabaseClient) {
+  const started = Date.now();
+  const { data: settings } = await db.from("settlement_settings").select("auto_payout, auto_payout_max_cad").eq("id", 1).single();
+  if (!settings?.auto_payout) return { ok: true, skipped: "Envoi automatique désactivé." };
+
+  const { data: orders } = await db.from("orders").select("id, network, updated_at")
+    .eq("side", "buy").eq("status", "payment_received").lte("cad_amount", Number(settings.auto_payout_max_cad))
+    .order("updated_at", { ascending: true }).limit(200);
+  if (!orders?.length) return { ok: true, sent: {} };
+  const ids = orders.map((o) => o.id);
+
+  const [{ data: rcpts }, { data: payouts }] = await Promise.all([
+    db.from("interac_receipts").select("order_id").in("order_id", ids).eq("status", "matched").eq("authenticated", true),
+    db.from("usdt_payouts").select("order_id, status, updated_at").in("order_id", ids),
+  ]);
+  const paid = new Set((rcpts ?? []).map((r) => r.order_id));
+  const tries = new Map<string, { failed: number; active: boolean; last: number }>();
+  for (const p of payouts ?? []) {
+    const t = tries.get(p.order_id) ?? { failed: 0, active: false, last: 0 };
+    if (p.status === "failed") t.failed++; else t.active = true;
+    t.last = Math.max(t.last, new Date(p.updated_at).getTime());
+    tries.set(p.order_id, t);
+  }
+  const queue = orders.filter((o) => {
+    const t = tries.get(o.id);
+    return paid.has(o.id) && !t?.active && (t?.failed ?? 0) < 3 && Date.now() - (t?.last ?? 0) > 60_000;
+  });
+
+  // Un réseau occupé ou à court de solde ne bloque pas les autres.
+  const out: Record<string, string> = {};
+  const stopped = new Set<string>();
+  for (const o of queue) {
+    if (Date.now() - started > 100_000) break;
+    if (stopped.has(o.network)) continue;
+    const r = await send(db, o.id, "auto", null, false);
+    out[ref(o.id)] = r.ok ? "envoyé" : r.error ?? "échec";
+    if (!r.ok && ("busy" in r || /solde|frais|plafond/i.test(r.error ?? ""))) stopped.add(o.network);
+  }
+  return { ok: true, waiting: queue.length, sent: out };
+}
+
 async function status(db: SupabaseClient) {
   const { data: settings } = await db.from("settlement_settings").select("*").eq("id", 1).single();
   const wallets = await Promise.all(SUPPORTED.map(async (net) => {
@@ -259,6 +355,7 @@ Deno.serve(async (req) => {
   const action = body.action ?? "send";
 
   if (action === "reconcile") return json(await reconcile(db));
+  if (action === "drain") return json(await drain(db));
   if (action === "health") return json({ ok: true, networks: await health() });
 
   // Authentification : clé service (appel interne) ou membre de l'équipe.

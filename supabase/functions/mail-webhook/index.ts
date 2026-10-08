@@ -1,9 +1,5 @@
 // Fonction edge Ooble — webhook e-mails entrants (Resend Inbound).
 //
-// Les avis de virement Interac envoyés à `interac@ooble.ca` sont traités à
-// part (voir interac.ts) : rapprochement avec l'ordre d'achat, puis envoi
-// automatique des USDT.
-//
 // Reçoit les e-mails envoyés à `support@ooble.ca` et à `otc@ooble.ca`
 // (desk gros volumes) et les insère dans la table `mail_messages`,
 // rattachés au bon thread. Le thread est identifié par le plus-addressing
@@ -28,7 +24,6 @@
 //   MAIL_WEBHOOK_SECRET       (optionnel) signature Resend
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { handleInterac, isInteracInbox, isInteracSender } from "./interac.ts";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -181,21 +176,10 @@ Deno.serve(async (req) => {
 
   const senderEmail = extractEmail(fromRaw);
 
-  // ── Avis de virement Interac → rapprochement automatique ──
-  if (isInteracInbox(toAddresses.map(extractEmail)) && isInteracSender(senderEmail)) {
-    let headers = toHeaderMap(data.headers);
-    if (resendId && resendApiKey && !Object.keys(headers).some((k) => k.includes("authentication-results"))) {
-      const full = await fetchResendEmail(resendId, resendApiKey);
-      if (full) {
-        headers = { ...headers, ...full.headers };
-        bodyText = bodyText || full.text;
-        bodyHtml = bodyHtml || full.html;
-      }
-    }
-    const db = createClient(supabaseUrl, serviceKey);
-    const r = await handleInterac(db, { resendId, fromEmail: senderEmail, subject, text: bodyText, html: bodyHtml, headers }, supabaseUrl, serviceKey);
-    return json({ ok: true, interac: r });
-  }
+  // Les avis Interac n'entrent jamais par ici : interac@ooble.ca passe par
+  // un Email Worker Cloudflare et la fonction `interac-ingest` (requête
+  // signée, DKIM vérifié). Ce webhook n'est pas authentifié : un « avis »
+  // reçu ici serait traité comme un courriel ordinaire, sans effet sur un ordre.
   const senderName = extractName(fromRaw)
     || fromNameFromObj
     || ((data.from_name as string) ?? "");

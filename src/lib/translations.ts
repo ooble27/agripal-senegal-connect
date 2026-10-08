@@ -459,8 +459,8 @@ const dict = {
   "buy.exactAmount": { fr: "Montant exact", en: "Exact amount" },
   "buy.reference": { fr: "Message / référence", en: "Message / reference" },
   "buy.autoNote": {
-    fr: "Écrivez la référence dans le message du virement et payez depuis un compte bancaire à votre nom, au montant exact : vos USDT partent alors automatiquement.",
-    en: "Put the reference in the transfer message and pay from a bank account in your name, for the exact amount: your USDT are then sent automatically.",
+    fr: "Écrivez la référence dans le message du virement et payez depuis un compte bancaire à votre nom, au montant exact : votre paiement est alors reconnu dès sa réception.",
+    en: "Put the reference in the transfer message and pay from a bank account in your name, for the exact amount: your payment is then recognised as soon as it arrives.",
   },
   "buy.newOrder": { fr: "Nouvel ordre", en: "New order" },
   "buy.done": { fr: "Terminé", en: "Done" },

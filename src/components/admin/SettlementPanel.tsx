@@ -11,10 +11,10 @@ import { SubTabs } from "./AdminBits";
 import AdminHero from "./AdminHero";
 
 /*
- * Règlement automatique : portefeuille chaud (soldes par réseau), réglages
- * de l'envoi automatique, avis Interac lus sur interac@ooble.ca et envois
- * d'USDT. Les envois eux-mêmes partent de la fiche d'un ordre (bouton
- * « Envoyer les USDT ») ou seuls, quand un avis Interac est rapproché.
+ * Règlement des achats : portefeuille d'envoi (soldes par réseau), plafond,
+ * avis Interac lus sur interac@ooble.ca et envois d'USDT. Règle : le système
+ * prépare et vérifie, l'humain déclenche — chaque envoi part d'un clic sur
+ * « Envoyer les USDT », dans la fiche de l'ordre.
  */
 
 const dateFmt = new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -83,12 +83,7 @@ const SettlementPanel = () => {
   const save = async () => {
     if (!draft) return;
     setSaving(true);
-    const res = await updateSettings({
-      auto_payout: draft.auto_payout,
-      auto_payout_max_cad: Number(draft.auto_payout_max_cad),
-      daily_payout_max_usdt: Number(draft.daily_payout_max_usdt),
-      require_email_auth: draft.require_email_auth,
-    });
+    const res = await updateSettings({ daily_payout_max_usdt: Number(draft.daily_payout_max_usdt) });
     setSaving(false);
     if (res.error) setErr(res.error); else void load();
   };
@@ -108,7 +103,7 @@ const SettlementPanel = () => {
           value={nf(total)}
           unit="USDT"
           stats={[
-            { label: "Envoi auto", value: settings?.auto_payout ? "Activé" : "Désactivé", hint: settings ? `≤ ${nf(settings.auto_payout_max_cad, 0)} $` : undefined },
+            { label: "Envoi", value: "Sur clic de l'équipe" },
             { label: "Réseaux prêts", value: `${configured.filter((w) => !w.error).length} / ${(wallets ?? []).length || 5}` },
             { label: "À vérifier", value: toReview },
           ]}
@@ -171,29 +166,16 @@ const SettlementPanel = () => {
 
           {draft && (
             <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
-              <p className="text-[14px] font-medium">Envoi automatique</p>
-              <label className="flex items-start gap-3 text-[13px]">
-                <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[hsl(var(--foreground))]" disabled={!isAdmin} checked={draft.auto_payout} onChange={(e) => setDraft({ ...draft, auto_payout: e.target.checked })} />
-                <span>Envoyer les USDT dès qu'un virement Interac est rapproché d'un achat.</span>
+              <p className="text-[14px] font-medium">Règles d'envoi</p>
+              <ul className="space-y-2 text-[13px] leading-relaxed text-muted-foreground">
+                <li>Un avis Interac authentique (signature d'Interac vérifiée) dont la référence, le montant et le nom concordent fait passer l'achat à « paiement reçu ».</li>
+                <li>Aucun envoi ne part seul : un membre de l'équipe clique « Envoyer les USDT » dans la fiche de l'ordre, après avoir vérifié le dépôt dans le compte bancaire.</li>
+                <li>Un seul envoi par ordre ; soldes, adresse et plafond sont contrôlés avant chaque envoi.</li>
+              </ul>
+              <label className="block text-[12px] font-medium">
+                Plafond des envois sur 24 h (USDT)
+                <input className={cn(inputCn, "mt-1.5")} type="number" min={0} disabled={!isAdmin} value={draft.daily_payout_max_usdt} onChange={(e) => setDraft({ ...draft, daily_payout_max_usdt: Number(e.target.value) })} />
               </label>
-              <label className="flex items-start gap-3 text-[13px]">
-                <input type="checkbox" className="mt-0.5 h-4 w-4 accent-[hsl(var(--foreground))]" disabled={!isAdmin} checked={draft.require_email_auth} onChange={(e) => setDraft({ ...draft, require_email_auth: e.target.checked })} />
-                <span>Seulement si l'avis Interac est authentifié (signature DKIM d'interac.ca). Sinon, l'envoi attend un clic.</span>
-              </label>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block text-[12px] font-medium">
-                  Seuil automatique (CAD)
-                  <input className={cn(inputCn, "mt-1.5")} type="number" min={0} disabled={!isAdmin} value={draft.auto_payout_max_cad} onChange={(e) => setDraft({ ...draft, auto_payout_max_cad: Number(e.target.value) })} />
-                </label>
-                <label className="block text-[12px] font-medium">
-                  Plafond sur 24 h (USDT)
-                  <input className={cn(inputCn, "mt-1.5")} type="number" min={0} disabled={!isAdmin} value={draft.daily_payout_max_usdt} onChange={(e) => setDraft({ ...draft, daily_payout_max_usdt: Number(e.target.value) })} />
-                </label>
-              </div>
-              <p className="text-[12px] leading-relaxed text-muted-foreground">
-                Au-dessus du seuil, l'ordre passe à « paiement reçu » et l'envoi se lance depuis sa fiche.
-                Le plafond s'applique à tous les envois, automatiques ou non.
-              </p>
               {isAdmin ? (
                 <Button variant="appSolid" shape="rounded" className="h-auto px-4 py-2.5 text-[13px]" disabled={!dirty || saving} onClick={save}>
                   {saving ? "Enregistrement…" : "Enregistrer"}

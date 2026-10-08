@@ -1,18 +1,19 @@
 // Avis de virement Interac reçus sur interac@ooble.ca (dépôt automatique).
 //
-// Chaque avis est enregistré dans `interac_receipts`. Il est rapproché d'un
-// ordre d'achat si les trois conditions sont réunies :
+// Chaque avis est enregistré dans `interac_receipts`. Un avis dont la
+// signature DKIM d'Interac n'est pas valide ne touche à aucun ordre. Un avis
+// authentique est rapproché d'un ordre d'achat si les trois conditions sont
+// réunies :
 //   • la référence OOB-XXXXXXXX de l'ordre figure dans le message ;
 //   • le montant reçu est exactement celui de l'ordre ;
 //   • le nom de l'expéditeur correspond au client (ou à son entreprise).
-// L'ordre passe alors à « paiement reçu », le client est prévenu, et l'envoi
-// des USDT est demandé à `usdt-payout` si les réglages le permettent. Dans
+// L'ordre passe alors à « paiement reçu » et le client est prévenu. L'envoi
+// des USDT reste déclenché par l'équipe, depuis la fiche de l'ordre. Dans
 // tous les autres cas, rien ne bouge : l'avis attend l'équipe dans l'admin.
 
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 export const isInteracSender = (email: string) => /@(?:[a-z0-9-]+\.)*interac\.ca$/i.test(email);
-export const isInteracInbox = (addrs: string[]) => addrs.some((a) => /^interac(\+[^@]*)?@ooble\.ca$/i.test(a));
 
 const stripHtml = (h: string) =>
   h.replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|div|tr|td|li|h\d)>/gi, "\n")
@@ -34,11 +35,22 @@ function parseSender(subject: string, text: string): string {
   return (re.exec(subject)?.[1] ?? re.exec(text)?.[1] ?? "").replace(/^(?:Virement|INTERAC)[^:]*:\s*/i, "").trim();
 }
 
+// Mots sans valeur pour comparer des noms : formes juridiques, articles,
+// civilités et liaisons des comptes conjoints (« X ET Y », « X AND Y »).
+const STOP = new Set([
+  "INC", "LTD", "LTEE", "CORP", "CO", "SENC", "SEC", "ENR", "THE", "LA", "LE", "LES", "DE", "DU", "DES",
+  "AND", "ET", "OR", "OU", "MR", "MRS", "MS", "MME", "MLLE", "DR",
+]);
 const norm = (s: string) =>
-  s.normalize("NFD").replace(/[̀-ͯ]/g, "").toUpperCase().replace(/[^A-Z0-9]+/g, " ")
-    .split(" ").filter((w) => w.length >= 2 && !["INC", "LTD", "LTEE", "CORP", "CO", "SENC", "THE", "LA", "LE", "DE", "DU", "DES"].includes(w));
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]+/g, " ")
+    .split(" ").filter((w) => w.length >= 2 && !STOP.has(w));
 
-/** Les noms correspondent si au moins deux mots (ou tous, s'il y en a moins) se recoupent. */
+/**
+ * Correspondance approximative : casse, accents, ordre des mots, traits
+ * d'union, civilités et comptes conjoints sont ignorés. Les noms
+ * correspondent si au moins deux mots se recoupent (ou tous, quand l'un des
+ * deux noms n'a qu'un mot).
+ */
 export function namesMatch(a: string, b: string): boolean {
   const A = new Set(norm(a)), B = new Set(norm(b));
   if (!A.size || !B.size) return false;
@@ -46,20 +58,16 @@ export function namesMatch(a: string, b: string): boolean {
   return common >= Math.min(2, A.size, B.size);
 }
 
-/** DKIM / DMARC valides pour un domaine interac.ca, d'après les en-têtes. */
-function authenticated(headers: Record<string, string>): boolean {
-  const h = Object.entries(headers).filter(([k]) => /authentication-results/i.test(k)).map(([, v]) => v).join(" ; ");
-  return /dkim=pass[^;]*header\.[di]=@?(?:[a-z0-9-]+\.)*interac\.ca/i.test(h)
-    || /dmarc=pass[^;]*header\.from=(?:[a-z0-9-]+\.)*interac\.ca/i.test(h);
-}
-
 export interface InteracMail {
-  resendId: string | null;
+  /** Message-ID du courriel (dédoublonnage). */
+  messageId: string | null;
   fromEmail: string;
   subject: string;
   text: string;
   html: string;
-  headers: Record<string, string>;
+  /** Signature DKIM d'interac.ca valide, alignée sur l'expéditeur, sans l=. */
+  authenticated: boolean;
+  authDetail: string;
 }
 
 export async function handleInterac(db: SupabaseClient, m: InteracMail, supabaseUrl: string, serviceKey: string) {
@@ -68,11 +76,11 @@ export async function handleInterac(db: SupabaseClient, m: InteracMail, supabase
   const sender = parseSender(m.subject, text);
   const refs = [...new Set([...`${m.subject}\n${text}`.matchAll(/OOB[\s-]?([0-9A-F]{8})\b/gi)].map((x) => x[1].toLowerCase()))];
   const interacRef = /(?:R[ée]f[ée]rence(?: Number| number)?|Num[ée]ro de r[ée]f[ée]rence|N[o°º]\s*de r[ée]f[ée]rence)\s*:?\s*(?!OOB)([A-Za-z0-9]{6,})/i.exec(text)?.[1] ?? null;
-  const auth = authenticated(m.headers);
-  console.log("interac: montant", amount, "réf.", refs, "auth", auth, "en-têtes", Object.keys(m.headers).join(","));
+  const auth = m.authenticated;
+  console.log("interac: montant", amount, "réf.", refs, "dkim", m.authDetail);
 
   const base = {
-    resend_id: m.resendId, interac_ref: interacRef, from_email: m.fromEmail, sender_name: sender || null,
+    resend_id: m.messageId, interac_ref: interacRef, from_email: m.fromEmail, sender_name: sender || null,
     amount_cad: amount, order_ref: refs[0] ? `OOB-${refs[0].toUpperCase()}` : null, authenticated: auth,
     subject: m.subject, body_text: text.slice(0, 8000),
   };
@@ -83,6 +91,9 @@ export async function handleInterac(db: SupabaseClient, m: InteracMail, supabase
     return status;
   };
 
+  if (!auth || !isInteracSender(m.fromEmail)) {
+    return { status: await save("mismatch", `Avis non authentifié (${m.authDetail}). Aucun ordre modifié : vérifiez le dépôt dans le compte bancaire.`) };
+  }
   if (!/automatically deposited|d[ée]pos[ée]e? automatiquement|d[ée]p[ôo]t automatique|has been deposited|a [ée]t[ée] d[ée]pos[ée]/i.test(text)) {
     return { status: await save("ignored", "Avis sans dépôt automatique (virement à accepter ou autre message Interac).") };
   }
@@ -108,7 +119,7 @@ export async function handleInterac(db: SupabaseClient, m: InteracMail, supabase
   }
 
   // Rapproché : l'avis est enregistré d'abord (un avis = un seul rapprochement).
-  const st = await save("matched", auth ? "Rapproché (avis authentifié)." : "Rapproché (authenticité de l'avis non confirmée).", order.id);
+  const st = await save("matched", "Rapproché : avis authentifié, référence, montant et nom concordent.", order.id);
   if (st === "duplicate") return { status: st };
 
   const { data: moved } = await db.from("orders").update({ status: "payment_received" })
@@ -133,14 +144,7 @@ export async function handleInterac(db: SupabaseClient, m: InteracMail, supabase
     }).catch((e) => console.error("interac: courriel", e));
   }
 
-  // Envoi automatique des USDT, dans les limites des réglages.
-  const { data: s } = await db.from("settlement_settings").select("*").eq("id", 1).maybeSingle();
-  const auto = s?.auto_payout && amount <= Number(s.auto_payout_max_cad) && (auth || !s.require_email_auth);
-  if (auto) {
-    const job = call("usdt-payout", { action: "send", order_id: order.id })
-      .then((r) => r.json()).then((r) => console.log("interac: envoi", r)).catch((e) => console.error("interac: envoi", e));
-    // @ts-ignore EdgeRuntime existe dans l'environnement Supabase
-    if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(job); else await job;
-  }
-  return { status: "matched", orderId: order.id, autoPayout: !!auto };
+  // Aucun envoi d'argent ici : l'équipe déclenche l'envoi des USDT depuis la
+  // fiche de l'ordre (règle d'exploitation : l'humain déclenche).
+  return { status: "matched", orderId: order.id };
 }

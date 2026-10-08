@@ -1,10 +1,13 @@
 // Fonction edge Ooble — envoi automatique des USDT d'un achat.
 //
+// Règle d'exploitation : aucun envoi d'argent ne part sans un humain. Le
+// système prépare et vérifie (paiement rapproché, adresse, soldes, plafond) ;
+// un membre de l'équipe déclenche l'envoi depuis la fiche de l'ordre.
+//
 // Actions (POST JSON) :
-//   { action: "send", order_id }  envoie les USDT d'un achat payé.
-//       • appel interne (clé service_role, depuis mail-webhook) → envoi « auto »,
-//         soumis aux réglages (settlement_settings) ;
-//       • appel d'un membre de l'équipe (admin ou opérateur) → envoi « staff ».
+//   { action: "send", order_id }  envoie les USDT d'un achat payé — réservé à
+//       un membre de l'équipe connecté (admin ou opérateur). Un appel avec la
+//       clé service_role est refusé : aucune automatisation ne peut envoyer.
 //   { action: "status" }          adresses et soldes du portefeuille chaud,
 //                                 réglages (équipe uniquement).
 //   { action: "health" }          diagnostic des réseaux, sans clé ni envoi.
@@ -72,7 +75,7 @@ async function complete(db: SupabaseClient, payoutId: string) {
   const { data: o } = await db.from("orders").update({ status: "completed" })
     .eq("id", p.order_id).eq("status", "settling").select("id, user_id, usdt_amount, network").maybeSingle();
   if (!o) return; // déjà terminé
-  await event(db, o.id, "settling", "completed", `USDT envoyés automatiquement — ${p.tx_hash}`);
+  await event(db, o.id, "settling", "completed", `USDT envoyés — ${p.tx_hash}`);
   const { data: prof } = await db.from("profiles").select("email").eq("id", o.user_id).maybeSingle();
   await email(prof?.email, "order-completed", {
     ref: ref(o.id),
@@ -101,10 +104,7 @@ async function send(db: SupabaseClient, orderId: string, trigger: "auto" | "staf
   if (!hasKey(net)) return { ok: false, error: "Portefeuille chaud non configuré pour ce réseau." };
   const amount = Number(o.usdt_amount);
 
-  if (trigger === "auto") {
-    if (!settings?.auto_payout) return { ok: false, error: "Envoi automatique désactivé." };
-    if (Number(o.cad_amount) > Number(settings.auto_payout_max_cad)) return { ok: false, error: "Montant au-dessus du seuil automatique : clic de l'équipe requis." };
-  }
+  if (trigger !== "staff" || !by) return { ok: false, error: "L'envoi doit être déclenché par un membre de l'équipe." };
 
   // Plafond du portefeuille chaud sur 24 heures.
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
@@ -134,7 +134,7 @@ async function send(db: SupabaseClient, orderId: string, trigger: "auto" | "staf
   // Réservation : l'index unique refuse un second envoi actif pour l'ordre.
   const { data: p, error: insErr } = await db.from("usdt_payouts").insert({
     order_id: o.id, network: net, from_address: from, to_address: o.wallet_address,
-    usdt_amount: amount, status: "sending", trigger, requested_by: by,
+    usdt_amount: amount, status: "sending", trigger: "staff", requested_by: by,
   }).select("id").single();
   if (insErr || !p) return { ok: false, error: "Un envoi existe déjà pour cet ordre." };
 
@@ -144,7 +144,7 @@ async function send(db: SupabaseClient, orderId: string, trigger: "auto" | "staf
     await db.from("usdt_payouts").update({ status: "failed", error: "Statut de l'ordre modifié entre-temps." }).eq("id", p.id);
     return { ok: false, error: "Le statut de l'ordre a changé entre-temps." };
   }
-  await event(db, o.id, "payment_received", "settling", trigger === "auto" ? "Envoi automatique des USDT" : "Envoi des USDT lancé par l'équipe");
+  await event(db, o.id, "payment_received", "settling", "Envoi des USDT lancé par l'équipe");
 
   const undo = async (msg: string) => {
     await db.from("usdt_payouts").update({ status: "failed", error: msg, updated_at: new Date().toISOString() }).eq("id", p.id);
@@ -245,6 +245,7 @@ Deno.serve(async (req) => {
 
   if (action === "status") return json(await status(db));
   if (action === "send") {
+    if (trigger !== "staff") return json({ ok: false, error: "L'envoi doit être déclenché par un membre de l'équipe." }, 403);
     if (!body.order_id) return json({ error: "order_id manquant." }, 400);
     const r = await send(db, body.order_id, trigger, by);
     return json(r);

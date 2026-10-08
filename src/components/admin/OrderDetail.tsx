@@ -151,11 +151,11 @@ const PayoutBox = ({ order }: { order: AdminOrder }) => {
     <div className="rounded-2xl border border-border bg-card px-5 py-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[13px] font-medium">Envoi automatique des USDT</p>
+          <p className="text-[13px] font-medium">Envoi des USDT</p>
           {last ? (
             <p className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-muted-foreground">
               <Pill m={PAYOUT[last.status]} />
-              {last.trigger === "auto" ? "Lancé automatiquement" : "Lancé par l'équipe"}
+              Lancé par l'équipe
               {last.tx_hash && txUrl(last.network, last.tx_hash) && (
                 <a href={txUrl(last.network, last.tx_hash)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-foreground underline-offset-4 hover:underline">
                   Voir la transaction <ExternalLink className="h-3 w-3" />
@@ -163,7 +163,7 @@ const PayoutBox = ({ order }: { order: AdminOrder }) => {
               )}
             </p>
           ) : (
-            <p className="mt-1 text-[12px] text-muted-foreground">{nfUsdt.format(order.usdt)} USDT vers l'adresse du client, depuis le portefeuille chaud.</p>
+            <p className="mt-1 text-[12px] text-muted-foreground">{nfUsdt.format(order.usdt)} USDT vers l'adresse du client, depuis le portefeuille d'envoi. Vérifiez d'abord le dépôt dans le compte bancaire.</p>
           )}
           {last?.error && <p className="mt-1 text-[12px] text-muted-foreground">{last.error}</p>}
         </div>

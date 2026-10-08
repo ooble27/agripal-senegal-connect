@@ -10,8 +10,6 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { SEED_ALERTS, autoFlagOrders } from "@/lib/compliance";
-import type { AdminOrder } from "@/lib/adminOrders";
 
 type DbStatus = Database["public"]["Enums"]["order_status"];
 type DbSide = Database["public"]["Enums"]["order_side"];
@@ -259,7 +257,7 @@ export async function getCustomerFunnel(): Promise<CustomerFunnel> {
 }
 
 // ────────────────────────────────────────────────────────────
-// Alertes conformité ouvertes (SEED + auto-flag sur ordres réels)
+// Alertes conformité ouvertes (table compliance_alerts)
 // ────────────────────────────────────────────────────────────
 
 export interface ComplianceAlertsCount {
@@ -267,16 +265,19 @@ export interface ComplianceAlertsCount {
   critical: number;
 }
 
-export function getComplianceAlertsCount(orders: AdminOrder[]): ComplianceAlertsCount {
-  const auto = autoFlagOrders(orders);
-  const existingRefs = new Set(SEED_ALERTS.map((a) => a.orderRef).filter(Boolean));
-  const combined = [
-    ...SEED_ALERTS,
-    ...auto.filter((a) => a.orderRef && !existingRefs.has(a.orderRef)),
-  ];
-  const openList = combined.filter((a) => a.status === "nouveau" || a.status === "en_cours");
-  const critical = openList.filter((a) => a.type === "dot" || a.type === "sanctions").length;
-  return { open: openList.length, critical };
+export async function getComplianceAlertsCount(): Promise<ComplianceAlertsCount> {
+  // Table récente, absente des types générés.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as unknown as { from: (t: string) => any };
+  const { data } = await db
+    .from("compliance_alerts")
+    .select("type")
+    .in("status", ["nouveau", "en_cours"]);
+  const rows = (data ?? []) as { type: string }[];
+  return {
+    open: rows.length,
+    critical: rows.filter((a) => a.type === "dot" || a.type === "sanctions").length,
+  };
 }
 
 // ────────────────────────────────────────────────────────────

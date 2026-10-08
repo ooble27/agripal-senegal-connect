@@ -8,7 +8,7 @@
  * s'alignent via `tabular-nums` sans changer de famille. Aucun accent coloré
  * (vert/rouge/orange) : les tendances sont de simples flèches monochromes.
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   TrendingUp, TrendingDown, Send,
   Users2, ShieldCheck, ClipboardList,
@@ -157,7 +157,7 @@ function PeriodSwitcher({ value, onChange }: { value: Period; onChange: (v: Peri
 // Composant principal
 // ────────────────────────────────────────────────────────────
 
-const KpiDashboard = ({ orders, onNavigate }: KpiDashboardProps) => {
+const KpiDashboard = ({ onNavigate }: KpiDashboardProps) => {
   const [period, setPeriod] = useState<Period>(7);
   const [loading, setLoading] = useState(true);
   const [volume, setVolume] = useState<VolumeMetrics | null>(null);
@@ -166,25 +166,24 @@ const KpiDashboard = ({ orders, onNavigate }: KpiDashboardProps) => {
   const [pending, setPending] = useState(0);
   const [funnel, setFunnel] = useState<CustomerFunnel | null>(null);
 
-  const complianceCount: ComplianceAlertsCount = useMemo(
-    () => getComplianceAlertsCount(orders),
-    [orders],
-  );
+  const [complianceCount, setComplianceCount] = useState<ComplianceAlertsCount>({ open: 0, critical: 0 });
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [v, m, s, p, f] = await Promise.all([
+    const [v, m, s, p, f, c] = await Promise.all([
       getVolumeMetrics({ periodDays: period }),
       getMarginMetrics({ periodDays: period }),
       getOrderStatusCounts(),
       getPendingActionsCount(),
       getCustomerFunnel(),
+      getComplianceAlertsCount(),
     ]);
     setVolume(v);
     setMargin(m);
     setStatuses(s);
     setPending(p);
     setFunnel(f);
+    setComplianceCount(c);
     setLoading(false);
   }, [period]);
 

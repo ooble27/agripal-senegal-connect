@@ -117,7 +117,7 @@ export async function sendRefundEmail(input: {
   ref: string;
   amount: string;
 }): Promise<SendResult> {
-  const subject = `Remboursement de votre commande ${input.ref} — Ooble`;
+  const subject = `Remboursement de votre commande ${input.ref} · Ooble`;
   const html = `
     <h2 style="margin:0 0 16px;font-size:20px;font-weight:600;">Remboursement confirmé</h2>
     <p style="margin:0 0 12px;font-size:15px;line-height:1.6;">Bonjour ${escHtml(input.clientName)},</p>

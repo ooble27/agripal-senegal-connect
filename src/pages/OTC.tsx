@@ -39,7 +39,7 @@ const STEPS: { t: Bi; d: Bi }[] = [
   { t: { fr: "Vous écrivez au desk", en: "You write to the desk" }, d: { fr: "Achat ou vente, montant, réseau. Un membre de l'équipe vous répond personnellement.", en: "Buy or sell, amount, network. A team member replies to you personally." } },
   { t: { fr: "Nous vérifions le dossier", en: "We review your file" }, d: { fr: "Identité ou entreprise, et origine des fonds. Compte déjà vérifié : il ne reste en général qu'un justificatif.", en: "Identity or business, and source of funds. Already verified: usually only one document is left." } },
   { t: { fr: "Vous recevez un prix ferme", en: "You get a firm price" }, d: { fr: "Garanti pendant la durée indiquée dans la cotation. Vous l'acceptez, ou non.", en: "Guaranteed for the time stated in the quote. Accept it, or not." } },
-  { t: { fr: "Règlement", en: "Settlement" }, d: { fr: "Par virement bancaire, puis envoi des USDT à votre adresse — ou des dollars sur votre compte.", en: "By bank transfer, then the USDT go to your address — or the dollars to your account." } },
+  { t: { fr: "Règlement", en: "Settlement" }, d: { fr: "Par virement bancaire, puis envoi des USDT à votre adresse, ou des dollars sur votre compte.", en: "By bank transfer, then the USDT go to your address, or the dollars to your account." } },
   { t: { fr: "Reçu", en: "Receipt" }, d: { fr: "Montants, taux et transaction sur la blockchain, par courriel.", en: "Amounts, rate and blockchain transaction, by email." } },
 ];
 
@@ -155,12 +155,12 @@ const OTC = () => {
                 {fr ? (
                   <>
                     Un <B>prix ferme</B>, garanti pendant la durée indiquée. <B>Un seul interlocuteur</B>, de la demande jusqu'au reçu.
-                    Et <B>le montant entier</B>, en une seule fois — plus besoin de le découper sur plusieurs jours.
+                    Et <B>le montant entier</B>, en une seule fois, sans avoir à le découper sur plusieurs jours.
                   </>
                 ) : (
                   <>
                     A <B>firm price</B>, guaranteed for the time stated. <B>One contact</B>, from request to receipt.
-                    And <B>the full amount</B>, in one go — no need to split it over several days.
+                    And <B>the full amount</B>, in one go, no need to split it over several days.
                   </>
                 )}
               </p>
@@ -250,7 +250,7 @@ const OTC = () => {
                     <Icon className="h-6 w-6 shrink-0 text-foreground/70" strokeWidth={1.5} />
                     <p className="min-w-0 text-[15px] leading-[1.5]">
                       <span className="font-medium">{L(t)}</span>
-                      <span className="text-muted-foreground"> — {L(d)}</span>
+                      <span className="text-muted-foreground"> · {L(d)}</span>
                     </p>
                   </Reveal>
                 ))}

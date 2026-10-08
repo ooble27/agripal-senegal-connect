@@ -3,19 +3,21 @@ import ThemeToggle from "@/components/app/ThemeToggle";
 import { LangPill } from "@/components/app/LangToggle";
 import { HELP_COLORS } from "@/lib/faq";
 import { useLang } from "@/lib/i18n";
+import AuthArt from "./AuthArt";
 
 /* Cadre des pages de connexion et d'inscription : le formulaire à gauche, un
    panneau de couleur à droite (ordinateur seulement). Le panneau est fixe et
-   tient toujours dans la hauteur de l'écran : une grande phrase, puis les
+   tient toujours dans la hauteur de l'écran : une illustration propre à la
+   page (porte, personne, immeuble, cadenas), une grande phrase, puis les
    trois étapes qui comptent pour la page, sans animation. */
 
-type Variant = "login" | "signup" | "business" | "reset";
+type Variant = "login" | "signup" | "individual" | "business" | "reset";
 type Bi = { fr: string; en: string };
 
 const C = HELP_COLORS;
 const INK = "#14110f";
 
-const PANELS: Record<Variant, { bg: string; ink: string; accent: string; a: Bi; b: Bi; steps: [Bi, Bi][] }> = {
+const PANELS: Record<Exclude<Variant, "individual">, { bg: string; ink: string; accent: string; a: Bi; b: Bi; steps: [Bi, Bi][] }> = {
   login: {
     bg: C.forest, ink: C.cream, accent: C.sun,
     a: { fr: "Bon retour.", en: "Welcome back." },
@@ -60,7 +62,7 @@ const PANELS: Record<Variant, { bg: string; ink: string; accent: string; a: Bi; 
 
 const AuthShell = ({ variant, children }: { variant: Variant; children: React.ReactNode }) => {
   const [lang] = useLang();
-  const P = PANELS[variant];
+  const P = PANELS[variant === "individual" ? "signup" : variant];
 
   return (
     <div className="ink-neutral app-type grid min-h-screen bg-background tracking-[-0.015em] lg:grid-cols-[1fr_minmax(0,0.9fr)]">
@@ -83,10 +85,7 @@ const AuthShell = ({ variant, children }: { variant: Variant; children: React.Re
         style={{ background: P.bg, color: P.ink }}
         aria-hidden
       >
-        <span
-          className="absolute -right-[16vh] -top-[16vh] h-[52vh] w-[52vh] rounded-full"
-          style={{ background: P.accent }}
-        />
+        <AuthArt kind={variant} className="absolute right-[7%] top-[5vh] h-[34vh] w-[34vh]" />
 
         <div className="relative flex h-full flex-col justify-between px-12 py-[6vh] xl:px-16">
           <p className="text-[12px] uppercase tracking-[0.18em] opacity-70">Ooble · USDT ⇄ CAD</p>

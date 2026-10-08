@@ -170,8 +170,8 @@ function MaintenanceOverlay({ window: mw }: { window: MaintenanceWindow }) {
         )}
         <p className="mt-6 text-[11.5px] text-muted-foreground">
           {lang === "en"
-            ? "Thanks for your patience — Ooble team."
-            : "Merci de votre patience — l'équipe Ooble."}
+            ? "Thanks for your patience. The Ooble team"
+            : "Merci de votre patience. L'équipe Ooble"}
         </p>
       </div>
     </div>

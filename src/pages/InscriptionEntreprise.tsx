@@ -245,7 +245,7 @@ if (message === "disposable_email") return t("reg.errDisposable");
             )}
 
             <div className="mt-5 flex justify-end">
-              <Button type="submit" variant="appSolid" shape="rounded" size="default" className="w-full rounded-md px-6">
+              <Button type="submit" variant="appSolid" shape="rounded" size="default" className="h-10 rounded-md px-5">
                 {t("regb.continue")} <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
@@ -315,7 +315,7 @@ if (message === "disposable_email") return t("reg.errDisposable");
             )}
 
             <div className="mt-5 flex justify-end">
-              <Button type="submit" variant="appSolid" shape="rounded" size="default" className="w-full rounded-md px-6" disabled={busy || (captchaEnabled() && !captcha)}>
+              <Button type="submit" variant="appSolid" shape="rounded" size="default" className="h-10 rounded-md px-5" disabled={busy || (captchaEnabled() && !captcha)}>
                 {busy ? t("misc.wait") : captchaEnabled() && !captcha ? t("auth.captchaWait") : t("regi.createAccount")}
                 {!busy && <ArrowRight className="h-4 w-4" />}
               </Button>

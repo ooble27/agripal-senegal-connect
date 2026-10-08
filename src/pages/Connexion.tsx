@@ -362,7 +362,7 @@ const Connexion = () => {
             )}
 
             <div className="mt-5 flex justify-end">
-              <Button type="submit" variant="appSolid" shape="rounded" size="default" className="w-full rounded-md px-6" disabled={busy || captchaBlocks}>
+              <Button type="submit" variant="appSolid" shape="rounded" size="default" className="h-10 rounded-md px-5" disabled={busy || captchaBlocks}>
                 {busy
                   ? t("misc.wait")
                   : isForgot

@@ -8,8 +8,8 @@ import { RATE_LOCK_MINUTES, formatCad, formatUsdt } from "@/lib/rates";
 import type { OrderSide, UsdtNetwork } from "@/lib/types";
 
 const networks: { id: UsdtNetwork; label: string; hint: { fr: string; en: string } }[] = [
-  { id: "trc20", label: "TRC20", hint: { fr: "Tron — frais très bas", en: "Tron — very low fees" } },
-  { id: "erc20", label: "ERC20", hint: { fr: "Ethereum — compatible partout", en: "Ethereum — compatible everywhere" } },
+  { id: "trc20", label: "TRC20", hint: { fr: "Tron, frais très bas", en: "Tron, very low fees" } },
+  { id: "erc20", label: "ERC20", hint: { fr: "Ethereum, compatible partout", en: "Ethereum, compatible everywhere" } },
 ];
 
 interface OrderFormProps {
@@ -153,8 +153,8 @@ const OrderForm = ({ side }: OrderFormProps) => {
         <div className="mt-4 flex items-start gap-2.5 rounded-2xl border border-primary/30 bg-accent-tint p-4 text-sm leading-relaxed text-accent-ink">
           <Sparkles className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.9} />
           <span>
-            <T en="Order creation will open very soon. You'll need a verified account (KYC) — authentication is the next step.">La création d'ordres ouvrira très bientôt. Il faudra un compte
-            vérifié (KYC) — l'authentification est la prochaine étape.</T>
+            <T en="Order creation will open very soon. You'll need a verified account (KYC). Authentication is the next step.">La création d'ordres ouvrira très bientôt. Il faudra un compte
+            vérifié (KYC). L'authentification est la prochaine étape.</T>
           </span>
         </div>
       )}

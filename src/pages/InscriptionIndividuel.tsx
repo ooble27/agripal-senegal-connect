@@ -85,7 +85,7 @@ if (message === "disposable_email") return t("reg.errDisposable");
   };
 
   return (
-    <AuthShell variant="signup">
+    <AuthShell variant="individual">
       <Link
         to="/inscription"
         className="mb-6 inline-flex items-center gap-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
@@ -166,7 +166,7 @@ if (message === "disposable_email") return t("reg.errDisposable");
           )}
 
           <div className="mt-5 flex justify-end">
-            <Button type="submit" variant="appSolid" shape="rounded" size="default" className="w-full rounded-md px-6" disabled={busy || (captchaEnabled() && !captcha)}>
+            <Button type="submit" variant="appSolid" shape="rounded" size="default" className="h-10 rounded-md px-5" disabled={busy || (captchaEnabled() && !captcha)}>
               {busy ? t("misc.wait") : captchaEnabled() && !captcha ? t("auth.captchaWait") : t("regi.createAccount")}
               {!busy && <ArrowRight className="h-4 w-4" />}
             </Button>

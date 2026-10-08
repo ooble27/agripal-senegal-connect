@@ -67,7 +67,7 @@ const Footer = () => {
 
         <div className="flex flex-col gap-4 py-8 sm:flex-row sm:items-start sm:justify-between">
           <p className="shrink-0 text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Ooble — Canada
+            © {new Date().getFullYear()} Ooble · Canada
           </p>
           <p className="max-w-xl text-xs leading-relaxed text-muted-foreground">
             {t("footer.risk")}

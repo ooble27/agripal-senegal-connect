@@ -133,7 +133,7 @@ const Reinitialiser = () => {
               )}
 
               <div className="flex justify-end pt-1">
-                <Button type="submit" variant="appSolid" shape="rounded" size="default" className="w-full rounded-md px-6" disabled={busy}>
+                <Button type="submit" variant="appSolid" shape="rounded" size="default" className="h-10 rounded-md px-5" disabled={busy}>
                   {busy ? t("misc.wait") : <T en="Save">Enregistrer</T>}
                   {!busy && <ArrowRight className="h-4 w-4" />}
                 </Button>

@@ -5,7 +5,6 @@ import {
   ShieldCheck, SunMoon,
 } from "lucide-react";
 import BusinessMark from "@/components/app/BusinessMark";
-import { HELP_COLORS as C } from "@/lib/faq";
 import { useLang, useT } from "@/lib/i18n";
 import { getTheme, onThemeChange, setTheme, type Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -14,7 +13,8 @@ import type { KycDbStatus } from "@/lib/kyc";
 import type { MyProfile } from "@/lib/profile";
 import type { TKey } from "@/lib/translations";
 
-/* Mon compte sur téléphone.
+/* Mon compte sur téléphone. Palette de l'application uniquement (noir,
+   blanc, gris) : les couleurs de la marque restent aux pages publiques.
    En haut l'identité (monogramme, nom, statut) ; si la vérification est à
    faire, un bandeau d'action ; puis la carte Interac, façon carte de
    portefeuille (un toucher copie la réponse) ; deux tuiles chiffrées
@@ -29,18 +29,23 @@ const STATUS_KEY: Record<KycDbStatus, TKey> = {
 };
 const STATUS_TONE: Record<KycDbStatus, string> = {
   not_started: "bg-secondary text-muted-foreground",
-  pending: "bg-[#ffc94d]/20 text-foreground",
-  approved: "bg-[#7cc4a6]/20 text-foreground",
+  pending: "bg-secondary text-foreground",
+  approved: "bg-foreground text-background",
   rejected: "bg-destructive/10 text-destructive",
 };
 
 const initialsOf = (n: string) =>
   n.trim().split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("") || "?";
 
-/** Pastille d'icône colorée (repère visuel de chaque réglage). */
-const Chip = ({ icon: Icon, bg, fg = "#14110f" }: { icon: React.ElementType; bg: string; fg?: string }) => (
-  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px]" style={{ background: bg, color: fg }}>
-    <Icon className="h-[17px] w-[17px]" strokeWidth={2} />
+/** Pastille d'icône (repère visuel de chaque réglage). */
+const Chip = ({ icon: Icon, strong }: { icon: React.ElementType; strong?: boolean }) => (
+  <span
+    className={cn(
+      "flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px]",
+      strong ? "bg-foreground text-background" : "bg-secondary text-foreground/75",
+    )}
+  >
+    <Icon className="h-[17px] w-[17px]" strokeWidth={1.9} />
   </span>
 );
 
@@ -115,10 +120,10 @@ const MobileAccount = ({ profile, kyc, name, email, isStaff, otc, onLogout }: Pr
   const pendingStatus: KycDbStatus | null = business ? bizStatus ?? null : kyc;
   const showBanner = !!pendingStatus && pendingStatus !== "approved" && (VERIFICATION_ENABLED || pendingStatus !== "not_started");
   const banner = pendingStatus === "pending"
-    ? { title: business ? t("kyb.stPending") : t("acct.verifyPendingTitle"), sub: business ? t("kyb.gatePending") : t("acct.verifyPendingSub"), cta: t("acct.verifyOpen"), bg: C.sun, fg: "#14110f" }
+    ? { title: business ? t("kyb.stPending") : t("acct.verifyPendingTitle"), sub: business ? t("kyb.gatePending") : t("acct.verifyPendingSub"), cta: t("acct.verifyOpen") }
     : pendingStatus === "rejected"
-      ? { title: t("acct.verifyRejectedTitle"), sub: t("acct.verifyRejectedSub"), cta: t("acct.verifyOpen"), bg: C.peach, fg: "#14110f" }
-      : { title: business ? t("kyb.gateTitle") : t("acct.verifyTitle"), sub: business ? t("kyb.gateSub") : t("acct.verifySub"), cta: t("acct.verifyCta"), bg: C.forest, fg: C.cream };
+      ? { title: t("acct.verifyRejectedTitle"), sub: t("acct.verifyRejectedSub"), cta: t("acct.verifyOpen") }
+      : { title: business ? t("kyb.gateTitle") : t("acct.verifyTitle"), sub: business ? t("kyb.gateSub") : t("acct.verifySub"), cta: t("acct.verifyCta") };
 
   const copyAnswer = async () => {
     if (!profile?.interacAnswer) return;
@@ -140,10 +145,7 @@ const MobileAccount = ({ profile, kyc, name, email, isStaff, otc, onLogout }: Pr
         {business ? (
           <BusinessMark name={profile?.businessName} size="lg" className="h-[68px] w-[68px] shrink-0 rounded-[22px] text-[22px]" />
         ) : (
-          <span
-            className="flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-[22px] font-display text-[24px] font-semibold tracking-tight"
-            style={{ background: C.forest, color: C.cream }}
-          >
+          <span className="flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-[22px] bg-foreground font-display text-[24px] font-semibold tracking-tight text-background">
             {initialsOf(name || email)}
           </span>
         )}
@@ -155,8 +157,8 @@ const MobileAccount = ({ profile, kyc, name, email, isStaff, otc, onLogout }: Pr
               {business ? t("kyb.accountBusiness") : t("acct.personal")}
             </span>
             {verified && (
-              <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-[3px] text-[11.5px] font-medium" style={{ background: `${C.sage}33` }}>
-                <BadgeCheck className="h-3.5 w-3.5" style={{ color: C.forest }} strokeWidth={2.2} /> {t("acct.verified")}
+              <span className="inline-flex items-center gap-1 rounded-full bg-foreground px-2.5 py-[3px] text-[11.5px] font-medium text-background">
+                <BadgeCheck className="h-3.5 w-3.5" strokeWidth={2.2} /> {t("acct.verified")}
               </span>
             )}
           </div>
@@ -167,17 +169,13 @@ const MobileAccount = ({ profile, kyc, name, email, isStaff, otc, onLogout }: Pr
       {showBanner && (
         <Link
           to={business ? "/app/entreprise" : "/app/verification"}
-          className="relative mt-6 block overflow-hidden rounded-[22px] p-5 transition-transform active:scale-[0.99]"
-          style={{ background: banner.bg, color: banner.fg }}
+          className="relative mt-6 block overflow-hidden rounded-[22px] border border-border bg-card p-5 transition-transform active:scale-[0.99]"
         >
-          <span aria-hidden className="absolute -right-8 -top-10 h-32 w-32 rounded-full opacity-[0.14]" style={{ background: banner.fg }} />
+          <span aria-hidden className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-foreground/[0.05]" />
           <ShieldCheck className="relative h-6 w-6" strokeWidth={1.8} />
           <p className="relative mt-3 font-display text-[19px] font-semibold leading-snug tracking-tight">{banner.title}</p>
-          <p className="relative mt-1 max-w-[290px] text-[13.5px] leading-relaxed opacity-80">{banner.sub}</p>
-          <span
-            className="relative mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-semibold"
-            style={{ background: banner.fg, color: banner.bg }}
-          >
+          <p className="relative mt-1 max-w-[290px] text-[13.5px] leading-relaxed text-muted-foreground">{banner.sub}</p>
+          <span className="relative mt-4 inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[13px] font-semibold text-background">
             {banner.cta} <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
           </span>
         </Link>
@@ -188,12 +186,12 @@ const MobileAccount = ({ profile, kyc, name, email, isStaff, otc, onLogout }: Pr
         <button
           type="button"
           onClick={copyAnswer}
-          className="relative mt-6 block w-full overflow-hidden rounded-[22px] p-5 text-left shadow-[0_18px_40px_-22px_rgba(15,92,69,0.8)] transition-transform active:scale-[0.99]"
-          style={{ background: `linear-gradient(140deg, ${C.forest} 0%, #0a4232 100%)`, color: C.cream }}
+          className="relative mt-6 block w-full overflow-hidden rounded-[22px] border border-white/[0.08] p-5 text-left text-white shadow-[0_18px_40px_-22px_rgba(0,0,0,0.7)] transition-transform active:scale-[0.99]"
+          style={{ background: "linear-gradient(140deg, #2a2a2c 0%, #0b0b0c 100%)" }}
           aria-label={`${t("acct.answer")} ${profile.interacAnswer}. ${t("acct.tapCopy")}`}
         >
-          <span aria-hidden className="absolute -right-12 -top-16 h-44 w-44 rounded-full" style={{ background: C.sage, opacity: 0.16 }} />
-          <span aria-hidden className="absolute -bottom-20 right-10 h-40 w-40 rounded-full" style={{ background: C.mint, opacity: 0.08 }} />
+          <span aria-hidden className="absolute -right-12 -top-16 h-44 w-44 rounded-full bg-white/[0.06]" />
+          <span aria-hidden className="absolute -bottom-20 right-10 h-40 w-40 rounded-full bg-white/[0.03]" />
           <span className="relative flex items-center justify-between">
             <span className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-75">Interac e-Transfer</span>
             <span className="text-[11px] font-medium uppercase tracking-[0.14em] opacity-60">Ooble</span>
@@ -202,13 +200,15 @@ const MobileAccount = ({ profile, kyc, name, email, isStaff, otc, onLogout }: Pr
           <span className="relative mt-1 flex items-end justify-between gap-3">
             <span className="font-mono text-[30px] font-semibold leading-none tracking-[0.12em]">{profile.interacAnswer}</span>
             <span
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors"
-              style={{ background: copied ? C.sun : "rgba(246,241,231,0.14)", color: copied ? "#14110f" : C.cream }}
+              className={cn(
+                "flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors",
+                copied ? "bg-white text-[#0b0b0c]" : "bg-white/[0.12] text-white",
+              )}
             >
               {copied ? <Check className="h-[18px] w-[18px]" strokeWidth={2.6} /> : <Copy className="h-[17px] w-[17px]" strokeWidth={1.9} />}
             </span>
           </span>
-          <span className="relative mt-5 block border-t pt-3 text-[12.5px] leading-snug opacity-75" style={{ borderColor: "rgba(246,241,231,0.16)" }}>
+          <span className="relative mt-5 block border-t border-white/[0.12] pt-3 text-[12.5px] leading-snug text-white/70">
             {copied ? t("acct.copied") : t("acct.interacHint")}
           </span>
         </button>
@@ -217,7 +217,7 @@ const MobileAccount = ({ profile, kyc, name, email, isStaff, otc, onLogout }: Pr
       {/* ─── Tuiles chiffrées ─── */}
       <div className={cn("mt-3 grid gap-3", otc ? "grid-cols-2" : "grid-cols-1")}>
         <Link to="/app/limites" className="group relative rounded-[20px] border border-border bg-card p-4 transition-colors active:bg-secondary/60">
-          <Chip icon={Gauge} bg={C.mint} />
+          <Chip icon={Gauge} />
           <ArrowUpRight className="absolute right-3.5 top-3.5 h-4 w-4 text-muted-foreground/60" />
           <p className="mt-4 text-[12px] font-medium text-muted-foreground">{t("acct.limits")}</p>
           <p className="mt-0.5 font-display text-[22px] font-semibold leading-tight tracking-tight tabular-nums">{t("acct.limitsAmount")}</p>
@@ -225,7 +225,7 @@ const MobileAccount = ({ profile, kyc, name, email, isStaff, otc, onLogout }: Pr
         </Link>
         {otc && (
           <Link to="/app/otc" className="group relative rounded-[20px] border border-border bg-card p-4 transition-colors active:bg-secondary/60">
-            <Chip icon={Handshake} bg={C.sun} />
+            <Chip icon={Handshake} />
             <ArrowUpRight className="absolute right-3.5 top-3.5 h-4 w-4 text-muted-foreground/60" />
             <p className="mt-4 text-[12px] font-medium text-muted-foreground">{t("nav.otc")}</p>
             <p className="mt-0.5 font-display text-[22px] font-semibold leading-tight tracking-tight tabular-nums">{t("acct.otcAmount")}</p>
@@ -237,33 +237,33 @@ const MobileAccount = ({ profile, kyc, name, email, isStaff, otc, onLogout }: Pr
       {/* ─── Entreprise ─── */}
       {business && profile?.businessName && (
         <Group title={t("acct.business")}>
-          <Row chip={<Chip icon={Building2} bg={C.peach} />} label={profile.businessName} value={[profile.businessNumber, profile.businessAddress, profile.businessPhone].filter(Boolean).join(" · ") || undefined} />
+          <Row chip={<Chip icon={Building2} />} label={profile.businessName} value={[profile.businessNumber, profile.businessAddress, profile.businessPhone].filter(Boolean).join(" · ") || undefined} />
         </Group>
       )}
 
       {/* ─── Vérifications ─── */}
       <Group title={t("acct.verifications")}>
-        <Row to="/app/verification" chip={<Chip icon={ShieldCheck} bg={C.sage} />} label={t("acct.identity")} right={kyc ? <span className="flex items-center gap-1.5">{pill(kyc)}<ChevronRight className="h-[18px] w-[18px] text-muted-foreground/70" /></span> : undefined} />
+        <Row to="/app/verification" chip={<Chip icon={ShieldCheck} />} label={t("acct.identity")} right={kyc ? <span className="flex items-center gap-1.5">{pill(kyc)}<ChevronRight className="h-[18px] w-[18px] text-muted-foreground/70" /></span> : undefined} />
         {business && bizStatus && (
-          <Row to="/app/entreprise" chip={<Chip icon={Building2} bg={C.peach} />} label={t("acct.businessVerif")} right={<span className="flex items-center gap-1.5">{pill(bizStatus)}<ChevronRight className="h-[18px] w-[18px] text-muted-foreground/70" /></span>} />
+          <Row to="/app/entreprise" chip={<Chip icon={Building2} />} label={t("acct.businessVerif")} right={<span className="flex items-center gap-1.5">{pill(bizStatus)}<ChevronRight className="h-[18px] w-[18px] text-muted-foreground/70" /></span>} />
         )}
       </Group>
 
       {/* ─── Connexion et sécurité ─── */}
       <Group title={t("acct.security")}>
-        <Row to="/app/changer-email" chip={<Chip icon={Mail} bg={C.mint} />} label={t("acct.email")} value={email} />
-        <Row to="/reinitialiser" chip={<Chip icon={Lock} bg={C.sun} />} label={t("acct.password")} value="••••••••" />
+        <Row to="/app/changer-email" chip={<Chip icon={Mail} />} label={t("acct.email")} value={email} />
+        <Row to="/reinitialiser" chip={<Chip icon={Lock} />} label={t("acct.password")} value="••••••••" />
       </Group>
 
       {/* ─── Préférences ─── */}
       <Group title={t("acct.preferences")}>
         <Row
-          chip={<Chip icon={Globe} bg={C.peach} />}
+          chip={<Chip icon={Globe} />}
           label={t("acct.language")}
           right={<Segment value={lang} options={[{ v: "fr", label: "FR" }, { v: "en", label: "EN" }]} onChange={setLang} />}
         />
         <Row
-          chip={<Chip icon={SunMoon} bg={C.coral} />}
+          chip={<Chip icon={SunMoon} />}
           label={t("acct.appearance")}
           right={
             <Segment
@@ -273,7 +273,7 @@ const MobileAccount = ({ profile, kyc, name, email, isStaff, otc, onLogout }: Pr
             />
           }
         />
-        {isStaff && <Row to="/admin" chip={<Chip icon={LayoutGrid} bg={C.forest} fg={C.cream} />} label={t("acct.backoffice")} />}
+        {isStaff && <Row to="/admin" chip={<Chip icon={LayoutGrid} strong />} label={t("acct.backoffice")} />}
       </Group>
 
       {/* ─── Déconnexion ─── */}

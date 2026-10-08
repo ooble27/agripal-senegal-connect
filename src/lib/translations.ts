@@ -1033,6 +1033,52 @@ const dict = {
     en: "Your browser can't play this video.",
   },
 
+  "guide.service.title": { fr: "Ooble en une minute", en: "Ooble in one minute" },
+  "guide.service.desc": {
+    fr: "Le service en bref : compte, vérification, ordre, paiement et réception, sans solde gardé chez Ooble.",
+    en: "The service at a glance: account, verification, order, payment and delivery, with no balance held by Ooble.",
+  },
+  "guide.service.cta": { fr: "Ouvrir un compte", en: "Create an account" },
+  "guide.service.s1": { fr: "Créez votre compte", en: "Create your account" },
+  "guide.service.s1d": { fr: "Gratuit, en moins d'une minute, avec votre nom légal complet.", en: "Free, in under a minute, with your full legal name." },
+  "guide.service.s2": { fr: "Vérifiez votre identité", en: "Verify your identity" },
+  "guide.service.s2d": { fr: "Une seule fois : pièce d'identité et selfie. C'est une exigence de la loi canadienne.", en: "Just once: photo ID and selfie. It's required by Canadian law." },
+  "guide.service.s3": { fr: "Passez un ordre", en: "Place an order" },
+  "guide.service.s3d": { fr: "Achat ou vente, à partir de 100 $. Le taux affiché est garanti 15 minutes.", en: "Buy or sell, from $100. The rate shown is locked for 15 minutes." },
+  "guide.service.s4": { fr: "Payez ou envoyez", en: "Pay or send" },
+  "guide.service.s4d": { fr: "Un virement Interac pour un achat, vos USDT pour une vente, toujours au montant exact.", en: "An Interac transfer for a purchase, your USDT for a sale, always for the exact amount." },
+  "guide.service.s5": { fr: "Recevez directement", en: "Receive directly" },
+  "guide.service.s5d": { fr: "Vos USDT arrivent dans votre wallet, vos dollars sur votre compte bancaire.", en: "Your USDT land in your wallet, your dollars in your bank account." },
+  "guide.service.s6": { fr: "Aucun solde chez Ooble", en: "No balance held by Ooble" },
+  "guide.service.s6d": { fr: "Chaque ordre est réglé individuellement, puis fermé. Ooble ne garde pas votre argent.", en: "Each order is settled individually, then closed. Ooble doesn't keep your money." },
+  "guide.service.tip1": { fr: "Utilisez le même nom partout : compte Ooble, pièce d'identité et compte bancaire.", en: "Use the same name everywhere: Ooble account, ID and bank account." },
+  "guide.service.tip2": { fr: "Gardez un œil sur vos courriels : vous êtes prévenu à chaque étape de l'ordre.", en: "Watch your inbox: you're notified at every step of the order." },
+  "guide.service.tip3": { fr: "Pour de gros volumes, passez par notre desk OTC.", en: "For large volumes, use our OTC desk." },
+
+  "guide.safety.title": { fr: "Votre sécurité", en: "Staying safe" },
+  "guide.safety.desc": {
+    fr: "Six réflexes contre les arnaques les plus courantes : achats pour un inconnu, fausses amendes, faux courriels.",
+    en: "Six habits against the most common scams: buying for a stranger, fake fines, fake emails.",
+  },
+  "guide.safety.cta": { fr: "Nous écrire", en: "Write to us" },
+  "guide.safety.s1": { fr: "N'achetez que pour vous", en: "Only buy for yourself" },
+  "guide.safety.s1d": { fr: "Vers un wallet qui vous appartient. Jamais pour un inconnu, même rencontré en ligne depuis longtemps.", en: "To a wallet you own. Never for a stranger, even someone you've known online for a long time." },
+  "guide.safety.s2": { fr: "Méfiez-vous de l'urgence", en: "Beware of urgency" },
+  "guide.safety.s2d": { fr: "Aucune administration, police ou banque ne se fait payer une amende en cryptomonnaie.", en: "No government agency, police force or bank takes payment of a fine in cryptocurrency." },
+  "guide.safety.s3": { fr: "Gardez vos clés secrètes", en: "Keep your keys secret" },
+  "guide.safety.s3d": { fr: "Ne partagez jamais la phrase de récupération de votre wallet : qui la connaît peut le vider.", en: "Never share your wallet's recovery phrase: whoever knows it can empty it." },
+  "guide.safety.s4": { fr: "Ooble ne demande jamais vos codes", en: "Ooble never asks for your codes" },
+  "guide.safety.s4d": { fr: "Ni mot de passe, ni code reçu par courriel ou texto. Nos courriels viennent seulement de @ooble.ca.", en: "No password, no code sent by email or text. Our emails only come from @ooble.ca." },
+  "guide.safety.s5": { fr: "Vérifiez l'adresse et le réseau", en: "Check the address and network" },
+  "guide.safety.s5d": { fr: "Avant de valider un ordre : une transaction sur la blockchain est définitive.", en: "Before confirming an order: a blockchain transaction is final." },
+  "guide.safety.s6": { fr: "Un doute ? Écrivez-nous", en: "In doubt? Write to us" },
+  "guide.safety.s6d": { fr: "Arrêtez tout et écrivez à support@ooble.ca, en français ou en anglais.", en: "Stop everything and write to support@ooble.ca, in English or French." },
+  "guide.safety.tip1": { fr: "Un message pressant qui parle de crypto est presque toujours une arnaque.", en: "An urgent message about crypto is almost always a scam." },
+  "guide.safety.tip2": { fr: "Ne cliquez pas sur un lien reçu par texto : passez toujours par ooble.ca.", en: "Don't click links sent by text: always go through ooble.ca." },
+  "guide.safety.tip3": { fr: "Utilisez pour Ooble un mot de passe unique, que vous n'utilisez nulle part ailleurs.", en: "Use a unique password for Ooble that you don't use anywhere else." },
+  "guide.group.safety": { fr: "Sécurité", en: "Safety" },
+  "guide.group.safetySub": { fr: "Protégez votre argent contre les arnaques.", en: "Protect your money from scams." },
+
   "guide.account.title": { fr: "Créer un compte", en: "Create an account" },
   "guide.account.desc": {
     fr: "Ouvrez votre compte Ooble en moins d'une minute.",
@@ -1051,8 +1097,8 @@ const dict = {
   },
   "guide.account.s3": { fr: "Remplissez le formulaire", en: "Fill in the form" },
   "guide.account.s3d": {
-    fr: "Entrez votre nom complet, votre adresse e-mail et un mot de passe d'au moins 8 caractères.",
-    en: "Enter your full name, your email address and a password of at least 8 characters.",
+    fr: "Entrez votre nom légal complet (celui de votre pièce d'identité et de votre compte bancaire), votre adresse e-mail et un mot de passe d'au moins 8 caractères.",
+    en: "Enter your full legal name (as on your ID and bank account), your email address and a password of at least 8 characters.",
   },
   "guide.account.s4": { fr: "Créez votre compte", en: "Create your account" },
   "guide.account.s4d": {
@@ -1237,8 +1283,8 @@ const dict = {
   "guide.sell.cta": { fr: "Vendre des USDT", en: "Sell USDT" },
   "guide.sell.s1": { fr: "Entrez le montant", en: "Enter the amount" },
   "guide.sell.s1d": {
-    fr: "Dans l'onglet Vendre, entrez le montant en USDT à vendre (minimum 50 USDT). Le montant en dollars s'affiche automatiquement.",
-    en: "On the Sell tab, enter the USDT amount to sell (minimum 50 USDT). The dollar amount is shown automatically.",
+    fr: "Dans l'onglet Vendre, entrez le montant en USDT à vendre (minimum 100 $ par vente). Le montant en dollars s'affiche automatiquement.",
+    en: "On the Sell tab, enter the USDT amount to sell (minimum $100 per sale). The dollar amount is shown automatically.",
   },
   "guide.sell.s2": { fr: "Choisissez le réseau", en: "Choose the network" },
   "guide.sell.s2d": {
@@ -1274,8 +1320,8 @@ const dict = {
     en: "Keep the security answer: it unlocks your Interac e-Transfer.",
   },
   "guide.sell.tip3": {
-    fr: "Le montant minimum de vente est de 50 USDT.",
-    en: "The minimum sell amount is 50 USDT.",
+    fr: "Si vous envoyez depuis une plateforme d'échange, ajoutez ses frais de retrait : le montant reçu doit être exact.",
+    en: "If you send from an exchange, add its withdrawal fee: the amount received must be exact.",
   },
 } as const;
 

@@ -7,6 +7,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { peekCache, putCache } from "@/lib/cache";
 
 export type KybStatus = Database["public"]["Enums"]["kyc_status"];
 
@@ -51,10 +52,17 @@ export interface MyKyb {
   owners: BusinessOwner[];
 }
 
+/** Dernière vérification d'entreprise connue, sans appel réseau (undefined : pas encore lue). */
+export const peekMyKyb = (uid: string | null | undefined) => peekCache<MyKyb | null>(uid ? `kyb:${uid}` : null);
+
 export async function getMyKyb(): Promise<MyKyb | null> {
   const { data: sess } = await supabase.auth.getSession();
   const uid = sess.session?.user?.id;
   if (!uid) return null;
+  return putCache(`kyb:${uid}`, await fetchMyKyb(uid));
+}
+
+async function fetchMyKyb(uid: string): Promise<MyKyb | null> {
   const { data: r } = await supabase
     .from("business_verifications")
     .select("*")

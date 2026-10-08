@@ -4,10 +4,10 @@ import { AlertCircle, ArrowLeft, Check, ChevronRight, Clock, FileText, Lock, Plu
 import AppShell from "@/components/app/AppShell";
 import BusinessMark, { BuildingGlyph } from "@/components/app/BusinessMark";
 import { Button } from "@/components/ui/button";
-import { getMyProfile, type MyProfile } from "@/lib/profile";
-import { getMyKyc, type KycDbStatus } from "@/lib/kyc";
+import { getMyProfile, peekMyProfile, type MyProfile } from "@/lib/profile";
+import { getMyKyc, peekMyKyc, type KycDbStatus } from "@/lib/kyc";
 import {
-  getMyKyb, submitKyb, KYB_ACCEPT, KYB_DOCS, KYB_MAX_FILE,
+  getMyKyb, peekMyKyb, submitKyb, KYB_ACCEPT, KYB_DOCS, KYB_MAX_FILE,
   type BusinessInfo, type BusinessOwner, type KybDocKey, type KybStatus, type MyKyb, type OwnerRole,
 } from "@/lib/kyb";
 import { KYB_PREVIEW_USERS, VERIFICATION_ENABLED } from "@/lib/config";
@@ -118,14 +118,27 @@ const Entreprise = () => {
   const placeLabel = (v: string) => ALL_PLACES.find((p) => p.fr === v || p.en === v)?.[lang] ?? v;
   const kybOpen = VERIFICATION_ENABLED || (!!user && KYB_PREVIEW_USERS.includes(user.id));
 
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<MyProfile | null>(null);
-  const [kyb, setKyb] = useState<MyKyb | null>(null);
-  const [kyc, setKyc] = useState<KycDbStatus>("not_started");
+  // Données déjà chargées (préchargement de l'app) : la page s'affiche tout
+  // de suite ; la lecture en arrière-plan ne met à jour que les statuts.
+  const [cached] = useState(() => {
+    const p = peekMyProfile(user?.id), k = peekMyKyb(user?.id), c = peekMyKyc(user?.id);
+    return p !== undefined && k !== undefined && c !== undefined ? { p, k, c } : null;
+  });
+  const initForm = (p: MyProfile | null, k: MyKyb | null) => ({
+    info: k ? k.info : {
+      legalName: p?.businessName ?? "", businessNumber: p?.businessNumber ?? "", jurisdiction: "",
+      address: p?.businessAddress ?? "", phone: p?.businessPhone ?? "", activity: "", website: "",
+    },
+    owners: k ? k.owners : p?.fullName ? [{ ...emptyOwner(), name: p.fullName }] : [],
+  });
+  const [loading, setLoading] = useState(!cached);
+  const [profile, setProfile] = useState<MyProfile | null>(cached?.p ?? null);
+  const [kyb, setKyb] = useState<MyKyb | null>(cached?.k ?? null);
+  const [kyc, setKyc] = useState<KycDbStatus>(cached?.c?.status ?? "not_started");
   const [view, setView] = useState<View>("hub");
 
-  const [info, setInfo] = useState<BusinessInfo>({ legalName: "", businessNumber: "", jurisdiction: "", address: "", phone: "", activity: "", website: "" });
-  const [owners, setOwners] = useState<BusinessOwner[]>([]);
+  const [info, setInfo] = useState<BusinessInfo>(() => initForm(cached?.p ?? null, cached?.k ?? null).info);
+  const [owners, setOwners] = useState<BusinessOwner[]>(() => (cached ? initForm(cached.p, cached.k).owners : []));
   const [files, setFiles] = useState<Partial<Record<KybDocKey, File>>>({});
   const [attest, setAttest] = useState(false);
   const [sending, setSending] = useState(false);
@@ -142,15 +155,15 @@ const Entreprise = () => {
       setProfile(p);
       setKyb(k);
       setKyc(c?.status ?? "not_started");
-      if (k) {
-        setInfo(k.info);
-        setOwners(k.owners);
-      } else if (p) {
-        setInfo((i) => ({ ...i, legalName: p.businessName ?? "", businessNumber: p.businessNumber ?? "", address: p.businessAddress ?? "", phone: p.businessPhone ?? "" }));
-        if (p.fullName) setOwners([{ ...emptyOwner(), name: p.fullName }]);
+      // Formulaire déjà rempli depuis le cache : on ne l'écrase pas (saisie en cours).
+      if (!cached || k?.status !== cached.k?.status) {
+        const f = initForm(p, k);
+        setInfo(f.info);
+        setOwners(f.owners);
       }
       setLoading(false);
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const status: KybStatus = kyb?.status ?? "not_started";

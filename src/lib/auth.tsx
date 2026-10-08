@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { clearCache } from "@/lib/cache";
 
 export type AppRole = Database["public"]["Enums"]["app_role"];
 
@@ -194,6 +195,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       },
       signOut: async () => {
         await supabase.auth.signOut();
+        clearCache();
       },
     }),
     [user, loading, roles, rolesLoading],

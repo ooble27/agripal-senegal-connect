@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Clock, Coins, HandCoins, Handshake, Inbox, ChevronRight } from "lucide-react";
+import { Clock, Coins, HandCoins, Inbox, ChevronRight } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import RateChart from "@/components/app/RateChart";
 import { NETWORKS } from "@/components/app/networks";
@@ -15,7 +15,6 @@ import { TRADING_ENABLED } from "@/lib/config";
 import { getMyProfile, peekMyProfile, type MyProfile } from "@/lib/profile";
 import { businessBlocked } from "@/components/app/BusinessGate";
 import BusinessMark from "@/components/app/BusinessMark";
-import { useOtcVisible } from "@/lib/otc";
 
 const nf = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
 
@@ -77,7 +76,6 @@ const Dashboard = () => {
   const rate = useUsdtRate();
   const history = useUsdtHistory();
   const { user, isStaff } = useAuth();
-  const otc = useOtcVisible();
   const [profile, setProfile] = useState<MyProfile | null>(() => peekMyProfile(user?.id) ?? null);
   useEffect(() => { getMyProfile().then(setProfile); }, []);
   const kybPending = profile?.businessStatus === "pending";
@@ -177,19 +175,6 @@ const Dashboard = () => {
               <span className="text-[15px] font-medium">{t("dash.sell")}</span>
             </Link>
           </div>
-          {otc && (
-          <Link
-            to="/app/otc"
-            className="flex items-center gap-3 rounded-2xl border border-border bg-card px-5 py-3.5 transition-colors hover:bg-secondary/50 active:bg-secondary"
-          >
-            <Handshake className="h-[18px] w-[18px] shrink-0 text-foreground/60" strokeWidth={1.6} />
-            <span className="min-w-0 flex-1 text-[14px]">
-              <span className="font-medium">{t("nav.otc")}</span>
-              <span className="text-muted-foreground"> · {t("dash.otcSub")}</span>
-            </span>
-            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.8} />
-          </Link>
-          )}
           {!TRADING_ENABLED && !isStaff && (
             <p className="text-center text-[12px] text-muted-foreground/70">
              {t("dash.tradingSuspended")}

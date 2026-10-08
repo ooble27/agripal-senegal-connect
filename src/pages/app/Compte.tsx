@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, ShieldCheck, LayoutGrid, ChevronRight, Gauge, MessageSquare, Building2, Globe, MapPin, Phone, Hash, Mail, User, Lock, SunMoon } from "lucide-react";
+import { LogOut, ShieldCheck, LayoutGrid, ChevronRight, Gauge, MessageSquare, Building2, Globe, MapPin, Phone, Hash, Mail, User, Lock, SunMoon, Handshake } from "lucide-react";
+import { useOtcVisible } from "@/lib/otc";
 import { Link } from "react-router-dom";
 import AppShell from "@/components/app/AppShell";
 import CopyRow from "@/components/app/CopyRow";
 import { LangPill } from "@/components/app/LangToggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { getMyProfile, type MyProfile } from "@/lib/profile";
-import { getMyKyc, type KycDbStatus } from "@/lib/kyc";
+import { getMyProfile, peekMyProfile, type MyProfile } from "@/lib/profile";
+import { getMyKyc, peekMyKyc, type KycDbStatus } from "@/lib/kyc";
 import { useLang, useT } from "@/lib/i18n";
 import { getTheme, onThemeChange, setTheme, type Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -33,8 +34,14 @@ const Compte = () => {
   const navigate = useNavigate();
   const { user, signOut, isStaff } = useAuth();
   const t = useT();
-  const [profile, setProfile] = useState<MyProfile | null>(null);
-  const [kyc, setKyc] = useState<KycDbStatus | null>(null);
+  const otc = useOtcVisible();
+  // Données déjà chargées (préchargement de l'app) : affichées tout de suite,
+  // puis relues en arrière-plan.
+  const [profile, setProfile] = useState<MyProfile | null>(() => peekMyProfile(user?.id) ?? null);
+  const [kyc, setKyc] = useState<KycDbStatus | null>(() => {
+    const k = peekMyKyc(user?.id);
+    return k === undefined ? null : k?.status ?? "not_started";
+  });
   useEffect(() => {
     getMyProfile().then(setProfile);
     getMyKyc().then((k) => setKyc(k?.status ?? "not_started"));
@@ -131,6 +138,18 @@ const Compte = () => {
         </div>
         <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
       </Link>
+
+      {/* ─── Desk OTC : gros volumes, à partir de 10 000 $ ─── */}
+      {otc && (
+        <Link to="/app/otc" className="mt-3 flex items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card px-5 py-4 transition-colors hover:bg-secondary/40">
+          <Handshake className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />
+          <div className="min-w-0 flex-1">
+            <span className="text-sm font-medium">{t("nav.otc")}</span>
+            <p className="truncate text-[13px] text-muted-foreground">{t("dash.otcSub")}</p>
+          </div>
+          <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
+        </Link>
+      )}
 
       {/* ─── Interac e-Transfer ─── */}
       {profile?.interacQuestion && (
@@ -261,6 +280,7 @@ function DesktopAccount({
   profile: MyProfile | null; kyc: KycDbStatus | null; name: string; email: string; isStaff: boolean; onLogout: () => void;
 }) {
   const t = useT();
+  const otc = useOtcVisible();
   const [lang, setLang] = useLang();
   const [theme, setThemeState] = useState<Theme>(getTheme);
   useEffect(() => onThemeChange(setThemeState), []);
@@ -344,6 +364,7 @@ function DesktopAccount({
         <Card className="order-4 xl:order-none">
           <Eyebrow>{t("acct.limits")}</Eyebrow>
           <LinkRow to="/app/limites" icon={Gauge} label={t("acct.limitsRow")} sub={t("acct.limitsSub")} right={<ChevronRight className="h-[18px] w-[18px] shrink-0 text-muted-foreground" />} />
+          {otc && <LinkRow to="/app/otc" icon={Handshake} label={t("nav.otc")} sub={t("dash.otcSub")} right={<ChevronRight className="h-[18px] w-[18px] shrink-0 text-muted-foreground" />} />}
         </Card>
         </div>
 

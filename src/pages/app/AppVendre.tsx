@@ -8,10 +8,10 @@ import RecipientBook from "@/components/app/RecipientBook";
 import { Button } from "@/components/ui/button";
 import { NETWORKS, type NetId } from "@/components/app/networks";
 import { useUsdtRate } from "@/hooks/useUsdtRate";
-import { createOrder, getAllowance, orderRef, type TradeAllowance } from "@/lib/orders";
+import { createOrder, getAllowance, orderRef, peekAllowance, type TradeAllowance } from "@/lib/orders";
 import { amountText, parseAmount, toCad, toUsdt, type Unit } from "@/lib/tradeAmounts";
 import { sendEmail, notifyStaffOfNewOrder } from "@/lib/email";
-import { getMyProfile } from "@/lib/profile";
+import { getMyProfile, peekMyProfile } from "@/lib/profile";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -97,7 +97,10 @@ const AppVendre = () => {
   const [savedRef, setSavedRef] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [interacQA, setInteracQA] = useState<{ q: string; a: string } | null>(null);
+  const [interacQA, setInteracQA] = useState<{ q: string; a: string } | null>(() => {
+    const p = peekMyProfile(user?.id);
+    return p?.interacQuestion && p?.interacAnswer ? { q: p.interacQuestion, a: p.interacAnswer } : null;
+  });
 
   useEffect(() => {
     getMyProfile().then((p) => {
@@ -109,7 +112,7 @@ const AppVendre = () => {
 
   // Limites : 100 $ minimum, 9 999 $ au total sur 24 heures, sur le montant
   // en CAD (même règle en base, comptée à part des achats).
-  const [allowance, setAllowance] = useState<TradeAllowance | null>(null);
+  const [allowance, setAllowance] = useState<TradeAllowance | null>(() => peekAllowance(user?.id, "sell") ?? null);
   useEffect(() => { getAllowance("sell").then(setAllowance); }, []);
   // L'équipe Ooble (tous les rôles) vend n'importe quel montant, pour les
   // tests : ni minimum, ni plafond (la base les exempte aussi).

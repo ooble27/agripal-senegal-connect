@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import type { NetId } from "@/components/app/networks";
 import { getLang } from "@/lib/i18n";
+import { peekCache, putCache } from "@/lib/cache";
 
 type DbNetwork = Database["public"]["Enums"]["usdt_network"];
 type DbSide = Database["public"]["Enums"]["order_side"];
@@ -66,6 +67,10 @@ export interface TradeAllowance {
  * (ordres non annulés, expirés ni remboursés, du même sens). La base
  * applique la même règle.
  */
+/** Dernière limite connue pour ce sens, sans appel réseau (undefined : pas encore lue). */
+export const peekAllowance = (uid: string | null | undefined, side: "buy" | "sell") =>
+  peekCache<TradeAllowance>(uid ? `allow:${side}:${uid}` : null);
+
 export async function getAllowance(side: "buy" | "sell"): Promise<TradeAllowance> {
   const { TRADE_DAILY_MAX_CAD, TRADE_MIN_CAD } = await import("@/lib/config");
   const { data: auth } = await supabase.auth.getSession();
@@ -97,7 +102,7 @@ export async function getAllowance(side: "buy" | "sell"): Promise<TradeAllowance
       if (freed >= TRADE_MIN_CAD) { nextAt = new Date(r.at.getTime() + 24 * 3600 * 1000); break; }
     }
   }
-  return { limit, used, remaining, nextAt };
+  return putCache(`allow:${side}:${uid}`, { limit, used, remaining, nextAt });
 }
 
 /** Crée un ordre pour l'utilisateur connecté. Renvoie l'id ou une erreur. */

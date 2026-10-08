@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { peekCache, putCache } from "@/lib/cache";
 
 export type KycDbStatus = Database["public"]["Enums"]["kyc_status"];
 
@@ -13,11 +14,18 @@ export interface MyKyc {
   reviewNote: string | null;
 }
 
+/** Dernière vérification connue, sans appel réseau (undefined : pas encore lue). */
+export const peekMyKyc = (uid: string | null | undefined) => peekCache<MyKyc | null>(uid ? `kyc:${uid}` : null);
+
 /** Vérification la plus récente de l'utilisateur connecté (ou null). */
 export async function getMyKyc(): Promise<MyKyc | null> {
   const { data: sess } = await supabase.auth.getSession();
   const uid = sess.session?.user?.id;
   if (!uid) return null;
+  return putCache(`kyc:${uid}`, await fetchMyKyc(uid));
+}
+
+async function fetchMyKyc(uid: string): Promise<MyKyc | null> {
 
   const { data: row } = await supabase
     .from("kyc_verifications")

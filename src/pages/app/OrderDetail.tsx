@@ -5,7 +5,8 @@ import AppShell from "@/components/app/AppShell";
 import { OrderDetailContent } from "@/components/app/ActivityList";
 import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
-import type { OrderRow } from "@/lib/orders";
+import { peekMyOrders, type OrderRow } from "@/lib/orders";
+import { useAuth } from "@/lib/auth";
 
 /**
  * Fiche d'une commande. Ouverte depuis la liste, l'ordre arrive dans l'état
@@ -17,11 +18,16 @@ const OrderDetail = () => {
   const location = useLocation();
   const { id } = useParams();
   const t = useT();
-  const [order, setOrder] = useState<OrderRow | null>((location.state?.order as OrderRow | undefined) ?? null);
+  const { user } = useAuth();
+  // Affiché tout de suite (ordre passé par la liste, ou activité en cache),
+  // puis relu pour avoir le statut à jour.
+  const [order, setOrder] = useState<OrderRow | null>(() =>
+    (location.state?.order as OrderRow | undefined) ?? peekMyOrders(user?.id, 100)?.find((o) => o.id === id) ?? null,
+  );
   const [missing, setMissing] = useState(false);
 
   useEffect(() => {
-    if (order || !id) return;
+    if (!id) return;
     let on = true;
     (async () => {
       const { data: auth } = await supabase.auth.getSession();
@@ -31,13 +37,13 @@ const OrderDetail = () => {
       if (data) setOrder(data as OrderRow); else setMissing(true);
     })();
     return () => { on = false; };
-  }, [id, order]);
+  }, [id]);
 
   useEffect(() => {
     if (missing || (!id && !order)) navigate("/app/activite", { replace: true });
   }, [missing, id, order, navigate]);
 
-  if (!order) return null;
+  if (!order) return <AppShell>{null}</AppShell>;
   const buy = order.side === "buy";
 
   return (

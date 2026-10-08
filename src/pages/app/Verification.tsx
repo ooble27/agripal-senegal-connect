@@ -7,7 +7,8 @@ import {
 } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
-import { getMyKyc, type KycDbStatus } from "@/lib/kyc";
+import { getMyKyc, peekMyKyc, type KycDbStatus } from "@/lib/kyc";
+import { useAuth } from "@/lib/auth";
 import { submitKycDocuments, type DocType } from "@/lib/kycUpload";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -188,15 +189,18 @@ function StepProgress({ steps, current }: { steps: Step[]; current: Step }) {
 const Verification = () => {
   const navigate = useNavigate();
   const t = useT();
-  const [status, setStatus] = useState<KycDbStatus | null>(null);
-  const [reviewNote, setReviewNote] = useState<string | null>(null);
+  const { user } = useAuth();
+  // Statut déjà chargé (préchargement de l'app) : affiché tout de suite.
+  const [cachedKyc] = useState(() => peekMyKyc(user?.id));
+  const [status, setStatus] = useState<KycDbStatus | null>(cachedKyc === undefined ? null : cachedKyc?.status ?? "not_started");
+  const [reviewNote, setReviewNote] = useState<string | null>(cachedKyc?.reviewNote ?? null);
   const [step, setStep] = useState<Step>("intro");
   const [docType, setDocType] = useState<DocType | null>(null);
   const [idFront, setIdFront] = useState<File | null>(null);
   const [idBack, setIdBack] = useState<File | null>(null);
   const [selfie, setSelfie] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(cachedKyc === undefined);
 
   const needsBack = DOC_TYPES.find((d) => d.id === docType)?.needsBack ?? false;
   const stepOrder = needsBack ? STEP_ORDER_3 : STEP_ORDER_2;

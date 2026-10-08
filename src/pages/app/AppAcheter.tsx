@@ -7,7 +7,7 @@ import RecipientBook from "@/components/app/RecipientBook";
 import { NETWORKS, type NetId } from "@/components/app/networks";
 import { Button } from "@/components/ui/button";
 import { useUsdtRate } from "@/hooks/useUsdtRate";
-import { createOrder, getAllowance, orderRef, type TradeAllowance } from "@/lib/orders";
+import { createOrder, getAllowance, orderRef, peekAllowance, type TradeAllowance } from "@/lib/orders";
 import { amountText, parseAmount, toCad, toUsdt, type Unit } from "@/lib/tradeAmounts";
 import { sendEmail, notifyStaffOfNewOrder } from "@/lib/email";
 import { useAuth } from "@/lib/auth";
@@ -82,7 +82,7 @@ const AppAcheter = () => {
 
   // Limites : 100 $ minimum, 9 999 $ au total sur 24 heures (même règle
   // en base). Même taux quel que soit le montant.
-  const [allowance, setAllowance] = useState<TradeAllowance | null>(null);
+  const [allowance, setAllowance] = useState<TradeAllowance | null>(() => peekAllowance(user?.id, "buy") ?? null);
   useEffect(() => { getAllowance("buy").then(setAllowance); }, []);
   const maxCad = Math.floor(Math.min(TRADE_DAILY_MAX_CAD, allowance?.remaining ?? TRADE_DAILY_MAX_CAD));
   // L'équipe peut faire de petits achats de test (dès 2 $).

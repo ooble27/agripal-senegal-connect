@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/i18n";
 import ThemeToggle from "./ThemeToggle";
 import BottomNav from "./BottomNav";
+import { useAuth } from "@/lib/auth";
+import { warmAppData } from "@/lib/warm";
 
 /**
  * Marque <html> pendant que l'app est montée pour que la racine, le <body> et
@@ -64,6 +66,8 @@ interface AppShellProps {
  */
 const AppShell = ({ children, header, backTo, wide, wider, center, className }: AppShellProps) => {
   useAppScope();
+  const { user } = useAuth();
+  useEffect(() => { warmAppData(user?.id); }, [user?.id]);
   const [lang] = useLang();
   return (
   <div className="app-surface app-type min-h-screen bg-background">

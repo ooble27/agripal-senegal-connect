@@ -21,7 +21,8 @@
 //   SUPABASE_URL              (auto Supabase)
 //   SUPABASE_SERVICE_ROLE_KEY (auto Supabase)
 //   RESEND_API_KEY            requis pour récupérer le corps des mails
-//   MAIL_WEBHOOK_SECRET       (optionnel) signature Resend
+//   MAIL_WEBHOOK_SECRET       OBLIGATOIRE — secret de signature du webhook
+//                             Resend (whsec_…). Sans lui : 503, Resend réessaie.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -94,6 +95,33 @@ async function fetchResendEmail(id: string, apiKey: string): Promise<{
   return null;
 }
 
+/**
+ * Vérifie la signature Svix d'un webhook Resend : HMAC-SHA256 de
+ * « id.horodatage.corps » avec le secret (whsec_…, base64), horodatage de
+ * moins de 5 minutes, comparaison à temps constant.
+ */
+async function svixValid(secret: string, headers: Headers, body: string): Promise<boolean> {
+  const id = headers.get("svix-id") ?? headers.get("webhook-id") ?? "";
+  const ts = headers.get("svix-timestamp") ?? headers.get("webhook-timestamp") ?? "";
+  const sigs = headers.get("svix-signature") ?? headers.get("webhook-signature") ?? "";
+  if (!id || !/^\d+$/.test(ts) || !sigs) return false;
+  if (Math.abs(Date.now() / 1000 - Number(ts)) > 300) return false;
+  let keyBytes: Uint8Array;
+  try {
+    keyBytes = Uint8Array.from(atob(secret.replace(/^whsec_/, "")), (c) => c.charCodeAt(0));
+  } catch { return false; }
+  const key = await crypto.subtle.importKey("raw", keyBytes, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${id}.${ts}.${body}`)));
+  const expected = btoa(String.fromCharCode(...mac));
+  return sigs.split(" ").some((part) => {
+    const [ver, sig] = part.split(",");
+    if (ver !== "v1" || !sig || sig.length !== expected.length) return false;
+    let r = 0;
+    for (let i = 0; i < sig.length; i++) r |= sig.charCodeAt(i) ^ expected.charCodeAt(i);
+    return r === 0;
+  });
+}
+
 /** En-têtes (objet ou liste { name, value }) → objet, clés en minuscules. */
 function toHeaderMap(h: unknown): Record<string, string> {
   const out: Record<string, string> = {};
@@ -115,8 +143,17 @@ Deno.serve(async (req) => {
   const resendApiKey = Deno.env.get("RESEND_API_KEY");
   if (!supabaseUrl || !serviceKey) return json({ error: "Config manquante" }, 500);
 
+  // Signature Resend (Svix) obligatoire : sans elle, n'importe qui pouvait
+  // écrire dans la messagerie support (injection constatée le 2026-10-08).
+  // Sans secret configuré, on répond 503 : Resend réessaie plus tard, aucun
+  // courriel n'est perdu le temps de poser MAIL_WEBHOOK_SECRET.
+  const raw = await req.text();
+  const signingSecret = Deno.env.get("MAIL_WEBHOOK_SECRET") ?? "";
+  if (!signingSecret) return json({ error: "Webhook non configuré" }, 503);
+  if (!(await svixValid(signingSecret, req.headers, raw))) return json({ error: "Signature invalide" }, 401);
+
   let payload: Record<string, unknown>;
-  try { payload = await req.json(); }
+  try { payload = JSON.parse(raw); }
   catch { return json({ error: "JSON invalide" }, 400); }
 
   console.log("mail-webhook: type =", payload.type);

@@ -94,7 +94,9 @@ async function scanTron(cursorMs: number): Promise<{ deposits: Deposit[]; cursor
         usdt_amount: units(BigInt(x.value), x.token_info?.decimals ?? 6), block_time: new Date(x.block_timestamp).toISOString(),
       };
     });
-  return { deposits, cursor };
+  // Sans nouveau transfert, on avance quand même (marge de 10 minutes pour
+  // les transactions pas encore confirmées) ; les doublons sont ignorés.
+  return { deposits, cursor: Math.max(cursor, Date.now() - 10 * 60_000) };
 }
 
 // ───────────────────────── EVM ─────────────────────────

@@ -458,6 +458,12 @@ const dict = {
   "buy.recipient": { fr: "Destinataire (e-mail Interac)", en: "Recipient (Interac email)" },
   "buy.exactAmount": { fr: "Montant exact", en: "Exact amount" },
   "buy.reference": { fr: "Message / référence", en: "Message / reference" },
+  "reg.errDisposable": {
+    fr: "Les adresses courriel temporaires ne sont pas acceptées. Utilisez une adresse personnelle ou professionnelle.",
+    en: "Temporary email addresses aren't accepted. Please use a personal or work address.",
+  },
+  "auth.captchaWait": { fr: "Vérification anti-robot en cours…", en: "Checking you're not a robot…" },
+  "auth.errCaptcha": { fr: "La vérification anti-robot a échoué. Réessayez.", en: "The robot check failed. Please try again." },
   "act.tx": { fr: "Transaction", en: "Transaction" },
   "act.viewOn": { fr: "Voir sur {x}", en: "View on {x}" },
   "buy.autoNote": {

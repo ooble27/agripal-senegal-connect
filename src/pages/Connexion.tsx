@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, KeyRound, Lock, Mail } from "lucide-react";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/app/ThemeToggle";
 import { LangPill } from "@/components/app/LangToggle";
 import { Button } from "@/components/ui/button";
+import Captcha, { captchaEnabled, type CaptchaHandle } from "@/components/Captcha";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
@@ -79,8 +80,15 @@ const Connexion = () => {
 
   const isForgot = mode === "forgot";
 
+  // Captcha : connexion, envoi du code de réinitialisation (et son renvoi).
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const captchaRef = useRef<CaptchaHandle>(null);
+  const needsCaptcha = mode === "login" || forgotStep === "email" || forgotStep === "otp";
+  const captchaBlocks = captchaEnabled() && !captcha && (mode === "login" || forgotStep === "email");
+
   const traduireErreur = (message: string): string => {
     const m = message.toLowerCase();
+    if (m.includes("captcha")) return t("auth.errCaptcha");
     if (m.includes("invalid login")) return t("login.errInvalid");
     if (m.includes("email not confirmed")) return t("login.errNotConfirmed");
     if (m.includes("unable to validate email")) return t("login.errBadEmail");
@@ -104,7 +112,9 @@ const Connexion = () => {
     try {
       const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/reinitialiser`,
+        ...(captcha ? { captchaToken: captcha } : {}),
       });
+      captchaRef.current?.reset();
       if (err) {
         setError(traduireErreur(err.message));
         return;
@@ -168,7 +178,8 @@ const Connexion = () => {
     setNotice(null);
     setBusy(true);
     try {
-      const res = await signIn(email, password);
+      const res = await signIn(email, password, captcha);
+      captchaRef.current?.reset();
       if (res.error) return setError(traduireErreur(res.error));
       navigate("/app", { replace: true });
     } finally {
@@ -349,6 +360,8 @@ const Connexion = () => {
                   </div>
                 )}
 
+                {needsCaptcha && <Captcha ref={captchaRef} onToken={setCaptcha} className="mt-4" />}
+
                 {error && (
                   <p className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
                     {error}
@@ -361,7 +374,7 @@ const Connexion = () => {
                 )}
 
                 <div className="mt-5 flex justify-end">
-                  <Button type="submit" variant="appSolid" shape="rounded" size="default" className="px-6" disabled={busy}>
+                  <Button type="submit" variant="appSolid" shape="rounded" size="default" className="px-6" disabled={busy || captchaBlocks}>
                     {busy
                       ? t("misc.wait")
                       : isForgot

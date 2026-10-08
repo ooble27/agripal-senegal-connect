@@ -13,6 +13,14 @@ export const OOBLE_SUPPORT_EMAIL = "support@ooble.ca";
 export const OOBLE_OTC_EMAIL = "otc@ooble.ca";
 
 /**
+ * Captcha Cloudflare Turnstile — clé de SITE (publique). Vide = captcha
+ * désactivé côté site. À renseigner AVANT d'activer le captcha dans
+ * Supabase → Authentication → Attack Protection (qui reçoit la clé secrète),
+ * sinon inscription et connexion seraient refusées.
+ */
+export const TURNSTILE_SITE_KEY = "";
+
+/**
  * Kill switch — mettre à `false` pour bloquer toute création d'ordre
  * (achat et vente). Les comptes, le KYC et la navigation restent actifs.
  * Remettre à `true` pour réactiver les transactions.

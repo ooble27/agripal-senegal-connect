@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Building2, Eye, EyeOff, FileText, Lock, Mail, MapPin, Phone, User } from "lucide-react";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/app/ThemeToggle";
 import { LangPill } from "@/components/app/LangToggle";
 import { Button } from "@/components/ui/button";
+import Captcha, { captchaEnabled, type CaptchaHandle } from "@/components/Captcha";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -64,9 +65,13 @@ const InscriptionEntreprise = () => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const captchaRef = useRef<CaptchaHandle>(null);
 
   function traduireErreur(message: string): string {
     const m = message.toLowerCase();
+if (message === "disposable_email") return t("reg.errDisposable");
+    if (m.includes("captcha")) return t("auth.errCaptcha");
     if (m.includes("already registered") || m.includes("already been registered")) return t("reg.errAlreadyExists");
     if (m.includes("password should be at least")) return t("reg.errPasswordShort");
     if (m.includes("unable to validate email")) return t("reg.errBadEmail");
@@ -94,7 +99,9 @@ const InscriptionEntreprise = () => {
         businessNumber: businessNumber.trim() || undefined,
         businessAddress: businessAddress.trim() || undefined,
         businessPhone: businessPhone.trim() || undefined,
+        captchaToken: captcha,
       });
+      captchaRef.current?.reset();
       if (res.error) return setError(traduireErreur(res.error));
       if (res.needsConfirmation) {
         setNotice(t("regi.notice"));
@@ -311,6 +318,8 @@ const InscriptionEntreprise = () => {
                   {t("regb.docs")}
                 </p>
 
+                <Captcha ref={captchaRef} onToken={setCaptcha} className="mt-4" />
+
                 {error && (
                   <p className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
                     {error}
@@ -318,8 +327,8 @@ const InscriptionEntreprise = () => {
                 )}
 
                 <div className="mt-5 flex justify-end">
-                  <Button type="submit" variant="appSolid" shape="rounded" size="default" className="px-6" disabled={busy}>
-                    {busy ? t("misc.wait") : t("regi.createAccount")}
+                  <Button type="submit" variant="appSolid" shape="rounded" size="default" className="px-6" disabled={busy || (captchaEnabled() && !captcha)}>
+                    {busy ? t("misc.wait") : captchaEnabled() && !captcha ? t("auth.captchaWait") : t("regi.createAccount")}
                     {!busy && <ArrowRight className="h-4 w-4" />}
                   </Button>
                 </div>

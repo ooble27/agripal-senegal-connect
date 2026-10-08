@@ -22,16 +22,17 @@ interface AuthContextValue {
   isStaff: boolean;
   /** Les rôles sont encore en cours de chargement. */
   rolesLoading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  signIn: (email: string, password: string, captchaToken?: string | null) => Promise<{ error?: string }>;
   signUp: (email: string, password: string, name: string, extra?: {
     accountType?: "individual" | "business";
     businessName?: string;
     businessNumber?: string;
     businessAddress?: string;
     businessPhone?: string;
+    captchaToken?: string | null;
   }) => Promise<{ error?: string; needsConfirmation?: boolean }>;
   /** Envoie le courriel de réinitialisation de mot de passe. */
-  sendPasswordReset: (email: string) => Promise<{ error?: string }>;
+  sendPasswordReset: (email: string, captchaToken?: string | null) => Promise<{ error?: string }>;
   /** Définit un nouveau mot de passe (après clic sur le lien de réinitialisation). */
   updatePassword: (password: string) => Promise<{ error?: string }>;
   /** Change l'adresse e-mail (envoie un lien de confirmation au nouvel e-mail). */
@@ -68,11 +69,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [rolesFor, setRolesFor] = useState<string | null>(null);
 
   useEffect(() => {
-    // Session initiale + abonnement aux changements (connexion, déconnexion,
-    // rafraîchissement de jeton, confirmation d'e-mail…).
-    // Filet de sécurité : si Supabase se bloque (session corrompue, réseau
-    // instable), on force `loading` à false après 4 s pour ne jamais laisser
-    // l'utilisateur sur un écran de chargement infini.
     const safety = setTimeout(() => setLoading(false), 4000);
     supabase.auth.getSession().then(({ data }) => {
       clearTimeout(safety);
@@ -94,8 +90,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  // Charge les rôles d'équipe de l'utilisateur connecté (RLS : chacun voit les
-  // siens). Un client sans rôle obtient un tableau vide → pas de back-office.
   useEffect(() => {
     const uid = user?.id;
     if (!uid) {
@@ -126,11 +120,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isAdmin: roles.includes("admin"),
       isStaff: roles.length > 0,
       rolesLoading,
-      signIn: async (email, password) => {
-        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      signIn: async (email, password, captchaToken) => {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+          options: captchaToken ? { captchaToken } : undefined,
+        });
         return error ? { error: error.message } : {};
       },
       signUp: async (email, password, name, extra) => {
+        // Adresses jetables refusées (la base les refuse aussi, mais avec une
+        // erreur générique : on prévient ici avec un message clair).
+        const { data: allowed } = await supabase.rpc("email_domain_allowed" as never, { _email: email.trim() } as never);
+        if (allowed === false) return { error: "disposable_email" };
+
         const meta: Record<string, string> = {
           full_name: name.trim() || nameFromEmail(email),
         };
@@ -146,14 +149,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           options: {
             data: meta,
             emailRedirectTo: `${window.location.origin}/app`,
+            ...(extra?.captchaToken ? { captchaToken: extra.captchaToken } : {}),
           },
         });
-        if (error) return { error: error.message };
+        if (error) return { error: /saving new user/i.test(error.message) ? "disposable_email" : error.message };
         return { needsConfirmation: !data.session };
       },
-      sendPasswordReset: async (email) => {
+      sendPasswordReset: async (email, captchaToken) => {
         const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
           redirectTo: `${window.location.origin}/reinitialiser`,
+          ...(captchaToken ? { captchaToken } : {}),
         });
         return error ? { error: error.message } : {};
       },

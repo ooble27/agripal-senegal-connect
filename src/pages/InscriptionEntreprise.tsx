@@ -1,12 +1,10 @@
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Building2, Eye, EyeOff, FileText, Lock, Mail, MapPin, Phone, User } from "lucide-react";
-import Logo from "@/components/Logo";
-import ThemeToggle from "@/components/app/ThemeToggle";
-import { LangPill } from "@/components/app/LangToggle";
 import { Button } from "@/components/ui/button";
 import Captcha, { captchaEnabled, type CaptchaHandle } from "@/components/Captcha";
 import { useAuth } from "@/lib/auth";
+import AuthShell from "@/components/auth/AuthShell";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -121,230 +119,218 @@ if (message === "disposable_email") return t("reg.errDisposable");
   const stepLabels = [t("regb.step1"), t("regb.step2")];
 
   return (
-    <div className="ink-neutral app-type flex min-h-screen flex-col bg-background tracking-[-0.015em]">
-      <header className="flex items-center justify-between px-6 pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-10">
-        <Logo />
-        <div className="flex items-center gap-2">
-          <LangPill />
-          <ThemeToggle />
-        </div>
-      </header>
-
-      <main className="flex flex-1 items-center justify-center px-6 py-10">
-        <div className="w-full max-w-[440px]">
-          {!notice && (
-            <>
-              {step === 1 ? (
-                <Link
-                  to="/inscription"
-                  className="mb-6 inline-flex items-center gap-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <ArrowLeft className="h-4 w-4" /> {t("regi.back")}
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  onClick={back}
-                  className="mb-6 inline-flex items-center gap-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <ArrowLeft className="h-4 w-4" /> {t("regb.backBusiness")}
-                </button>
-              )}
-
-              <div className="mb-8 flex items-center">
-                {stepLabels.map((lbl, i) => {
-                  const s = (i + 1) as Step;
-                  const active = s <= step;
-                  return (
-                    <div key={i} className="flex flex-1 items-center">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            "flex h-7 w-7 items-center justify-center rounded-full text-[12px] transition-colors",
-                            active
-                              ? "bg-foreground text-background"
-                              : "border border-border text-muted-foreground",
-                          )}
-                        >
-                          {s}
-                        </span>
-                        <span className={cn("text-[12px]", active ? "text-foreground" : "text-muted-foreground/60")}>
-                          {lbl}
-                        </span>
-                      </div>
-                      {i < stepLabels.length - 1 && (
-                        <div className={cn("mx-3 h-px flex-1 transition-colors", step > s ? "bg-foreground" : "bg-border")} />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-
-          {notice ? (
-            <>
-              <h1 className="font-display text-[2rem] leading-[1.05] tracking-[-0.04em] sm:text-[2.4rem]">
-                {t("regb.accountCreated")}
-              </h1>
-              <div className="mt-8 overflow-hidden rounded-2xl border border-primary/20 bg-primary/[0.04]">
-                <div className="px-5 py-5 text-[14px] leading-relaxed text-foreground">
-                  {notice}
-                  <div className="mt-4">
-                    <Link
-                      to="/connexion"
-                      className="inline-flex items-center gap-2 text-[13px] text-primary hover:underline"
-                    >
-                      {t("regi.goLogin")} <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : step === 1 ? (
-            <>
-              <h1 className="font-display text-[2rem] leading-[1.05] tracking-[-0.04em] sm:text-[2.4rem]">
-                {t("regb.title1")}
-              </h1>
-              <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-                {t("regb.sub1")}
-              </p>
-
-              <form onSubmit={goStep2} className="mt-8">
-                <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                  <Field
-                    label={t("regb.businessName")}
-                    icon={Building2}
-                    type="text"
-                    autoComplete="organization"
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    required
-                  />
-                  <Field
-                    label={t("regb.businessNumber")}
-                    icon={FileText}
-                    type="text"
-                    value={businessNumber}
-                    onChange={(e) => setBusinessNumber(e.target.value)}
-                    placeholder={t("regb.optional")}
-                  />
-                  <Field
-                    label={t("regb.address")}
-                    icon={MapPin}
-                    type="text"
-                    autoComplete="street-address"
-                    value={businessAddress}
-                    onChange={(e) => setBusinessAddress(e.target.value)}
-                    placeholder={t("regb.optional")}
-                  />
-                  <Field
-                    label={t("regb.phone")}
-                    icon={Phone}
-                    type="tel"
-                    autoComplete="tel"
-                    value={businessPhone}
-                    onChange={(e) => setBusinessPhone(e.target.value)}
-                    placeholder={t("regb.optional")}
-                    last
-                  />
-                </div>
-
-                {error && (
-                  <p className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
-                    {error}
-                  </p>
-                )}
-
-                <div className="mt-5 flex justify-end">
-                  <Button type="submit" variant="appSolid" shape="rounded" size="default" className="px-6">
-                    {t("regb.continue")} <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </form>
-            </>
-          ) : (
-            <>
-              <h1 className="font-display text-[2rem] leading-[1.05] tracking-[-0.04em] sm:text-[2.4rem]">
-                {t("regb.title2")}
-              </h1>
-              <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-                {t("regb.sub2")} {businessName || t("regb.sub2fallback")}.
-              </p>
-
-              <form onSubmit={submit} className="mt-8">
-                <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                  <Field
-                    label={t("regi.fullName")}
-                    icon={User}
-                    type="text"
-                    autoComplete="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
-                  <Field
-                    label={t("login.email")}
-                    icon={Mail}
-                    type="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                  <Field
-                    label={t("login.password")}
-                    icon={Lock}
-                    type={showPassword ? "text" : "password"}
-                    autoComplete="new-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    last
-                    trailing={
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((v) => !v)}
-                        aria-label={showPassword ? t("misc.hidePw") : t("misc.showPw")}
-                        className="shrink-0 text-muted-foreground/50 transition-colors hover:text-foreground"
-                      >
-                        {showPassword ? <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.6} /> : <Eye className="h-[18px] w-[18px]" strokeWidth={1.6} />}
-                      </button>
-                    }
-                  />
-                </div>
-
-                <p className="mt-3 rounded-xl border border-border/60 bg-secondary/50 px-4 py-3 text-[12px] leading-relaxed text-muted-foreground">
-                  {t("regb.docs")}
-                </p>
-
-                <Captcha ref={captchaRef} onToken={setCaptcha} className="mt-4" />
-
-                {error && (
-                  <p className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
-                    {error}
-                  </p>
-                )}
-
-                <div className="mt-5 flex justify-end">
-                  <Button type="submit" variant="appSolid" shape="rounded" size="default" className="px-6" disabled={busy || (captchaEnabled() && !captcha)}>
-                    {busy ? t("misc.wait") : captchaEnabled() && !captcha ? t("auth.captchaWait") : t("regi.createAccount")}
-                    {!busy && <ArrowRight className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </form>
-            </>
-          )}
-
-          <p className="mt-10 text-center text-xs leading-relaxed text-muted-foreground">
-            {t("login.ncNote")}{" "}
-            <Link to="/" className="underline hover:text-foreground">
-              {t("login.backHome")}
+    <AuthShell variant="business">
+      {!notice && (
+        <>
+          {step === 1 ? (
+            <Link
+              to="/inscription"
+              className="mb-6 inline-flex items-center gap-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" /> {t("regi.back")}
             </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={back}
+              className="mb-6 inline-flex items-center gap-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" /> {t("regb.backBusiness")}
+            </button>
+          )}
+
+          <div className="mb-8 flex items-center">
+            {stepLabels.map((lbl, i) => {
+              const s = (i + 1) as Step;
+              const active = s <= step;
+              return (
+                <div key={i} className="flex flex-1 items-center">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "flex h-7 w-7 items-center justify-center rounded-full text-[12px] transition-colors",
+                        active
+                          ? "bg-foreground text-background"
+                          : "border border-border text-muted-foreground",
+                      )}
+                    >
+                      {s}
+                    </span>
+                    <span className={cn("text-[12px]", active ? "text-foreground" : "text-muted-foreground/60")}>
+                      {lbl}
+                    </span>
+                  </div>
+                  {i < stepLabels.length - 1 && (
+                    <div className={cn("mx-3 h-px flex-1 transition-colors", step > s ? "bg-foreground" : "bg-border")} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {notice ? (
+        <>
+          <h1 className="font-display text-[2rem] leading-[1.05] tracking-[-0.04em] sm:text-[2.4rem]">
+            {t("regb.accountCreated")}
+          </h1>
+          <div className="mt-8 overflow-hidden rounded-2xl border border-primary/20 bg-primary/[0.04]">
+            <div className="px-5 py-5 text-[14px] leading-relaxed text-foreground">
+              {notice}
+              <div className="mt-4">
+                <Link
+                  to="/connexion"
+                  className="inline-flex items-center gap-2 text-[13px] text-primary hover:underline"
+                >
+                  {t("regi.goLogin")} <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : step === 1 ? (
+        <>
+          <h1 className="font-display text-[2rem] leading-[1.05] tracking-[-0.04em] sm:text-[2.4rem]">
+            {t("regb.title1")}
+          </h1>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+            {t("regb.sub1")}
           </p>
-        </div>
-      </main>
-    </div>
+
+          <form onSubmit={goStep2} className="mt-8">
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              <Field
+                label={t("regb.businessName")}
+                icon={Building2}
+                type="text"
+                autoComplete="organization"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                required
+              />
+              <Field
+                label={t("regb.businessNumber")}
+                icon={FileText}
+                type="text"
+                value={businessNumber}
+                onChange={(e) => setBusinessNumber(e.target.value)}
+                placeholder={t("regb.optional")}
+              />
+              <Field
+                label={t("regb.address")}
+                icon={MapPin}
+                type="text"
+                autoComplete="street-address"
+                value={businessAddress}
+                onChange={(e) => setBusinessAddress(e.target.value)}
+                placeholder={t("regb.optional")}
+              />
+              <Field
+                label={t("regb.phone")}
+                icon={Phone}
+                type="tel"
+                autoComplete="tel"
+                value={businessPhone}
+                onChange={(e) => setBusinessPhone(e.target.value)}
+                placeholder={t("regb.optional")}
+                last
+              />
+            </div>
+
+            {error && (
+              <p className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
+                {error}
+              </p>
+            )}
+
+            <div className="mt-5 flex justify-end">
+              <Button type="submit" variant="appSolid" shape="rounded" size="default" className="w-full rounded-md px-6">
+                {t("regb.continue")} <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </form>
+        </>
+      ) : (
+        <>
+          <h1 className="font-display text-[2rem] leading-[1.05] tracking-[-0.04em] sm:text-[2.4rem]">
+            {t("regb.title2")}
+          </h1>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+            {t("regb.sub2")} {businessName || t("regb.sub2fallback")}.
+          </p>
+
+          <form onSubmit={submit} className="mt-8">
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              <Field
+                label={t("regi.fullName")}
+                icon={User}
+                type="text"
+                autoComplete="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+              <Field
+                label={t("login.email")}
+                icon={Mail}
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <Field
+                label={t("login.password")}
+                icon={Lock}
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                last
+                trailing={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? t("misc.hidePw") : t("misc.showPw")}
+                    className="shrink-0 text-muted-foreground/50 transition-colors hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.6} /> : <Eye className="h-[18px] w-[18px]" strokeWidth={1.6} />}
+                  </button>
+                }
+              />
+            </div>
+
+            <p className="mt-3 rounded-xl border border-border/60 bg-secondary/50 px-4 py-3 text-[12px] leading-relaxed text-muted-foreground">
+              {t("regb.docs")}
+            </p>
+
+            <Captcha ref={captchaRef} onToken={setCaptcha} className="mt-4" />
+
+            {error && (
+              <p className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
+                {error}
+              </p>
+            )}
+
+            <div className="mt-5 flex justify-end">
+              <Button type="submit" variant="appSolid" shape="rounded" size="default" className="w-full rounded-md px-6" disabled={busy || (captchaEnabled() && !captcha)}>
+                {busy ? t("misc.wait") : captchaEnabled() && !captcha ? t("auth.captchaWait") : t("regi.createAccount")}
+                {!busy && <ArrowRight className="h-4 w-4" />}
+              </Button>
+            </div>
+          </form>
+        </>
+      )}
+
+      <p className="mt-10 text-center text-xs leading-relaxed text-muted-foreground">
+        {t("login.ncNote")}{" "}
+        <Link to="/" className="underline hover:text-foreground">
+          {t("login.backHome")}
+        </Link>
+      </p>
+    </AuthShell>
   );
 };
 

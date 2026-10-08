@@ -143,3 +143,12 @@ export const POPULAR: [string, string][] = [
 
 /** Retire les accents et la casse, pour la recherche. */
 export const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+/** Couleur et forme d'un guide vidéo : celles du thème où il apparaît. */
+export const guideTheme = (slug: string): { color: string; shape: HelpShape } => {
+  const c = FAQ_CATEGORIES.find((x) => x.videos.includes(slug));
+  return c ? { color: c.color, shape: c.shape } : { color: HELP_COLORS.mint, shape: "circle" };
+};
+
+/** Couleur de texte lisible sur une couleur de thème. */
+export const inkOn = (color: string) => (color === HELP_COLORS.forest ? HELP_COLORS.cream : "#14110f");

@@ -20,13 +20,20 @@ import { useOtcVisible } from "@/lib/otc";
 
 type Step = "amount" | "reception" | "network" | "deposit" | "done";
 
+/**
+ * Adresses de dépôt des ventes. Réseaux EVM : le portefeuille MetaMask d'Ooble
+ * (le même que celui d'envoi des achats : les USDT vendus servent aux achats).
+ * Tron et Solana : adresses du compte Binance, en attendant un portefeuille
+ * dédié. Mêmes valeurs dans supabase/functions/sell-watch (lecture des dépôts).
+ */
+const OOBLE_EVM = "0x0aC6f6202Ebff35D36A2Dca04C4f556FF95Fc093";
 const OOBLE_DEPOSIT: Record<NetId, string> = {
   trx: "TSPUk2W5bcGGNPpKzx1xTDc2NuxpRJRCBb",
-  bnb: "0xe1d04ef9b4c199ba6a59460ed8bd0a486dc4fc84",
-  eth: "0xe1d04ef9b4c199ba6a59460ed8bd0a486dc4fc84",
-  matic: "0xe1d04ef9b4c199ba6a59460ed8bd0a486dc4fc84",
+  bnb: OOBLE_EVM,
+  eth: OOBLE_EVM,
+  matic: OOBLE_EVM,
   sol: "8ES2hxsfqZVX3cjxWLBJ8jCdzSu9hTBYELSkX82UdnhN",
-  avax: "0xe1d04ef9b4c199ba6a59460ed8bd0a486dc4fc84",
+  avax: OOBLE_EVM,
 };
 
 const nfCad = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 2, minimumFractionDigits: 2 });

@@ -30,10 +30,11 @@ const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const SITE = Deno.env.get("SITE_URL") ?? "https://ooble.ca";
 
-/** Adresses de dépôt affichées aux clients (mêmes valeurs que src/pages/app/AppVendre.tsx). */
+/** Adresses de dépôt affichées aux clients (mêmes valeurs que src/pages/app/AppVendre.tsx).
+ *  EVM : portefeuille MetaMask d'Ooble (aussi portefeuille d'envoi des achats). */
 const DEPOSIT = {
   trc20: "TSPUk2W5bcGGNPpKzx1xTDc2NuxpRJRCBb",
-  evm: "0xe1d04ef9b4c199ba6a59460ed8bd0a486dc4fc84",
+  evm: "0x0aC6f6202Ebff35D36A2Dca04C4f556FF95Fc093",
 };
 
 type EvmNet = "bep20" | "polygon" | "avalanche" | "erc20";

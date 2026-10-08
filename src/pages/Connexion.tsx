@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, KeyRound, Lock, Mail } from "lucide-react";
-import Logo from "@/components/Logo";
-import ThemeToggle from "@/components/app/ThemeToggle";
-import { LangPill } from "@/components/app/LangToggle";
 import { Button } from "@/components/ui/button";
 import Captcha, { captchaEnabled, type CaptchaHandle } from "@/components/Captcha";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import AuthShell from "@/components/auth/AuthShell";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -206,229 +204,217 @@ const Connexion = () => {
     : t("login.sub");
 
   return (
-    <div className="ink-neutral app-type flex min-h-screen flex-col bg-background tracking-[-0.015em]">
-      <header className="flex items-center justify-between px-6 pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-10">
-        <Logo />
-        <div className="flex items-center gap-2.5">
-          <LangPill />
-          <ThemeToggle />
+    <AuthShell variant="login">
+      {isForgot && forgotStep !== "done" && (
+        <button
+          type="button"
+          onClick={() => switchMode("login")}
+          className="mb-6 inline-flex items-center gap-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" /> {t("login.backToLogin")}
+        </button>
+      )}
+
+      {forgotStep === "done" ? (
+        <div className="text-center">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-lg bg-foreground text-background">
+            <Check className="h-6 w-6" strokeWidth={2.2} />
+          </span>
+          <h1 className="mt-6 font-display text-[1.8rem] tracking-[-0.03em]">{title}</h1>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">{subtitle}</p>
         </div>
-      </header>
+      ) : (
+        <>
+          <h1 className="font-display text-[2rem] leading-[1.05] tracking-[-0.04em] sm:text-[2.4rem]">
+            {title}
+          </h1>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">{subtitle}</p>
 
-      <main className="flex flex-1 items-center justify-center px-6 py-10">
-        <div className="w-full max-w-[440px]">
-          {isForgot && forgotStep !== "done" && (
-            <button
-              type="button"
-              onClick={() => switchMode("login")}
-              className="mb-6 inline-flex items-center gap-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" /> {t("login.backToLogin")}
-            </button>
-          )}
-
-          {forgotStep === "done" ? (
-            <div className="text-center">
-              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-foreground text-background">
-                <Check className="h-6 w-6" strokeWidth={2.2} />
-              </span>
-              <h1 className="mt-6 font-display text-[1.8rem] tracking-[-0.03em]">{title}</h1>
-              <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">{subtitle}</p>
-            </div>
-          ) : (
-            <>
-              <h1 className="font-display text-[2rem] leading-[1.05] tracking-[-0.04em] sm:text-[2.4rem]">
-                {title}
-              </h1>
-              <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">{subtitle}</p>
-
-              <form onSubmit={submit} className="mt-8">
-                <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                  {/* Login mode: email + password */}
-                  {!isForgot && (
-                    <>
-                      <Field
-                        label={t("login.email")}
-                        icon={Mail}
-                        type="email"
-                        autoComplete="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                      <Field
-                        label={t("login.password")}
-                        icon={Lock}
-                        type={showPassword ? "text" : "password"}
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        last
-                        trailing={
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword((v) => !v)}
-                            aria-label={showPassword ? t("misc.hidePw") : t("misc.showPw")}
-                            className="shrink-0 text-muted-foreground/50 transition-colors hover:text-foreground"
-                          >
-                            {showPassword ? <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.6} /> : <Eye className="h-[18px] w-[18px]" strokeWidth={1.6} />}
-                          </button>
-                        }
-                      />
-                    </>
-                  )}
-
-                  {/* Forgot step 1: email */}
-                  {isForgot && forgotStep === "email" && (
-                    <Field
-                      label={t("login.email")}
-                      icon={Mail}
-                      type="email"
-                      autoComplete="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      last
-                    />
-                  )}
-
-                  {/* Forgot step 2: OTP code */}
-                  {isForgot && forgotStep === "otp" && (
-                    <Field
-                      label={t("login.otpLabel")}
-                      icon={KeyRound}
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]{8}"
-                      maxLength={8}
-                      autoComplete="one-time-code"
-                      placeholder={t("login.otpPlaceholder")}
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 8))}
-                      required
-                      last
-                    />
-                  )}
-
-                  {/* Forgot step 3: new password */}
-                  {isForgot && forgotStep === "newpw" && (
-                    <Field
-                      label={t("login.newPwLabel")}
-                      icon={Lock}
-                      type={showNewPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                      last
-                      trailing={
-                        <button
-                          type="button"
-                          onClick={() => setShowNewPassword((v) => !v)}
-                          aria-label={showNewPassword ? t("misc.hidePw") : t("misc.showPw")}
-                          className="shrink-0 text-muted-foreground/50 transition-colors hover:text-foreground"
-                        >
-                          {showNewPassword ? <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.6} /> : <Eye className="h-[18px] w-[18px]" strokeWidth={1.6} />}
-                        </button>
-                      }
-                    />
-                  )}
-                </div>
-
-                {mode === "login" && (
-                  <div className="mt-2 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => switchMode("forgot")}
-                      className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {t("login.forgot")}
-                    </button>
-                  </div>
-                )}
-
-                {isForgot && forgotStep === "otp" && (
-                  <div className="mt-2 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => { setOtp(""); sendOtpCode(); }}
-                      className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {t("login.resendCode")}
-                    </button>
-                  </div>
-                )}
-
-                {needsCaptcha && <Captcha ref={captchaRef} onToken={setCaptcha} className="mt-4" />}
-
-                {error && (
-                  <p className="mt-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
-                    {error}
-                  </p>
-                )}
-                {notice && forgotStep === "email" && (
-                  <p className="mt-3 rounded-xl border border-primary/20 bg-primary/[0.04] px-4 py-3 text-[14px] leading-relaxed text-foreground">
-                    {notice}
-                  </p>
-                )}
-
-                <div className="mt-5 flex justify-end">
-                  <Button type="submit" variant="appSolid" shape="rounded" size="default" className="px-6" disabled={busy || captchaBlocks}>
-                    {busy
-                      ? t("misc.wait")
-                      : isForgot
-                        ? forgotStep === "otp"
-                          ? t("login.verifyCode")
-                          : forgotStep === "newpw"
-                            ? t("login.savePw")
-                            : t("login.sendLink")
-                        : t("login.submit")}
-                    {!busy && <ArrowRight className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </form>
-
+          <form onSubmit={submit} className="mt-8">
+            <div className="overflow-hidden rounded-lg border border-border bg-card">
+              {/* Login mode: email + password */}
               {!isForgot && (
                 <>
-                  <div className="mt-6 flex items-center gap-3">
-                    <span className="h-px flex-1 bg-border" />
-                    <span className="text-xs text-muted-foreground">{t("login.or")}</span>
-                    <span className="h-px flex-1 bg-border" />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => signInWithGoogle()}
-                    className="mt-4 flex w-full items-center justify-center gap-3 rounded-2xl border border-border bg-card px-5 py-3.5 text-sm font-medium transition-colors hover:bg-secondary/60 active:scale-[0.98]"
-                  >
-                    <GoogleIcon />
-                    {t("login.google")}
-                  </button>
-
-                  <p className="mt-6 text-center text-sm text-muted-foreground">
-                    {t("login.newUser")}{" "}
-                    <Link
-                      to="/inscription"
-                      className="text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground"
-                    >
-                      {t("login.createAccount")}
-                    </Link>
-                  </p>
+                  <Field
+                    label={t("login.email")}
+                    icon={Mail}
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                  <Field
+                    label={t("login.password")}
+                    icon={Lock}
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    last
+                    trailing={
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        aria-label={showPassword ? t("misc.hidePw") : t("misc.showPw")}
+                        className="shrink-0 text-muted-foreground/50 transition-colors hover:text-foreground"
+                      >
+                        {showPassword ? <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.6} /> : <Eye className="h-[18px] w-[18px]" strokeWidth={1.6} />}
+                      </button>
+                    }
+                  />
                 </>
               )}
 
-              <p className="mt-8 text-center text-xs leading-relaxed text-muted-foreground">
-                {t("login.ncNote")}{" "}
-                <Link to="/" className="underline hover:text-foreground">
-                  {t("login.backHome")}
+              {/* Forgot step 1: email */}
+              {isForgot && forgotStep === "email" && (
+                <Field
+                  label={t("login.email")}
+                  icon={Mail}
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  last
+                />
+              )}
+
+              {/* Forgot step 2: OTP code */}
+              {isForgot && forgotStep === "otp" && (
+                <Field
+                  label={t("login.otpLabel")}
+                  icon={KeyRound}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]{8}"
+                  maxLength={8}
+                  autoComplete="one-time-code"
+                  placeholder={t("login.otpPlaceholder")}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                  required
+                  last
+                />
+              )}
+
+              {/* Forgot step 3: new password */}
+              {isForgot && forgotStep === "newpw" && (
+                <Field
+                  label={t("login.newPwLabel")}
+                  icon={Lock}
+                  type={showNewPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  last
+                  trailing={
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword((v) => !v)}
+                      aria-label={showNewPassword ? t("misc.hidePw") : t("misc.showPw")}
+                      className="shrink-0 text-muted-foreground/50 transition-colors hover:text-foreground"
+                    >
+                      {showNewPassword ? <EyeOff className="h-[18px] w-[18px]" strokeWidth={1.6} /> : <Eye className="h-[18px] w-[18px]" strokeWidth={1.6} />}
+                    </button>
+                  }
+                />
+              )}
+            </div>
+
+            {mode === "login" && (
+              <div className="mt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => switchMode("forgot")}
+                  className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {t("login.forgot")}
+                </button>
+              </div>
+            )}
+
+            {isForgot && forgotStep === "otp" && (
+              <div className="mt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => { setOtp(""); sendOtpCode(); }}
+                  className="text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {t("login.resendCode")}
+                </button>
+              </div>
+            )}
+
+            {needsCaptcha && <Captcha ref={captchaRef} onToken={setCaptcha} className="mt-4" />}
+
+            {error && (
+              <p className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
+                {error}
+              </p>
+            )}
+            {notice && forgotStep === "email" && (
+              <p className="mt-3 rounded-md border border-primary/20 bg-primary/[0.04] px-4 py-3 text-[14px] leading-relaxed text-foreground">
+                {notice}
+              </p>
+            )}
+
+            <div className="mt-5 flex justify-end">
+              <Button type="submit" variant="appSolid" shape="rounded" size="default" className="w-full rounded-md px-6" disabled={busy || captchaBlocks}>
+                {busy
+                  ? t("misc.wait")
+                  : isForgot
+                    ? forgotStep === "otp"
+                      ? t("login.verifyCode")
+                      : forgotStep === "newpw"
+                        ? t("login.savePw")
+                        : t("login.sendLink")
+                    : t("login.submit")}
+                {!busy && <ArrowRight className="h-4 w-4" />}
+              </Button>
+            </div>
+          </form>
+
+          {!isForgot && (
+            <>
+              <div className="mt-6 flex items-center gap-3">
+                <span className="h-px flex-1 bg-border" />
+                <span className="text-xs text-muted-foreground">{t("login.or")}</span>
+                <span className="h-px flex-1 bg-border" />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => signInWithGoogle()}
+                className="mt-4 flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-card px-5 py-3.5 text-sm font-medium transition-colors hover:bg-secondary/60 active:scale-[0.98]"
+              >
+                <GoogleIcon />
+                {t("login.google")}
+              </button>
+
+              <p className="mt-6 text-center text-sm text-muted-foreground">
+                {t("login.newUser")}{" "}
+                <Link
+                  to="/inscription"
+                  className="text-foreground underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground"
+                >
+                  {t("login.createAccount")}
                 </Link>
               </p>
             </>
           )}
-        </div>
-      </main>
-    </div>
+
+          <p className="mt-8 text-center text-xs leading-relaxed text-muted-foreground">
+            {t("login.ncNote")}{" "}
+            <Link to="/" className="underline hover:text-foreground">
+              {t("login.backHome")}
+            </Link>
+          </p>
+        </>
+      )}
+    </AuthShell>
   );
 };
 

@@ -28,11 +28,11 @@ function snippet(text: string | null, len = 120): string {
 
 const OOBLE_DEPOSIT_ADDRESSES: Record<string, string> = {
   trx: "TSPUk2W5bcGGNPpKzx1xTDc2NuxpRJRCBb",
-  bnb: "0xe1d04ef9b4c199ba6a59460ed8bd0a486dc4fc84",
-  eth: "0xe1d04ef9b4c199ba6a59460ed8bd0a486dc4fc84",
-  matic: "0xe1d04ef9b4c199ba6a59460ed8bd0a486dc4fc84",
+  bnb: "0x0aC6f6202Ebff35D36A2Dca04C4f556FF95Fc093",
+  eth: "0x0aC6f6202Ebff35D36A2Dca04C4f556FF95Fc093",
+  matic: "0x0aC6f6202Ebff35D36A2Dca04C4f556FF95Fc093",
   sol: "8ES2hxsfqZVX3cjxWLBJ8jCdzSu9hTBYELSkX82UdnhN",
-  avax: "0xe1d04ef9b4c199ba6a59460ed8bd0a486dc4fc84",
+  avax: "0x0aC6f6202Ebff35D36A2Dca04C4f556FF95Fc093",
 };
 
 export async function fetchPlatformContext(): Promise<PlatformContext> {

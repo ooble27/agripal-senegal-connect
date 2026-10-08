@@ -7,9 +7,10 @@
 //   • la référence OOB-XXXXXXXX de l'ordre figure dans le message ;
 //   • le montant reçu est exactement celui de l'ordre ;
 //   • le nom de l'expéditeur correspond au client (ou à son entreprise).
-// L'ordre passe alors à « paiement reçu » et le client est prévenu. L'envoi
-// des USDT reste déclenché par l'équipe, depuis la fiche de l'ordre. Dans
-// tous les autres cas, rien ne bouge : l'avis attend l'équipe dans l'admin.
+// L'ordre passe alors à « paiement reçu », le client est prévenu, et l'envoi
+// automatique des USDT est demandé à `usdt-payout` si les réglages le
+// permettent. Dans tous les autres cas, rien ne bouge : l'avis attend
+// l'équipe dans l'admin.
 
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -144,7 +145,17 @@ export async function handleInterac(db: SupabaseClient, m: InteracMail, supabase
     }).catch((e) => console.error("interac: courriel", e));
   }
 
-  // Aucun envoi d'argent ici : l'équipe déclenche l'envoi des USDT depuis la
-  // fiche de l'ordre (règle d'exploitation : l'humain déclenche).
-  return { status: "matched", orderId: order.id };
+  // Envoi automatique des USDT si les réglages le permettent ; usdt-payout
+  // refait tous les contrôles (seuil, client vérifié, avis, soldes, plafond).
+  // Sinon l'ordre reste « paiement reçu » et l'équipe clique « Envoyer ».
+  const { data: s } = await db.from("settlement_settings").select("auto_payout, auto_payout_max_cad").eq("id", 1).maybeSingle();
+  const auto = !!s?.auto_payout && amount <= Number(s.auto_payout_max_cad);
+  if (auto) {
+    const job = call("usdt-payout", { action: "send", order_id: order.id })
+      .then((r) => r.json()).then((r) => console.log("interac: envoi automatique", JSON.stringify(r)))
+      .catch((e) => console.error("interac: envoi automatique", e));
+    // @ts-ignore EdgeRuntime existe dans l'environnement Supabase
+    if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(job); else await job;
+  }
+  return { status: "matched", orderId: order.id, autoPayout: auto };
 }

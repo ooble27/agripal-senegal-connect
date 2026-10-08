@@ -154,7 +154,7 @@ const PayoutBox = ({ order, list, onChanged }: { order: AdminOrder; list: UsdtPa
           {last ? (
             <p className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-muted-foreground">
               <Pill m={PAYOUT[last.status]} />
-              Lancé par l'équipe
+              {last.trigger === "auto" ? "Envoyé automatiquement" : "Lancé par l'équipe"}
               {last.tx_hash && txUrl(last.network, last.tx_hash) && (
                 <a href={txUrl(last.network, last.tx_hash)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-foreground underline-offset-4 hover:underline">
                   Voir la transaction <ExternalLink className="h-3 w-3" />

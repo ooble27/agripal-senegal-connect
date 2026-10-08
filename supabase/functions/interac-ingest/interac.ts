@@ -22,7 +22,14 @@ const stripHtml = (h: string) =>
     .replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
 
 /** « 1 234,56 $ » ou « $1,234.56 » → 1234.56 */
-function parseAmount(text: string): number | null {
+export function parseAmount(text: string): number | null {
+  // Ligne « Montant : 2,00 $ (CAD) » ou « Amount: $2.00 (CAD) » en priorité.
+  const line = /(?:Montant|Amount)\s*:\s*(\$\s?[\d,]+\.\d{2}|[\d\s  .]*\d,\d{2}\s?\$)/i.exec(text)?.[1];
+  if (line) {
+    const s = line.replace(/[$\s  ]/g, "");
+    const n = s.includes(",") && !/\.\d{2}$/.test(s) ? Number(s.replace(/\./g, "").replace(",", ".")) : Number(s.replace(/,/g, ""));
+    if (Number.isFinite(n) && n > 0) return Math.round(n * 100) / 100;
+  }
   const near = /(?:sent you|vous a envoy[ée]|has sent|envoy[ée] un virement|deposited|déposé)[\s\S]{0,80}?(\$\s?[\d,]+\.\d{2}|[\d\s  .]+,\d{2}\s?\$)/i.exec(text);
   const any = near?.[1] ?? /(\$\s?[\d,]+\.\d{2})|([\d\s  .]+,\d{2}\s?\$)/.exec(text)?.[0];
   if (!any) return null;
@@ -31,10 +38,23 @@ function parseAmount(text: string): number | null {
   return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null;
 }
 
-function parseSender(subject: string, text: string): string {
+export function parseSender(subject: string, text: string): string {
+  // « Envoyé par : MOHAMED LO » / « Sent by: MOHAMED LO » (avis de dépôt).
+  const by = /(?:Envoy[ée] par|Sent by|Sent from)\s*:\s*([^\n]{2,80})/i.exec(text)?.[1];
+  if (by) return by.trim();
+  // « Vous avez reçu 2,00 $ de MOHAMED LO et ce montant… » /
+  // « You've received $2.00 from MOHAMED LO and the money… »
+  const recv = /(?:re[çc]u|received)\s+[^\n]{1,30}?\s+(?:de|from)\s+(.{2,80}?)\s+(?:et|and)\s/i;
+  const r = recv.exec(subject)?.[1] ?? recv.exec(text)?.[1];
+  if (r) return r.trim();
   const re = /(?:INTERAC[^:]*:\s*)?([^:\n]{2,80}?)\s+(?:sent you|has sent you|vous a envoy[ée]|vous a fait parvenir)/i;
   return (re.exec(subject)?.[1] ?? re.exec(text)?.[1] ?? "").replace(/^(?:Virement|INTERAC)[^:]*:\s*/i, "").trim();
 }
+
+/** Avis de dépôt automatique (et non virement à accepter). */
+export const isAutoDeposit = (subject: string, text: string) =>
+  /automatically deposited|deposited automatically|has been deposited|have been deposited|d[ée]pos[ée]e?s? automatiquement|d[ée]p[ôo]t automatique|a [ée]t[ée] d[ée]pos[ée]|ont [ée]t[ée] d[ée]pos[ée]s/i
+    .test(`${subject}\n${text}`);
 
 // Mots sans valeur pour comparer des noms : formes juridiques, articles,
 // civilités et liaisons des comptes conjoints (« X ET Y », « X AND Y »).
@@ -95,7 +115,7 @@ export async function handleInterac(db: SupabaseClient, m: InteracMail, supabase
   if (!auth || !isInteracSender(m.fromEmail)) {
     return { status: await save("mismatch", `Avis non authentifié (${m.authDetail}). Aucun ordre modifié : vérifiez le dépôt dans le compte bancaire.`) };
   }
-  if (!/automatically deposited|d[ée]pos[ée]e? automatiquement|d[ée]p[ôo]t automatique|has been deposited|a [ée]t[ée] d[ée]pos[ée]/i.test(text)) {
+  if (!isAutoDeposit(m.subject, text)) {
     return { status: await save("ignored", "Avis sans dépôt automatique (virement à accepter ou autre message Interac).") };
   }
   if (!amount) return { status: await save("unmatched", "Montant introuvable dans l'avis.") };

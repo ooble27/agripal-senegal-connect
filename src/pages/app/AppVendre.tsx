@@ -111,17 +111,20 @@ const AppVendre = () => {
   // en CAD (même règle en base, comptée à part des achats).
   const [allowance, setAllowance] = useState<TradeAllowance | null>(null);
   useEffect(() => { getAllowance("sell").then(setAllowance); }, []);
-  const maxCad = Math.floor(Math.min(TRADE_DAILY_MAX_CAD, allowance?.remaining ?? TRADE_DAILY_MAX_CAD));
-  const blocked = allowance !== null && maxCad < TRADE_MIN_CAD;
+  // L'équipe Ooble (tous les rôles) vend n'importe quel montant, pour les
+  // tests : ni minimum, ni plafond (la base les exempte aussi).
+  const minCad = isStaff ? 0 : TRADE_MIN_CAD;
+  const maxCad = isStaff ? Infinity : Math.floor(Math.min(TRADE_DAILY_MAX_CAD, allowance?.remaining ?? TRADE_DAILY_MAX_CAD));
+  const blocked = !isStaff && allowance !== null && maxCad < TRADE_MIN_CAD;
 
   const sellRate = rate.sell;
   const value = parseAmount(amount);
   const usdt = toUsdt(value, unit, sellRate);
   const cad = toCad(usdt, "USDT", sellRate);
-  const belowMin = value > 0 && cad < TRADE_MIN_CAD;
+  const belowMin = value > 0 && cad < minCad;
 
   const maxText = (u: Unit) => amountText(maxCad, u, sellRate, "max");
-  const minText = (u: Unit) => amountText(TRADE_MIN_CAD, u, sellRate, "min");
+  const minText = (u: Unit) => amountText(minCad, u, sellRate, "min");
 
   // Au-delà du maximum permis, la saisie est ramenée au maximum.
   const onAmount = (raw: string) => {
@@ -215,7 +218,7 @@ const AppVendre = () => {
                   </button>
                 ))}
               </div>
-              <div className="flex gap-2">
+              <div className={isStaff ? "hidden" : "flex gap-2"}>
                 <button type="button" onClick={() => setAmount(minText(unit))} className="text-[11px] font-medium text-muted-foreground underline">Min</button>
                 <button type="button" onClick={() => setAmount(maxText(unit))} className="text-[11px] font-medium text-muted-foreground underline">Max</button>
               </div>
@@ -244,7 +247,7 @@ const AppVendre = () => {
           ) : belowMin ? (
             <p className="mt-3 text-[13px] text-destructive">{t("sell.minHint")}</p>
           ) : null}
-          {otc && (blocked || (value > 0 && cad >= maxCad)) && (
+          {otc && !isStaff && (blocked || (value > 0 && cad >= maxCad)) && (
             <Link to="/app/otc" className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium text-foreground underline-offset-2 hover:underline">
               {t("trade.otcHint")} <ArrowRight className="h-3.5 w-3.5" />
             </Link>

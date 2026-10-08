@@ -38,7 +38,7 @@ const Reinitialiser = () => {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) {
+    if (password.length < 8) {
       setError(t("reg.errPasswordShort"));
       return;
     }

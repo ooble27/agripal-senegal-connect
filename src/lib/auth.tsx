@@ -136,6 +136,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return error ? { error: error.message } : {};
       },
       signUp: async (email, password, name, extra) => {
+        // 8 caractères minimum (même règle à poser dans Supabase → Auth).
+        if (password.length < 8) return { error: "Password should be at least 8 characters." };
         // Adresses jetables refusées (la base les refuse aussi, mais avec une
         // erreur générique : on prévient ici avec un message clair).
         const { data: allowed } = await supabase.rpc("email_domain_allowed" as never, { _email: email.trim() } as never);
@@ -170,6 +172,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return error ? { error: error.message } : {};
       },
       updatePassword: async (password) => {
+        if (password.length < 8) return { error: "Password should be at least 8 characters." };
         const { error } = await supabase.auth.updateUser({ password });
         return error ? { error: error.message } : {};
       },

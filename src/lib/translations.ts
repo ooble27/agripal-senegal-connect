@@ -749,7 +749,7 @@ const dict = {
 
   // ── Registration errors ──
   "reg.errAlreadyExists": { fr: "Un compte existe déjà avec cet e-mail.", en: "An account already exists with this email." },
-  "reg.errPasswordShort": { fr: "Le mot de passe doit contenir au moins 6 caractères.", en: "Password must be at least 6 characters." },
+  "reg.errPasswordShort": { fr: "Le mot de passe doit contenir au moins 8 caractères.", en: "Password must be at least 8 characters." },
   "reg.errBadEmail": { fr: "Adresse e-mail invalide.", en: "Invalid email address." },
 
   // ── Send & OTC (placeholder page) ──
@@ -893,8 +893,8 @@ const dict = {
   },
   "guide.account.s3": { fr: "Remplissez le formulaire", en: "Fill in the form" },
   "guide.account.s3d": {
-    fr: "Entrez votre nom complet, votre adresse e-mail et un mot de passe d'au moins 6 caractères.",
-    en: "Enter your full name, your email address and a password of at least 6 characters.",
+    fr: "Entrez votre nom complet, votre adresse e-mail et un mot de passe d'au moins 8 caractères.",
+    en: "Enter your full name, your email address and a password of at least 8 characters.",
   },
   "guide.account.s4": { fr: "Créez votre compte", en: "Create your account" },
   "guide.account.s4d": {

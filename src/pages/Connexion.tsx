@@ -146,7 +146,7 @@ const Connexion = () => {
   };
 
   const saveNewPassword = async () => {
-    if (newPassword.length < 6) {
+    if (newPassword.length < 8) {
       setError(t("reg.errPasswordShort"));
       return;
     }

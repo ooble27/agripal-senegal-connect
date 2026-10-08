@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, ShieldCheck, LayoutGrid, ChevronRight, Gauge, MessageSquare, Building2, Globe, MapPin, Phone, Hash, Mail, User, Lock, SunMoon, Handshake } from "lucide-react";
+import { LogOut, ShieldCheck, LayoutGrid, ChevronRight, Gauge, Building2, Globe, Mail, User, Lock, SunMoon, Handshake } from "lucide-react";
 import { useOtcVisible } from "@/lib/otc";
 import { Link } from "react-router-dom";
 import AppShell from "@/components/app/AppShell";
 import CopyRow from "@/components/app/CopyRow";
-import { LangPill } from "@/components/app/LangToggle";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { getMyProfile, peekMyProfile, type MyProfile } from "@/lib/profile";
@@ -14,6 +13,7 @@ import { useLang, useT } from "@/lib/i18n";
 import { getTheme, onThemeChange, setTheme, type Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import BusinessMark from "@/components/app/BusinessMark";
+import MobileAccount from "@/components/app/account/MobileAccount";
 import type { TKey } from "@/lib/translations";
 
 const KYC_KEYS: Record<KycDbStatus, TKey> = {
@@ -66,158 +66,8 @@ const Compte = () => {
       {/* Tablette et ordinateur : deux colonnes (proposition A). */}
       <DesktopAccount profile={profile} kyc={kyc} name={user?.name ?? ""} email={user?.email ?? ""} isStaff={isStaff} onLogout={logout} />
 
-      {/* Téléphone : mise en page d'origine, inchangée. */}
-      <div className="md:hidden">
-      {/* ─── Profile card ─── */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
-        <div className="flex items-center gap-4 p-5">
-          <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-muted-foreground shadow-sm">
-            <User className="h-7 w-7" strokeWidth={1.6} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-display text-xl font-bold tracking-tight">{user?.name}</p>
-            <p className="truncate text-sm text-muted-foreground">{user?.email}</p>
-            {profile?.accountType === "business" && (
-              <span className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full bg-secondary py-[3px] pl-[3px] pr-2.5 text-[11.5px] font-semibold text-foreground/75">
-                <BusinessMark name={profile.businessName} size="sm" className="h-[18px] w-[18px] rounded-full text-[8px]" />
-                <span className="truncate">{t("kyb.accountBusiness")}</span>
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Business details (inline under profile) */}
-        {profile?.accountType === "business" && profile.businessName && (
-          <div className="divide-y divide-border border-t border-border">
-            <div className="flex items-center gap-3 px-5 py-3.5">
-              <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.7} />
-              <span className="flex-1 text-sm text-muted-foreground">{t("acct.businessName")}</span>
-              <span className="text-sm font-medium">{profile.businessName}</span>
-            </div>
-            {profile.businessNumber && (
-              <div className="flex items-center gap-3 px-5 py-3.5">
-                <Hash className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.7} />
-                <span className="flex-1 text-sm text-muted-foreground">NEQ / BN</span>
-                <span className="font-mono text-sm">{profile.businessNumber}</span>
-              </div>
-            )}
-            {profile.businessAddress && (
-              <div className="flex items-center gap-3 px-5 py-3.5">
-                <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.7} />
-                <span className="flex-1 text-sm text-muted-foreground">{t("regb.address")}</span>
-                <span className="text-right text-sm">{profile.businessAddress}</span>
-              </div>
-            )}
-            {profile.businessPhone && (
-              <div className="flex items-center gap-3 px-5 py-3.5">
-                <Phone className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.7} />
-                <span className="flex-1 text-sm text-muted-foreground">{t("regb.phone")}</span>
-                <span className="text-sm">{profile.businessPhone}</span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ─── Email ─── */}
-      <Link to="/app/changer-email" className="mt-3 flex items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card px-5 py-4 transition-colors hover:bg-secondary/40">
-        <Mail className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />
-        <div className="min-w-0 flex-1">
-          <span className="text-sm font-medium">{t("acct.email")}</span>
-          <p className="truncate text-[13px] text-muted-foreground">{user?.email}</p>
-        </div>
-        <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
-      </Link>
-
-      {/* ─── Limites : sur une page à part, comme l'e-mail ─── */}
-      <Link to="/app/limites" className="mt-3 flex items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card px-5 py-4 transition-colors hover:bg-secondary/40">
-        <Gauge className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />
-        <div className="min-w-0 flex-1">
-          <span className="text-sm font-medium">{t("acct.limits")}</span>
-          <p className="truncate text-[13px] text-muted-foreground">{t("acct.limitsSub")}</p>
-        </div>
-        <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
-      </Link>
-
-      {/* ─── Desk OTC : gros volumes, à partir de 10 000 $ ─── */}
-      {otc && (
-        <Link to="/app/otc" className="mt-3 flex items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card px-5 py-4 transition-colors hover:bg-secondary/40">
-          <Handshake className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />
-          <div className="min-w-0 flex-1">
-            <span className="text-sm font-medium">{t("nav.otc")}</span>
-            <p className="truncate text-[13px] text-muted-foreground">{t("dash.otcSub")}</p>
-          </div>
-          <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
-        </Link>
-      )}
-
-      {/* ─── Interac e-Transfer ─── */}
-      {profile?.interacQuestion && (
-        <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-card">
-          <div className="flex items-center gap-2.5 px-5 pb-1 pt-4">
-            <MessageSquare className="h-4 w-4 text-muted-foreground" strokeWidth={1.9} />
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{t("acct.interac")}</p>
-          </div>
-          <p className="px-5 pb-2 text-[12.5px] text-muted-foreground">
-            {t("acct.interacSub")}
-          </p>
-          <div className="divide-y divide-border border-t border-border">
-            <CopyRow label={t("acct.question")} value={profile.interacQuestion} />
-            <CopyRow label={t("acct.answer")} value={profile.interacAnswer!} mono />
-          </div>
-        </div>
-      )}
-
-      {/* ─── Settings group ─── */}
-      <div className="mt-3 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
-        {/* Language */}
-        <div className="flex items-center gap-3 px-5 py-4">
-          <Globe className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />
-          <span className="flex-1 text-sm font-medium">{t("acct.language")}</span>
-          <LangPill />
-        </div>
-
-        {/* KYC */}
-        <Link to="/app/verification" className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-secondary/40">
-          <ShieldCheck className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />
-          <span className="flex-1 text-sm font-medium">{t("acct.kyc")}</span>
-          {kyc && (
-            <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", KYC_TONE[kyc])}>
-              {t(KYC_KEYS[kyc])}
-            </span>
-          )}
-          <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
-        </Link>
-
-        {/* Vérification de l'entreprise (comptes entreprise) */}
-        {profile?.accountType === "business" && (
-          <Link to="/app/entreprise" className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-secondary/40">
-            <Building2 className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />
-            <span className="flex-1 text-sm font-medium">{t("acct.businessVerif")}</span>
-            <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", KYC_TONE[profile.businessStatus])}>
-              {t(KYC_KEYS[profile.businessStatus])}
-            </span>
-            <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
-          </Link>
-        )}
-
-        {/* Back-office (staff only) */}
-        {isStaff && (
-          <Link to="/admin" className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-secondary/40">
-            <LayoutGrid className="h-5 w-5 text-muted-foreground" strokeWidth={1.7} />
-            <span className="flex-1 text-sm font-medium">{t("acct.backoffice")}</span>
-            <ChevronRight className="h-[18px] w-[18px] text-muted-foreground" />
-          </Link>
-        )}
-      </div>
-
-      {/* ─── Logout ─── */}
-      <div className="mt-5 flex justify-end">
-        <Button variant="appOutline" shape="rounded" className="h-auto gap-2 px-[18px] py-[10px] text-sm" onClick={logout}>
-          <LogOut className="h-4 w-4" /> {t("acct.logout")}
-        </Button>
-      </div>
-      </div>
+      {/* Téléphone */}
+      <MobileAccount profile={profile} kyc={kyc} name={user?.name ?? ""} email={user?.email ?? ""} isStaff={isStaff} otc={otc} onLogout={logout} />
     </AppShell>
   );
 };

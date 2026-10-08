@@ -67,6 +67,16 @@ const EXPLORER: Record<string, string> = {
   erc20: "https://etherscan.io/tx/",
 };
 export const txUrl = (network: string, hash: string) => (EXPLORER[network] ? EXPLORER[network] + hash : "");
+export const EXPLORER_NAME: Record<string, string> = {
+  trc20: "Tronscan", bep20: "BscScan", polygon: "PolygonScan", avalanche: "Snowtrace", erc20: "Etherscan",
+};
+
+/** Transaction d'envoi des USDT d'un achat (visible par le client via RLS). */
+export async function fetchOutboundTx(orderId: string): Promise<{ network: string; tx_hash: string } | null> {
+  const { data } = await db.from("blockchain_transactions").select("network, tx_hash")
+    .eq("order_id", orderId).eq("direction", "outbound").order("created_at", { ascending: false }).limit(1);
+  return (data?.[0] as { network: string; tx_hash: string } | undefined) ?? null;
+}
 
 async function invoke<T>(body: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke("usdt-payout", { body });

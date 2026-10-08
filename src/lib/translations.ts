@@ -458,6 +458,8 @@ const dict = {
   "buy.recipient": { fr: "Destinataire (e-mail Interac)", en: "Recipient (Interac email)" },
   "buy.exactAmount": { fr: "Montant exact", en: "Exact amount" },
   "buy.reference": { fr: "Message / référence", en: "Message / reference" },
+  "act.tx": { fr: "Transaction", en: "Transaction" },
+  "act.viewOn": { fr: "Voir sur {x}", en: "View on {x}" },
   "buy.autoNote": {
     fr: "Écrivez la référence dans le message du virement et payez depuis un compte bancaire à votre nom, au montant exact : votre paiement est alors reconnu dès sa réception.",
     en: "Put the reference in the transfer message and pay from a bank account in your name, for the exact amount: your payment is then recognised as soon as it arrives.",
@@ -539,6 +541,7 @@ const dict = {
   "st.completed": { fr: "Terminée", en: "Completed" },
   "st.cancelled": { fr: "Annulée", en: "Cancelled" },
   "st.expired": { fr: "Expirée", en: "Expired" },
+  "st.refunded": { fr: "Remboursée", en: "Refunded" },
 
   // ── Verification (KYC) ──
   "kyc.title": { fr: "Vérification d'identité", en: "Identity verification" },

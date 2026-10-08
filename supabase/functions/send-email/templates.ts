@@ -80,7 +80,7 @@ export const TEMPLATES: Record<string, string> = {
       ["Référence",           "{{ref}}",          true],
       ["{{summaryLabel}}",    "{{summaryValue}}"],
       ["Réseau",              "{{network}}"],
-      ["Hash de transaction", "{{txHash}}",       true],
+      ["Transaction",         "{{txLinkHtml}}"],
     ]) +
     primaryButton("{{orderUrl}}", "Voir le reçu"),
   ),

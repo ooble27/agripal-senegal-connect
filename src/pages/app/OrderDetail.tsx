@@ -1,21 +1,43 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import { OrderDetailContent } from "@/components/app/ActivityList";
+import { supabase } from "@/integrations/supabase/client";
 import { useT } from "@/lib/i18n";
 import type { OrderRow } from "@/lib/orders";
 
+/**
+ * Fiche d'une commande. Ouverte depuis la liste, l'ordre arrive dans l'état
+ * de navigation ; ouverte depuis un lien (courriel « Transaction terminée »),
+ * il est relu en base — la RLS ne renvoie que les ordres du client connecté.
+ */
 const OrderDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { id } = useParams();
   const t = useT();
-  const order = location.state?.order as OrderRow | undefined;
+  const [order, setOrder] = useState<OrderRow | null>((location.state?.order as OrderRow | undefined) ?? null);
+  const [missing, setMissing] = useState(false);
 
-  if (!order) {
-    navigate("/app/activite", { replace: true });
-    return null;
-  }
+  useEffect(() => {
+    if (order || !id) return;
+    let on = true;
+    (async () => {
+      const { data: auth } = await supabase.auth.getSession();
+      const uid = auth.session?.user?.id;
+      const { data } = await supabase.from("orders").select("*").eq("id", id).eq("user_id", uid ?? "").maybeSingle();
+      if (!on) return;
+      if (data) setOrder(data as OrderRow); else setMissing(true);
+    })();
+    return () => { on = false; };
+  }, [id, order]);
 
+  useEffect(() => {
+    if (missing || (!id && !order)) navigate("/app/activite", { replace: true });
+  }, [missing, id, order, navigate]);
+
+  if (!order) return null;
   const buy = order.side === "buy";
 
   return (

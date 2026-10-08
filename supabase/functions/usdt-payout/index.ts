@@ -48,6 +48,16 @@ const ref = (id: string) => `OOB-${id.slice(0, 8).toUpperCase()}`;
 const NET_LABEL: Record<string, string> = {
   trc20: "Tron · TRC20", bep20: "BNB Chain · BEP20", polygon: "Polygon", avalanche: "Avalanche · C-Chain", erc20: "Ethereum · ERC20", spl: "Solana",
 };
+const EXPLORER_NAME: Record<string, string> = {
+  trc20: "Tronscan", bep20: "BscScan", polygon: "PolygonScan", avalanche: "Snowtrace", erc20: "Etherscan",
+};
+/** Lien vers la transaction pour le courriel (le hash seul, en repli). */
+const txLinkHtml = (network: string, hash: string) => {
+  const url = explorerUrl(network as Net, hash);
+  return url
+    ? `<a href="${url}" style="color:#111;text-decoration:underline;">Voir sur ${EXPLORER_NAME[network] ?? "l'explorateur"}</a>`
+    : hash;
+};
 const nfUsdt = (n: number) => new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 2 }).format(n);
 
 async function event(db: SupabaseClient, orderId: string, prev: string | null, next: string, note: string) {
@@ -83,6 +93,7 @@ async function complete(db: SupabaseClient, payoutId: string) {
     summaryValue: `${nfUsdt(Number(o.usdt_amount))} USDT`,
     network: NET_LABEL[o.network] ?? o.network,
     txHash: p.tx_hash,
+    txLinkHtml: txLinkHtml(o.network, p.tx_hash),
     orderUrl: `${SITE}/app/activite/${o.id}`,
   });
 }

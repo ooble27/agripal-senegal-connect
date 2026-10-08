@@ -1,4 +1,5 @@
-import { Coins, HandCoins, ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Coins, HandCoins, ChevronRight, ExternalLink } from "lucide-react";
 import { orderRef, DB_TO_NET, type OrderRow } from "@/lib/orders";
 import { NETWORKS } from "@/components/app/networks";
 import BottomSheet from "@/components/app/BottomSheet";
@@ -8,6 +9,7 @@ import { getLang } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { TKey } from "@/lib/translations";
 import type { Database } from "@/integrations/supabase/types";
+import { EXPLORER_NAME, fetchOutboundTx, txUrl } from "@/lib/settlement";
 
 type DbStatus = Database["public"]["Enums"]["order_status"];
 
@@ -19,6 +21,7 @@ const STATUS_KEY: Record<DbStatus, TKey> = {
   completed: "st.completed",
   cancelled: "st.cancelled",
   expired: "st.expired",
+  refunded: "st.refunded",
 };
 
 const nf = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
@@ -75,6 +78,14 @@ export const OrderDetailContent = ({ o }: { o: OrderRow }) => {
   const buy = o.side === "buy";
   const netId = DB_TO_NET[o.network];
   const network = NETWORKS.find((n) => n.id === netId);
+  // Achat terminé : lien vers la transaction d'envoi sur l'explorateur du réseau.
+  const [tx, setTx] = useState<{ network: string; tx_hash: string } | null>(null);
+  useEffect(() => {
+    let on = true;
+    if (buy && (o.status === "completed" || o.status === "settling")) fetchOutboundTx(o.id).then((r) => { if (on) setTx(r); });
+    return () => { on = false; };
+  }, [o.id, o.status, buy]);
+  const link = tx ? txUrl(tx.network, tx.tx_hash) : "";
   return (
     <>
       <div className="mb-5 flex flex-col items-center text-center">
@@ -115,6 +126,20 @@ export const OrderDetailContent = ({ o }: { o: OrderRow }) => {
             </div>
           )
         ))}
+        {link && (
+          <a
+            href={link}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-between border-t border-border px-4 py-3 transition-colors hover:bg-secondary/50"
+          >
+            <span className="text-[12.5px] text-muted-foreground">{t("act.tx")}</span>
+            <span className="inline-flex items-center gap-1.5 text-[12.5px] font-medium underline-offset-4 hover:underline">
+              {t("act.viewOn").replace("{x}", EXPLORER_NAME[tx!.network] ?? "explorer")}
+              <ExternalLink className="h-3.5 w-3.5" />
+            </span>
+          </a>
+        )}
       </div>
     </>
   );

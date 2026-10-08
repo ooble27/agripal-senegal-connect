@@ -219,6 +219,7 @@ async function notifyClient(orderId: string, newStatus: "recu" | "termine") {
           : `${nfCad.format(Number(row.cad_amount))} CAD`,
         network: networkLabel,
         txHash: "—",
+        txLinkHtml: "—",
         orderUrl,
       },
     });

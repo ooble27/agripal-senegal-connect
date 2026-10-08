@@ -4,17 +4,21 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import {
-  fetchPayouts, fetchReceipts, fetchWallets, reconcilePayouts, txUrl, updateSettings,
-  type InteracReceipt, type SettlementSettings, type UsdtPayout, type WalletState,
+  attachDeposit, fetchDeposits, fetchPayouts, fetchPendingSells, fetchReceipts, fetchScanState, fetchWallets,
+  ignoreDeposit, reconcilePayouts, scanDeposits, txUrl, updateSettings,
+  type ChainDeposit, type InteracReceipt, type SettlementSettings, type UsdtPayout, type WalletState,
 } from "@/lib/settlement";
 import { SubTabs } from "./AdminBits";
 import AdminHero from "./AdminHero";
 
 /*
- * Règlement des achats : portefeuille d'envoi (soldes par réseau), réglages
- * de l'envoi automatique, avis Interac lus sur interac@ooble.ca et envois
- * d'USDT. Un virement rapproché déclenche l'envoi seul si les réglages le
- * permettent ; sinon l'équipe clique « Envoyer les USDT » dans la fiche.
+ * Règlement des achats et des ventes : portefeuille d'envoi (soldes par
+ * réseau), réglages de l'envoi automatique, avis Interac lus sur
+ * interac@ooble.ca, envois d'USDT, et USDT reçus pour les ventes (lus sur la
+ * blockchain toutes les 2 minutes). Un virement rapproché déclenche l'envoi
+ * seul si les réglages le permettent ; sinon l'équipe clique « Envoyer les
+ * USDT » dans la fiche. Une vente dont les USDT sont rapprochés passe à
+ * « paiement reçu » : il reste à envoyer le virement Interac (fiche).
  */
 
 const dateFmt = new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -36,6 +40,51 @@ export const PAYOUT: Record<UsdtPayout["status"], { label: string; cls: string }
   failed: { label: "Échoué", cls: "bg-amber-500/20 text-amber-700 dark:text-amber-300" },
   review: { label: "À vérifier", cls: "bg-destructive/15 text-destructive" },
 };
+export const DEPOSIT: Record<ChainDeposit["status"], { label: string; cls: string }> = {
+  new: { label: "En attente d'une vente", cls: "bg-secondary text-foreground" },
+  matched: { label: "Rapproché", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" },
+  review: { label: "À vérifier", cls: "bg-destructive/15 text-destructive" },
+  unmatched: { label: "Sans vente", cls: "bg-amber-500/20 text-amber-700 dark:text-amber-300" },
+  ignored: { label: "Écarté", cls: "bg-secondary text-muted-foreground" },
+};
+const NET_NAME: Record<string, string> = { trc20: "Tron", bep20: "BNB Chain", polygon: "Polygon", avalanche: "Avalanche", erc20: "Ethereum" };
+
+/** Rattacher un dépôt à une vente en attente, ou l'écarter avec un motif. */
+const DepositActions = ({ d, onDone }: { d: ChainDeposit; onDone: () => void }) => {
+  const [sells, setSells] = useState<{ id: string; usdt_amount: number; created_at: string }[] | null>(null);
+  const [pick, setPick] = useState(d.order_id ?? "");
+  const [why, setWhy] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
+  useEffect(() => { fetchPendingSells(d.network).then(setSells); }, [d.network]);
+  const run = async (fn: () => Promise<{ error?: string }>) => {
+    setMsg(null);
+    const r = await fn();
+    if (r.error) setMsg(r.error); else onDone();
+  };
+  return (
+    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+      <div className="space-y-2">
+        <p className="font-medium text-foreground">Rattacher à une vente</p>
+        <select className={inputCn} value={pick} onChange={(e) => setPick(e.target.value)}>
+          <option value="">{sells === null ? "Chargement…" : sells.length ? "Choisir la vente…" : "Aucune vente en attente sur ce réseau"}</option>
+          {(sells ?? []).map((o) => <option key={o.id} value={o.id}>{ref(o.id)} · {nf(Number(o.usdt_amount))} USDT · {dateFmt.format(new Date(o.created_at))}</option>)}
+        </select>
+        <Button variant="appSolid" shape="rounded" className="h-auto px-3.5 py-2 text-[12.5px]" disabled={!pick} onClick={() => run(() => attachDeposit(d.id, pick))}>
+          Rattacher
+        </Button>
+      </div>
+      <div className="space-y-2">
+        <p className="font-medium text-foreground">Écarter</p>
+        <input className={inputCn} placeholder="Motif : test interne, remboursé…" value={why} onChange={(e) => setWhy(e.target.value)} />
+        <Button variant="appOutline" shape="rounded" className="h-auto px-3.5 py-2 text-[12.5px]" disabled={!why.trim()} onClick={() => run(() => ignoreDeposit(d.id, why))}>
+          Écarter ce dépôt
+        </Button>
+      </div>
+      {msg && <p className="text-destructive sm:col-span-2">{msg}</p>}
+    </div>
+  );
+};
+
 export const Pill = ({ m }: { m: { label: string; cls: string } }) => (
   <span className={cn("inline-flex shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium", m.cls)}>{m.label}</span>
 );
@@ -54,7 +103,7 @@ const CopyBtn = ({ value }: { value: string }) => {
   );
 };
 
-type Tab = "wallet" | "receipts" | "payouts";
+type Tab = "wallet" | "receipts" | "payouts" | "deposits";
 
 const SettlementPanel = () => {
   const { isAdmin } = useAuth();
@@ -64,6 +113,9 @@ const SettlementPanel = () => {
   const [draft, setDraft] = useState<SettlementSettings | null>(null);
   const [receipts, setReceipts] = useState<InteracReceipt[]>([]);
   const [payouts, setPayouts] = useState<UsdtPayout[]>([]);
+  const [deposits, setDeposits] = useState<ChainDeposit[]>([]);
+  const [lastScan, setLastScan] = useState<string | null>(null);
+  const [scanMsg, setScanMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
@@ -71,7 +123,9 @@ const SettlementPanel = () => {
 
   const load = useCallback(async () => {
     setBusy(true);
-    const [w, r, p] = await Promise.all([fetchWallets(), fetchReceipts(), fetchPayouts()]);
+    const [w, r, p, d, sc] = await Promise.all([fetchWallets(), fetchReceipts(), fetchPayouts(), fetchDeposits(), fetchScanState()]);
+    setDeposits(d);
+    setLastScan(sc.map((x) => x.updated_at).sort().pop() ?? null);
     if (!w.ok) setErr(w.error ?? "Portefeuille indisponible.");
     else { setErr(null); setWallets(w.wallets ?? []); setSettings(w.settings ?? null); setDraft(w.settings ?? null); }
     setReceipts(r);
@@ -95,7 +149,14 @@ const SettlementPanel = () => {
   const configured = (wallets ?? []).filter((w) => w.configured);
   const total = configured.reduce((s, w) => s + (w.usdt ?? 0), 0);
   const toReview = receipts.filter((r) => r.status === "mismatch" || r.status === "unmatched").length
-    + payouts.filter((p) => p.status === "review").length;
+    + payouts.filter((p) => p.status === "review").length
+    + deposits.filter((d) => d.status === "review" || d.status === "unmatched").length;
+  const scanNow = async () => {
+    setScanMsg("Lecture des blockchains…");
+    const r = await scanDeposits();
+    setScanMsg(r.error ? `Lecture impossible : ${r.error}` : `${r.found ?? 0} nouveau(x) dépôt(s), ${r.matched ?? 0} vente(s) rapprochée(s).`);
+    void load();
+  };
   const dirty = JSON.stringify(draft) !== JSON.stringify(settings);
 
   return (
@@ -124,6 +185,7 @@ const SettlementPanel = () => {
           { id: "wallet", label: "Portefeuille et réglages" },
           { id: "receipts", label: "Avis Interac", count: receipts.length },
           { id: "payouts", label: "Envois USDT", count: payouts.length },
+          { id: "deposits", label: "Dépôts USDT (ventes)", count: deposits.filter((d) => d.status === "review" || d.status === "unmatched" || d.status === "new").length || undefined },
         ]}
         active={tab}
         onChange={(id) => setTab(id as Tab)}
@@ -223,6 +285,49 @@ const SettlementPanel = () => {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {tab === "deposits" && (
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-1 text-[12.5px] text-muted-foreground">
+            <span>
+              Lu toutes les 2 minutes sur Tron, BNB Chain, Polygon, Avalanche et Ethereum (Solana : à vérifier à la main).
+              {lastScan && <> Dernière lecture : {dateFmt.format(new Date(lastScan))}.</>}
+            </span>
+            <button type="button" onClick={scanNow} className="inline-flex items-center gap-1.5 font-medium text-foreground underline-offset-4 hover:underline">
+              <RefreshCw className="h-3.5 w-3.5" /> Lire maintenant
+            </button>
+          </div>
+          {scanMsg && <p className="px-1 text-[12.5px]">{scanMsg}</p>}
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            {deposits.length === 0 && <p className="px-5 py-8 text-center text-[13px] text-muted-foreground">Aucun dépôt d'USDT lu pour l'instant.</p>}
+            {deposits.map((d, i) => (
+              <div key={d.id} className={cn(i > 0 && "border-t border-border")}>
+                <button type="button" className="flex w-full items-center gap-3 px-5 py-3.5 text-left hover:bg-secondary/40" onClick={() => setOpen(open === d.id ? null : d.id)}>
+                  <Pill m={DEPOSIT[d.status]} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px] font-medium">{nf(Number(d.usdt_amount))} USDT · {NET_NAME[d.network] ?? d.network}{d.order_id ? ` · ${ref(d.order_id)}` : ""}</span>
+                    <span className="block truncate text-[12px] text-muted-foreground">{d.reason ?? "En attente d'une vente du même montant (le client clique « J'ai envoyé mes USDT » après l'envoi)."}</span>
+                  </span>
+                  <span className="shrink-0 text-[12px] text-muted-foreground">{dateFmt.format(new Date(d.block_time))}</span>
+                </button>
+                {open === d.id && (
+                  <div className="border-t border-border bg-secondary/30 px-5 py-4 text-[12px] text-muted-foreground">
+                    <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span>Expéditeur : <span className="font-mono text-foreground">{d.from_address ?? "—"}</span></span>
+                      {txUrl(d.network, d.tx_hash) && (
+                        <a href={txUrl(d.network, d.tx_hash)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-foreground underline-offset-4 hover:underline">
+                          Voir la transaction <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
+                    </p>
+                    {d.status !== "matched" && d.status !== "ignored" && <DepositActions d={d} onDone={() => { setOpen(null); void load(); }} />}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

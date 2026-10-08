@@ -107,3 +107,59 @@ export async function fetchPayouts(orderId?: string, limit = 30): Promise<UsdtPa
   const { data } = await q;
   return (data ?? []) as UsdtPayout[];
 }
+
+// ─────────────── Ventes : USDT reçus sur les adresses de dépôt ───────────────
+
+export interface ChainDeposit {
+  id: string;
+  network: string;
+  tx_hash: string;
+  from_address: string | null;
+  usdt_amount: number;
+  block_time: string;
+  order_id: string | null;
+  status: "new" | "matched" | "review" | "unmatched" | "ignored";
+  reason: string | null;
+}
+
+/** Dépôts lus sur la blockchain (fonction edge `sell-watch`, toutes les 2 minutes). */
+export async function fetchDeposits(opts: { orderId?: string; limit?: number } = {}): Promise<ChainDeposit[]> {
+  let q = db.from("chain_deposits").select("id, network, tx_hash, from_address, usdt_amount, block_time, order_id, status, reason")
+    .order("block_time", { ascending: false }).limit(opts.limit ?? 50);
+  if (opts.orderId) q = q.eq("order_id", opts.orderId);
+  const { data } = await q;
+  return (data ?? []) as ChainDeposit[];
+}
+
+/** Dernière lecture réussie, par réseau. */
+export async function fetchScanState(): Promise<{ network: string; updated_at: string }[]> {
+  const { data } = await db.from("chain_scan_state").select("network, updated_at");
+  return (data ?? []) as { network: string; updated_at: string }[];
+}
+
+/** Lance une lecture tout de suite (elle tourne aussi toutes les 2 minutes). */
+export async function scanDeposits(): Promise<{ found?: number; matched?: number; error?: string }> {
+  const { data, error } = await supabase.functions.invoke("sell-watch", { body: { action: "scan" } });
+  if (error) return { error: error.message };
+  return data as { found: number; matched: number };
+}
+
+export async function attachDeposit(depositId: string, orderId: string): Promise<{ error?: string }> {
+  const { error } = await (supabase as unknown as { rpc: (f: string, a: Record<string, unknown>) => Promise<{ error: { message: string } | null }> })
+    .rpc("attach_chain_deposit", { _deposit: depositId, _order: orderId });
+  return error ? { error: error.message } : {};
+}
+
+export async function ignoreDeposit(depositId: string, reason: string): Promise<{ error?: string }> {
+  const { error } = await (supabase as unknown as { rpc: (f: string, a: Record<string, unknown>) => Promise<{ error: { message: string } | null }> })
+    .rpc("ignore_chain_deposit", { _deposit: depositId, _reason: reason });
+  return error ? { error: error.message } : {};
+}
+
+/** Ventes en attente des USDT, pour rattacher un dépôt à la main. */
+export async function fetchPendingSells(network: string): Promise<{ id: string; usdt_amount: number; created_at: string }[]> {
+  const { data } = await db.from("orders").select("id, usdt_amount, created_at")
+    .eq("side", "sell").eq("network", network).in("status", ["created", "awaiting_payment"])
+    .order("created_at", { ascending: false }).limit(20);
+  return (data ?? []) as { id: string; usdt_amount: number; created_at: string }[];
+}

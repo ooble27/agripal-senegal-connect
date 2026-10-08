@@ -192,7 +192,22 @@ async function notifyClient(orderId: string, newStatus: "recu" | "termine") {
   const networkLabel = net ? `${net.name} · ${net.tag}` : "—";
   const orderUrl = `${window.location.origin}/app`;
 
-  if (newStatus === "recu") {
+  if (newStatus === "recu" && row.side === "sell") {
+    // Vente : USDT reçus (marqués à la main, ex. Solana), virement en préparation.
+    void sendEmail({
+      to,
+      template: "usdt-received",
+      vars: {
+        ref,
+        usdtAmount: nfUsdt.format(Number(row.usdt_amount)),
+        cadAmount: nfCad.format(Number(row.cad_amount)),
+        network: networkLabel,
+        interacEmail: row.interac_email ?? to,
+        txLinkHtml: "—",
+        orderUrl,
+      },
+    });
+  } else if (newStatus === "recu") {
     const amount = row.side === "buy"
       ? `${nfCad.format(Number(row.cad_amount))} CAD`
       : `${nfUsdt.format(Number(row.usdt_amount))} USDT`;

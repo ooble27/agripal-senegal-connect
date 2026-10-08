@@ -72,6 +72,21 @@ export const TEMPLATES: Record<string, string> = {
     primaryButton("{{orderUrl}}", "Suivre ma commande"),
   ),
 
+  "usdt-received": template(
+    eyebrow("USDT reçus") +
+    heading("Vos USDT sont bien arrivés") +
+    lead("Nous avons reçu vos USDT sur la blockchain. Votre virement Interac est en préparation : vous le recevrez à l'adresse indiquée dans votre ordre.") +
+    dataRows([
+      ["Référence",         "{{ref}}",          true],
+      ["USDT reçus",        "{{usdtAmount}} USDT"],
+      ["Vous recevrez",     "{{cadAmount}} CAD"],
+      ["Virement Interac à", "{{interacEmail}}"],
+      ["Réseau",            "{{network}}"],
+      ["Transaction",       "{{txLinkHtml}}"],
+    ]) +
+    primaryButton("{{orderUrl}}", "Suivre ma vente"),
+  ),
+
   "order-completed": template(
     eyebrow("Terminé") +
     heading("Votre transaction est terminée") +
@@ -140,6 +155,7 @@ export const SUBJECTS: Record<string, string> = {
   "order-buy":        "Votre ordre d'achat Ooble ({{ref}})",
   "order-sell":       "Votre ordre de vente Ooble ({{ref}})",
   "payment-received": "Paiement reçu, on traite votre commande ({{ref}})",
+  "usdt-received":    "USDT reçus, votre virement est en préparation ({{ref}})",
   "order-completed":  "Transaction terminée ({{ref}})",
   "kyc-approved":     "Votre identité est vérifiée",
   "kyc-rejected":     "Votre vérification d'identité est à reprendre",

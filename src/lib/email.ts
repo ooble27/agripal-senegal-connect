@@ -17,6 +17,7 @@ export type EmailTemplate =
   | "order-buy"
   | "order-sell"
   | "payment-received"
+  | "usdt-received"
   | "order-completed"
   | "kyc-approved"
   | "kyc-rejected"

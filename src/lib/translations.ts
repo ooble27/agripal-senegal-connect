@@ -723,6 +723,8 @@ const dict = {
   "st.created": { fr: "En attente de paiement", en: "Awaiting payment" },
   "st.awaitingPayment": { fr: "En attente de paiement", en: "Awaiting payment" },
   "st.paymentReceived": { fr: "Paiement reçu", en: "Payment received" },
+  "st.sellAwaiting": { fr: "En attente de vos USDT", en: "Waiting for your USDT" },
+  "st.sellReceived": { fr: "USDT reçus · virement en préparation", en: "USDT received · transfer being prepared" },
   "st.settling": { fr: "En traitement", en: "Processing" },
   "st.completed": { fr: "Terminée", en: "Completed" },
   "st.cancelled": { fr: "Annulée", en: "Cancelled" },

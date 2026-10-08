@@ -12,8 +12,9 @@ import { useAuth } from "@/lib/auth";
 import { StatusBadge } from "./AdminBits";
 import { NETWORKS } from "@/components/app/networks";
 import { Trash2, Send, ExternalLink } from "lucide-react";
-import { fetchPayouts, sendPayout, txUrl, type UsdtPayout } from "@/lib/settlement";
-import { PAYOUT, Pill } from "./SettlementPanel";
+import { fetchDeposits, fetchPayouts, sendPayout, txUrl, type ChainDeposit, type UsdtPayout } from "@/lib/settlement";
+import { DEPOSIT, PAYOUT, Pill } from "./SettlementPanel";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   order: AdminOrder;
@@ -177,6 +178,83 @@ const PayoutBox = ({ order, list, onChanged }: { order: AdminOrder; list: UsdtPa
           {msg.text}
           {msg.url && <> · <a href={msg.url} target="_blank" rel="noreferrer" className="underline">transaction</a></>}
         </p>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Vente : USDT reçus (lus sur la blockchain toutes les 2 minutes) et virement
+ * Interac à envoyer, avec toutes les informations à copier dans la banque.
+ */
+const SellBox = ({ order }: { order: AdminOrder }) => {
+  const [deps, setDeps] = useState<ChainDeposit[] | null>(null);
+  const [qa, setQa] = useState<{ q: string | null; a: string | null } | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+  useEffect(() => {
+    fetchDeposits({ orderId: order.id, limit: 5 }).then(setDeps);
+    if (order.userId) {
+      supabase.from("profiles").select("interac_question, interac_answer").eq("id", order.userId).maybeSingle()
+        .then(({ data }) => setQa({ q: data?.interac_question ?? null, a: data?.interac_answer ?? null }));
+    }
+  }, [order.id, order.userId, order.status]);
+  const dep = (deps ?? []).find((d) => d.status === "matched") ?? deps?.[0];
+  const copy = (v: string, k: string) => { void navigator.clipboard?.writeText(v); setCopied(k); setTimeout(() => setCopied(null), 1200); };
+  const solana = order.network === "sol";
+  const toPay = order.status === "recu";
+
+  const Line = ({ k, label, value }: { k: string; label: string; value: string | null | undefined }) => (
+    <div className="flex items-center justify-between gap-4 py-2.5">
+      <span className="text-[13px] text-muted-foreground">{label}</span>
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="break-all text-right text-[14px] font-medium">{value || "—"}</span>
+        {value && (
+          <button type="button" onClick={() => copy(value, k)} className="shrink-0 text-muted-foreground hover:text-foreground" aria-label="Copier">
+            {copied === k ? <Check className="h-[14px] w-[14px]" /> : <Copy className="h-[14px] w-[14px]" />}
+          </button>
+        )}
+      </span>
+    </div>
+  );
+
+  return (
+    <div className="rounded-2xl border border-border bg-card px-5 py-4">
+      <p className="text-[13px] font-medium">USDT du client</p>
+      {dep ? (
+        <p className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-muted-foreground">
+          <Pill m={DEPOSIT[dep.status]} />
+          {nfUsdt.format(Number(dep.usdt_amount))} USDT reçus
+          {txUrl(dep.network, dep.tx_hash) && (
+            <a href={txUrl(dep.network, dep.tx_hash)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-foreground underline-offset-4 hover:underline">
+              Voir la transaction <ExternalLink className="h-3 w-3" />
+            </a>
+          )}
+          {dep.status !== "matched" && dep.reason && <span>· {dep.reason}</span>}
+        </p>
+      ) : (
+        <p className="mt-1 text-[12px] text-muted-foreground">
+          {solana
+            ? "Solana n'est pas surveillé : vérifiez l'arrivée des USDT dans le portefeuille de dépôt, puis « Marquer les USDT reçus »."
+            : order.status === "attente"
+              ? `En attente de ${nfUsdt.format(order.usdt)} USDT sur l'adresse de dépôt. Lecture automatique toutes les 2 minutes ; la commande passe seule à « À traiter » dès leur arrivée.`
+              : "Aucun dépôt lu automatiquement pour cette vente."}
+        </p>
+      )}
+
+      {toPay && (
+        <div className="mt-4 rounded-xl border border-foreground/15 bg-secondary/40 px-4 py-2">
+          <p className="pt-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">Virement Interac à envoyer</p>
+          <div className="divide-y divide-border">
+            <Line k="mail" label="Destinataire" value={order.interacEmail} />
+            <Line k="amt" label="Montant" value={nfCad.format(order.cad)} />
+            <Line k="q" label="Question de sécurité" value={qa?.q} />
+            <Line k="a" label="Réponse" value={qa?.a} />
+            <Line k="msg" label="Message" value={order.ref} />
+          </div>
+          <p className="pb-2 pt-1 text-[12px] leading-relaxed text-muted-foreground">
+            Envoyez le virement depuis le compte d'Ooble, puis cliquez « Virement Interac envoyé » ci-dessous : le client reçoit son courriel de fin.
+          </p>
+        </div>
       )}
     </div>
   );
@@ -373,6 +451,7 @@ const OrderDetail = ({ order, onBack, onPatch, onDelete, onShowClient, onRefresh
       </div>
 
       {order.type === "buy" && <PayoutBox order={order} list={payouts} onChanged={() => { loadPayouts(); onRefresh?.(); }} />}
+      {order.type === "sell" && <SellBox order={order} />}
 
       {/* Barre d'actions */}
       {lockedByOther ? (
@@ -402,7 +481,7 @@ const OrderDetail = ({ order, onBack, onPatch, onDelete, onShowClient, onRefresh
           )}
           {!locked && order.status === "recu" && (order.type === "sell" || !AUTO_NETWORKS.has(order.network ?? "")) && (
             <Button variant="appSolid" shape="rounded" className="h-auto gap-2 rounded-[10px] px-4 py-[11px] text-sm font-bold" onClick={() => onPatch(order.id, { status: "termine" })}>
-              <Check className="h-[17px] w-[17px]" /> {order.type === "sell" ? "Marquer terminé (virement envoyé)" : "Marquer terminé (envoi fait à la main)"}
+              <Check className="h-[17px] w-[17px]" /> {order.type === "sell" ? "Virement Interac envoyé" : "Marquer terminé (envoi fait à la main)"}
             </Button>
           )}
           {!locked && order.status === "recu" && (

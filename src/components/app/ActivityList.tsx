@@ -24,6 +24,13 @@ const STATUS_KEY: Record<DbStatus, TKey> = {
   refunded: "st.refunded",
 };
 
+/** Libellé du statut ; une vente a ses propres étapes (USDT attendus, puis reçus). */
+const statusKey = (o: { side: string; status: DbStatus }): TKey => {
+  if (o.side === "sell" && (o.status === "created" || o.status === "awaiting_payment")) return "st.sellAwaiting";
+  if (o.side === "sell" && o.status === "payment_received") return "st.sellReceived";
+  return STATUS_KEY[o.status];
+};
+
 const nf = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
 const nfUsdt = new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 2 });
 
@@ -59,7 +66,7 @@ export const ActivityRow = ({ o, onClick }: { o: OrderRow; onClick?: () => void 
           {buy ? t("act.buyLabel") : t("act.sellLabel")}
         </p>
         <p className="truncate text-[12px] text-muted-foreground">
-          {t(STATUS_KEY[o.status])}
+          {t(statusKey(o))}
         </p>
       </div>
       <div className="shrink-0 text-right">
@@ -94,7 +101,7 @@ export const OrderDetailContent = ({ o }: { o: OrderRow }) => {
         </p>
         <p className="mt-1 text-[14px] text-muted-foreground">{nf.format(Number(o.cad_amount))} CAD</p>
         <span className="mt-3 inline-flex rounded-full bg-secondary px-3 py-1 text-[12px] font-semibold text-muted-foreground">
-          {t(STATUS_KEY[o.status])}
+          {t(statusKey(o))}
         </span>
       </div>
       <div className="overflow-hidden rounded-[14px] border border-border bg-card">

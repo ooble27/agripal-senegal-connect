@@ -157,11 +157,11 @@ const Entreprises = () => {
       <main>
         {/* ===================== EN-TÊTE ===================== */}
         <section className="relative overflow-hidden">
-          {/* formes qui flottent, comme dans la vidéo (la menthe est masquée sur mobile) */}
-          <span aria-hidden className="ooble-float absolute left-[5%] top-[6%] h-8 w-8 rounded-full sm:left-[6%] sm:top-[16%] sm:h-10 sm:w-10" style={{ background: CORAL }} />
-          <span aria-hidden className="ooble-float absolute right-[7%] top-[5%] h-0 w-0 border-x-[16px] border-b-[28px] sm:right-[9%] sm:top-[12%] sm:border-x-[22px] sm:border-b-[38px] border-x-transparent [animation-delay:-2s]" style={{ borderBottomColor: SUN }} />
+          {/* formes qui flottent, comme dans la vidéo — ordinateur seulement */}
+          <span aria-hidden className="ooble-float absolute hidden sm:block left-[6%] top-[16%] h-10 w-10 rounded-full" style={{ background: CORAL }} />
+          <span aria-hidden className="ooble-float absolute hidden sm:block right-[9%] top-[12%] h-0 w-0 border-x-[22px] border-b-[38px] border-x-transparent [animation-delay:-2s]" style={{ borderBottomColor: SUN }} />
           <span aria-hidden className="ooble-float absolute hidden sm:block right-[14%] top-[44%] h-9 w-9 rotate-12 rounded-lg [animation-delay:-4s]" style={{ background: MINT }} />
-          <span aria-hidden className="ooble-float absolute left-[4%] top-[47%] h-5 w-5 rounded-full sm:left-[11%] sm:top-[50%] sm:h-6 sm:w-6 [animation-delay:-1s]" style={{ background: SUN }} />
+          <span aria-hidden className="ooble-float absolute hidden sm:block left-[11%] top-[50%] h-6 w-6 rounded-full [animation-delay:-1s]" style={{ background: SUN }} />
 
           <Wrap className="relative pb-14 pt-20 text-center lg:pb-16 lg:pt-24">
             <p className="animate-up text-[12px] uppercase tracking-[0.16em] text-muted-foreground">

@@ -51,8 +51,8 @@ export const KYB_PREVIEW_USERS: string[] = [
  */
 export const TRADE_MIN_CAD = 100;
 /**
- * Minimum pour l'équipe Ooble (admin, opérateur) : petits achats de test du
+ * Minimum pour l'équipe Ooble (admin, opérateur) : très petits achats de test du
  * règlement automatique. La base laisse déjà passer les ordres du staff.
  */
-export const STAFF_TEST_MIN_CAD = 10;
+export const STAFF_TEST_MIN_CAD = 2;
 export const TRADE_DAILY_MAX_CAD = 9999;

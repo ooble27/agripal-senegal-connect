@@ -85,7 +85,7 @@ const AppAcheter = () => {
   const [allowance, setAllowance] = useState<TradeAllowance | null>(null);
   useEffect(() => { getAllowance("buy").then(setAllowance); }, []);
   const maxCad = Math.floor(Math.min(TRADE_DAILY_MAX_CAD, allowance?.remaining ?? TRADE_DAILY_MAX_CAD));
-  // L'équipe peut faire de petits achats de test (10 $).
+  // L'équipe peut faire de petits achats de test (dès 2 $).
   const minCad = isStaff ? STAFF_TEST_MIN_CAD : TRADE_MIN_CAD;
   const blocked = allowance !== null && maxCad < minCad;
 

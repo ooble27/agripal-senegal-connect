@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { getAllowance, type TradeAllowance } from "@/lib/orders";
+import { getAllowance, peekAllowance, type TradeAllowance } from "@/lib/orders";
+import { useAuth } from "@/lib/auth";
+import { TRADE_DAILY_MAX_CAD } from "@/lib/config";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { TKey } from "@/lib/translations";
@@ -18,11 +20,17 @@ const fmtNext = (d: Date) =>
 /** Limites sur 24 heures : achats et ventes, comptés séparément. */
 export default function LimitsCard({ className }: { className?: string }) {
   const t = useT();
-  const [lim, setLim] = useState<{ buy: TradeAllowance; sell: TradeAllowance } | null>(null);
+  const { user } = useAuth();
+  // Valeurs déjà connues (préchargement de l'app), sinon la limite pleine :
+  // la carte s'affiche tout de suite à sa taille finale, sans saut, puis se
+  // met à jour.
+  const [lim, setLim] = useState<{ buy: TradeAllowance; sell: TradeAllowance }>(() => {
+    const full: TradeAllowance = { limit: TRADE_DAILY_MAX_CAD, used: 0, remaining: TRADE_DAILY_MAX_CAD, nextAt: null };
+    return { buy: peekAllowance(user?.id, "buy") ?? full, sell: peekAllowance(user?.id, "sell") ?? full };
+  });
   useEffect(() => {
     Promise.all([getAllowance("buy"), getAllowance("sell")]).then(([buy, sell]) => setLim({ buy, sell }));
   }, []);
-  if (!lim) return null;
   const rows: { key: "buy" | "sell"; label: TKey; next: TKey }[] = [
     { key: "buy", label: "acct.limitBuy", next: "acct.buyLimitNext" },
     { key: "sell", label: "acct.limitSell", next: "acct.sellLimitNext" },

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowUpRight, BadgeCheck, Building2, Check, ChevronRight, Copy, Gauge, Globe, Handshake, LayoutGrid, Lock, LogOut, Mail,
+  BadgeCheck, Building2, Check, ChevronRight, Copy, Gauge, Globe, Handshake, LayoutGrid, Lock, LogOut, Mail,
   ShieldCheck, SunMoon,
 } from "lucide-react";
 import BusinessMark from "@/components/app/BusinessMark";
@@ -214,22 +214,24 @@ const MobileAccount = ({ profile, kyc, name, email, isStaff, otc, onLogout }: Pr
         </button>
       )}
 
-      {/* ─── Tuiles chiffrées ─── */}
-      <div className={cn("mt-3 grid gap-3", otc ? "grid-cols-2" : "grid-cols-1")}>
-        <Link to="/app/limites" className="group relative rounded-[20px] border border-border bg-card p-4 transition-colors active:bg-secondary/60">
+      {/* ─── Limites et desk OTC : une seule carte compacte, en deux ─── */}
+      <div className={cn("mt-3 grid divide-x divide-border overflow-hidden rounded-2xl border border-border bg-card", otc ? "grid-cols-2" : "grid-cols-1")}>
+        <Link to="/app/limites" className="flex min-w-0 items-center gap-3 px-3.5 py-3 transition-colors active:bg-secondary/60">
           <Chip icon={Gauge} />
-          <ArrowUpRight className="absolute right-3.5 top-3.5 h-4 w-4 text-muted-foreground/60" />
-          <p className="mt-4 text-[12px] font-medium text-muted-foreground">{t("acct.limits")}</p>
-          <p className="mt-0.5 font-display text-[22px] font-semibold leading-tight tracking-tight tabular-nums">{t("acct.limitsAmount")}</p>
-          <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{t("acct.limitsTile")}</p>
+          <span className="min-w-0">
+            <span className="block text-[11.5px] text-muted-foreground">{t("acct.limits")}</span>
+            <span className="block truncate text-[15px] font-semibold tabular-nums tracking-tight">
+              {t("acct.limitsAmount")} <span className="text-[11.5px] font-normal text-muted-foreground">/ 24 h</span>
+            </span>
+          </span>
         </Link>
         {otc && (
-          <Link to="/app/otc" className="group relative rounded-[20px] border border-border bg-card p-4 transition-colors active:bg-secondary/60">
+          <Link to="/app/otc" className="flex min-w-0 items-center gap-3 px-3.5 py-3 transition-colors active:bg-secondary/60">
             <Chip icon={Handshake} />
-            <ArrowUpRight className="absolute right-3.5 top-3.5 h-4 w-4 text-muted-foreground/60" />
-            <p className="mt-4 text-[12px] font-medium text-muted-foreground">{t("nav.otc")}</p>
-            <p className="mt-0.5 font-display text-[22px] font-semibold leading-tight tracking-tight tabular-nums">{t("acct.otcAmount")}</p>
-            <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{t("acct.otcTile")}</p>
+            <span className="min-w-0">
+              <span className="block text-[11.5px] text-muted-foreground">{t("nav.otc")}</span>
+              <span className="block truncate text-[15px] font-semibold tabular-nums tracking-tight">{t("acct.otcAmount")}</span>
+            </span>
           </Link>
         )}
       </div>

@@ -11,7 +11,9 @@ import { sendRefundEmail } from "@/lib/email";
 import { useAuth } from "@/lib/auth";
 import { StatusBadge } from "./AdminBits";
 import { NETWORKS } from "@/components/app/networks";
-import { Trash2 } from "lucide-react";
+import { Trash2, Send, ExternalLink } from "lucide-react";
+import { fetchPayouts, sendPayout, txUrl, type UsdtPayout } from "@/lib/settlement";
+import { PAYOUT, Pill } from "./SettlementPanel";
 
 interface Props {
   order: AdminOrder;
@@ -111,6 +113,72 @@ const SegmentedTabs = ({ sections, active, onSelect }: { sections: { id: Section
           {s.label}
         </button>
       ))}
+    </div>
+  );
+};
+
+/**
+ * Envoi des USDT d'un achat depuis le portefeuille chaud (fonction usdt-payout).
+ * Le bouton n'apparaît qu'à « paiement reçu » et sans envoi déjà en cours :
+ * la base refuse de toute façon un second envoi pour le même ordre.
+ */
+const PayoutBox = ({ order }: { order: AdminOrder }) => {
+  const [list, setList] = useState<UsdtPayout[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string; url?: string } | null>(null);
+  useEffect(() => {
+    let on = true;
+    fetchPayouts(order.id, 5).then((l) => { if (on) setList(l); });
+    return () => { on = false; };
+  }, [order.id, order.status]);
+  const active = (list ?? []).find((p) => p.status !== "failed");
+  const last = list?.[0];
+  const canSend = order.status === "recu" && !active && list !== null;
+  if (!last && !canSend) return null;
+
+  const go = async () => {
+    setBusy(true);
+    setMsg(null);
+    const r = await sendPayout(order.id);
+    setBusy(false);
+    setMsg(r.ok
+      ? { ok: true, text: r.status === "confirmed" ? "USDT envoyés et confirmés. Le client a reçu son courriel." : "Transaction diffusée, confirmation en cours.", url: r.url }
+      : { ok: false, text: r.error ?? "Échec de l'envoi.", url: r.url });
+    setList(await fetchPayouts(order.id, 5));
+  };
+
+  return (
+    <div className="rounded-2xl border border-border bg-card px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[13px] font-medium">Envoi automatique des USDT</p>
+          {last ? (
+            <p className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-muted-foreground">
+              <Pill m={PAYOUT[last.status]} />
+              {last.trigger === "auto" ? "Lancé automatiquement" : "Lancé par l'équipe"}
+              {last.tx_hash && txUrl(last.network, last.tx_hash) && (
+                <a href={txUrl(last.network, last.tx_hash)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-foreground underline-offset-4 hover:underline">
+                  Voir la transaction <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </p>
+          ) : (
+            <p className="mt-1 text-[12px] text-muted-foreground">{nfUsdt.format(order.usdt)} USDT vers l'adresse du client, depuis le portefeuille chaud.</p>
+          )}
+          {last?.error && <p className="mt-1 text-[12px] text-muted-foreground">{last.error}</p>}
+        </div>
+        {canSend && (
+          <Button variant="appSolid" shape="rounded" className="h-auto gap-2 rounded-[10px] px-4 py-[11px] text-sm font-bold" disabled={busy} onClick={go}>
+            <Send className="h-[16px] w-[16px]" /> {busy ? "Envoi en cours…" : "Envoyer les USDT"}
+          </Button>
+        )}
+      </div>
+      {msg && (
+        <p className={cn("mt-3 text-[12.5px]", msg.ok ? "text-emerald-700 dark:text-emerald-300" : "text-destructive")}>
+          {msg.text}
+          {msg.url && <> · <a href={msg.url} target="_blank" rel="noreferrer" className="underline">transaction</a></>}
+        </p>
+      )}
     </div>
   );
 };
@@ -291,6 +359,8 @@ const OrderDetail = ({ order, onBack, onPatch, onDelete, onShowClient }: Props) 
         )}
         {active === "historique" && <Timeline order={order} events={events} />}
       </div>
+
+      {order.type === "buy" && <PayoutBox order={order} />}
 
       {/* Barre d'actions */}
       {lockedByOther ? (

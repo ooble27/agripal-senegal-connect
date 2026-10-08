@@ -13,7 +13,7 @@ import { sendEmail, notifyStaffOfNewOrder } from "@/lib/email";
 import { useAuth } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { OOBLE_INTERAC_EMAIL, TRADE_DAILY_MAX_CAD, TRADE_MIN_CAD, TRADING_ENABLED } from "@/lib/config";
+import { OOBLE_INTERAC_EMAIL, STAFF_TEST_MIN_CAD, TRADE_DAILY_MAX_CAD, TRADE_MIN_CAD, TRADING_ENABLED } from "@/lib/config";
 import { useOtcVisible } from "@/lib/otc";
 
 type Step = "amount" | "network" | "address" | "recap" | "done";
@@ -85,17 +85,19 @@ const AppAcheter = () => {
   const [allowance, setAllowance] = useState<TradeAllowance | null>(null);
   useEffect(() => { getAllowance("buy").then(setAllowance); }, []);
   const maxCad = Math.floor(Math.min(TRADE_DAILY_MAX_CAD, allowance?.remaining ?? TRADE_DAILY_MAX_CAD));
-  const blocked = allowance !== null && maxCad < TRADE_MIN_CAD;
+  // L'équipe peut faire de petits achats de test (10 $).
+  const minCad = isStaff ? STAFF_TEST_MIN_CAD : TRADE_MIN_CAD;
+  const blocked = allowance !== null && maxCad < minCad;
 
   const buyRate = rate.buy;
   const value = parseAmount(amount);
   const cad = toCad(value, unit, buyRate);
   const usdt = toUsdt(value, unit, buyRate);
-  const belowMin = value > 0 && cad < TRADE_MIN_CAD;
+  const belowMin = value > 0 && cad < minCad;
   const network = NETWORKS.find((n) => n.id === net) ?? null;
 
   const maxText = (u: Unit) => amountText(maxCad, u, buyRate, "max");
-  const minText = (u: Unit) => amountText(TRADE_MIN_CAD, u, buyRate, "min");
+  const minText = (u: Unit) => amountText(minCad, u, buyRate, "min");
 
   // Au-delà du maximum permis, la saisie est ramenée au maximum.
   const onAmount = (raw: string) => {
@@ -366,6 +368,7 @@ const AppAcheter = () => {
         <CopyRow label={t("buy.exactAmount")} value={`${nfCad.format(cad)} CAD`} />
         <CopyRow label={t("buy.reference")} value={savedRef} mono />
       </div>
+      <p className="mt-3 px-1 text-[12.5px] leading-relaxed text-muted-foreground">{t("buy.autoNote")}</p>
 
       <div className="mt-6 flex justify-end gap-2.5">
         <Button variant="ghost" shape="soft" className="h-auto px-[22px] py-[13px] text-sm" onClick={() => { setStep("amount"); setAmount(""); setNet(null); setAddress(""); setSavedRef(""); setErr(null); }}>

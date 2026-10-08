@@ -1,5 +1,9 @@
 // Fonction edge Ooble — webhook e-mails entrants (Resend Inbound).
 //
+// Les avis de virement Interac envoyés à `interac@ooble.ca` sont traités à
+// part (voir interac.ts) : rapprochement avec l'ordre d'achat, puis envoi
+// automatique des USDT.
+//
 // Reçoit les e-mails envoyés à `support@ooble.ca` et à `otc@ooble.ca`
 // (desk gros volumes) et les insère dans la table `mail_messages`,
 // rattachés au bon thread. Le thread est identifié par le plus-addressing
@@ -24,6 +28,7 @@
 //   MAIL_WEBHOOK_SECRET       (optionnel) signature Resend
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { handleInterac, isInteracInbox, isInteracSender } from "./interac.ts";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -56,6 +61,7 @@ async function fetchResendEmail(id: string, apiKey: string): Promise<{
   subject: string;
   from: string;
   to: string[];
+  headers: Record<string, string>;
 } | null> {
   // On essaie plusieurs endpoints (l'API a évolué au fil du temps) et
   // on prend le premier qui répond 200.
@@ -83,6 +89,7 @@ async function fetchResendEmail(id: string, apiKey: string): Promise<{
         subject: (d.subject as string) || "",
         from: (d.from as string) || "",
         to: Array.isArray(d.to) ? (d.to as string[]) : [],
+        headers: toHeaderMap(d.headers),
       };
     } catch (e) {
       console.warn(`fetchResendEmail: ${url} → erreur`, e);
@@ -90,6 +97,19 @@ async function fetchResendEmail(id: string, apiKey: string): Promise<{
   }
   console.error(`fetchResendEmail: aucun endpoint ne répond pour id=${id}`);
   return null;
+}
+
+/** En-têtes (objet ou liste { name, value }) → objet, clés en minuscules. */
+function toHeaderMap(h: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  const add = (k: string, v: unknown) => {
+    const key = k.toLowerCase();
+    const val = Array.isArray(v) ? v.join(" ; ") : String(v ?? "");
+    out[key] = out[key] ? `${out[key]} ; ${val}` : val;
+  };
+  if (Array.isArray(h)) h.forEach((x) => x && typeof x === "object" && add(String((x as { name?: string }).name ?? ""), (x as { value?: unknown }).value));
+  else if (h && typeof h === "object") Object.entries(h as Record<string, unknown>).forEach(([k, v]) => add(k, v));
+  return out;
 }
 
 Deno.serve(async (req) => {
@@ -160,6 +180,22 @@ Deno.serve(async (req) => {
   }
 
   const senderEmail = extractEmail(fromRaw);
+
+  // ── Avis de virement Interac → rapprochement automatique ──
+  if (isInteracInbox(toAddresses.map(extractEmail)) && isInteracSender(senderEmail)) {
+    let headers = toHeaderMap(data.headers);
+    if (resendId && resendApiKey && !Object.keys(headers).some((k) => k.includes("authentication-results"))) {
+      const full = await fetchResendEmail(resendId, resendApiKey);
+      if (full) {
+        headers = { ...headers, ...full.headers };
+        bodyText = bodyText || full.text;
+        bodyHtml = bodyHtml || full.html;
+      }
+    }
+    const db = createClient(supabaseUrl, serviceKey);
+    const r = await handleInterac(db, { resendId, fromEmail: senderEmail, subject, text: bodyText, html: bodyHtml, headers }, supabaseUrl, serviceKey);
+    return json({ ok: true, interac: r });
+  }
   const senderName = extractName(fromRaw)
     || fromNameFromObj
     || ((data.from_name as string) ?? "");

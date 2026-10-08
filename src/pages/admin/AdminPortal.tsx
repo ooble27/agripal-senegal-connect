@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Inbox, ShoppingCart, ScanFace, Calculator, Users, ArrowLeft,
   BadgeCheck, UserRound, Megaphone, Headphones, ShieldCheck, ScrollText,
-  LayoutDashboard, Bell, Wallet, Mail,
+  LayoutDashboard, Bell, Wallet, Mail, Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, type AppRole } from "@/lib/auth";
@@ -22,13 +22,14 @@ import AuditLogPanel from "@/components/admin/AuditLogPanel";
 import KpiDashboard from "@/components/admin/KpiDashboard";
 import AnnouncementsPanel from "@/components/admin/AnnouncementsPanel";
 import TreasuryPanel from "@/components/admin/TreasuryPanel";
+import SettlementPanel from "@/components/admin/SettlementPanel";
 import MailboxPanel from "@/components/admin/MailboxPanel";
 import CampaignsPanel from "@/components/admin/CampaignsPanel";
 import AIFloatingChat from "@/components/admin/AIFloatingChat";
 import { C, FONT, ADMIN_THEME_CSS, ADMIN_BG } from "@/components/admin/adminTheme";
 import ThemeToggle from "@/components/app/ThemeToggle";
 
-type TabId = "dashboard" | "queue" | "orders" | "kyc" | "accounting" | "compliance" | "treasury" | "mailbox" | "campaigns" | "announcements" | "team" | "audit";
+type TabId = "dashboard" | "queue" | "orders" | "kyc" | "accounting" | "compliance" | "treasury" | "settlement" | "mailbox" | "campaigns" | "announcements" | "team" | "audit";
 
 const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
   { id: "dashboard",  label: "Tableau de bord", desc: "Vue d'ensemble : volumes, marge, alertes et actions à traiter.", icon: LayoutDashboard },
@@ -38,6 +39,7 @@ const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
   { id: "accounting",  label: "Comptabilité",   desc: "Revenus, marges et volumes traités.", icon: Calculator },
   { id: "compliance",  label: "Conformité",     desc: "Alertes CANAFE, déclarations, dossiers et programme de conformité.", icon: ShieldCheck },
   { id: "treasury",    label: "Trésorerie",     desc: "Inventaire USDT multi-réseaux, snapshots, mouvements et alertes de solde bas.", icon: Wallet },
+  { id: "settlement",  label: "Règlement auto", desc: "Virements Interac lus automatiquement, envoi des USDT depuis le portefeuille chaud, réglages et soldes.", icon: Zap },
   { id: "mailbox",     label: "Messagerie",     desc: "Envoyer un e-mail à un client à partir d'un template, historique des envois, boîte de réception.", icon: Mail },
   { id: "campaigns",   label: "Campagnes",      desc: "Campagnes marketing bien designées avec segmentation, aperçu live et historique.", icon: Megaphone },
   { id: "announcements", label: "Annonces",     desc: "Bannière publique et mode maintenance côté client.", icon: Bell },
@@ -46,8 +48,8 @@ const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
 ];
 
 const ROLE_TABS: Record<AppRole, TabId[]> = {
-  admin:        ["dashboard", "queue", "orders", "kyc", "accounting", "compliance", "treasury", "mailbox", "campaigns", "announcements", "team", "audit"],
-  operator:     ["queue", "orders", "mailbox"],
+  admin:        ["dashboard", "queue", "orders", "kyc", "accounting", "compliance", "treasury", "settlement", "mailbox", "campaigns", "announcements", "team", "audit"],
+  operator:     ["queue", "orders", "settlement", "mailbox"],
   kyc_reviewer: ["kyc", "mailbox"],
   support:      ["queue", "orders", "mailbox"],
   marketing:    ["mailbox", "campaigns", "announcements", "accounting"],
@@ -302,6 +304,7 @@ const AdminPortal = () => {
                   {tab === "accounting" && <AccountingPanel orders={orders} />}
                   {tab === "compliance" && <CompliancePanel orders={orders} />}
                   {tab === "treasury" && <TreasuryPanel orders={orders} />}
+                  {tab === "settlement" && <SettlementPanel />}
                   {tab === "mailbox" && <MailboxPanel />}
                   {tab === "campaigns" && <CampaignsPanel />}
                   {tab === "announcements" && <AnnouncementsPanel />}

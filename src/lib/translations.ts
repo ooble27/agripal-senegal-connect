@@ -458,6 +458,10 @@ const dict = {
   "buy.recipient": { fr: "Destinataire (e-mail Interac)", en: "Recipient (Interac email)" },
   "buy.exactAmount": { fr: "Montant exact", en: "Exact amount" },
   "buy.reference": { fr: "Message / référence", en: "Message / reference" },
+  "buy.autoNote": {
+    fr: "Écrivez la référence dans le message du virement et payez depuis un compte bancaire à votre nom, au montant exact : vos USDT partent alors automatiquement.",
+    en: "Put the reference in the transfer message and pay from a bank account in your name, for the exact amount: your USDT are then sent automatically.",
+  },
   "buy.newOrder": { fr: "Nouvel ordre", en: "New order" },
   "buy.done": { fr: "Terminé", en: "Done" },
   "buy.toPay": { fr: "À payer", en: "To pay" },

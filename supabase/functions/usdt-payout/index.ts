@@ -1,0 +1,253 @@
+// Fonction edge Ooble — envoi automatique des USDT d'un achat.
+//
+// Actions (POST JSON) :
+//   { action: "send", order_id }  envoie les USDT d'un achat payé.
+//       • appel interne (clé service_role, depuis mail-webhook) → envoi « auto »,
+//         soumis aux réglages (settlement_settings) ;
+//       • appel d'un membre de l'équipe (admin ou opérateur) → envoi « staff ».
+//   { action: "status" }          adresses et soldes du portefeuille chaud,
+//                                 réglages (équipe uniquement).
+//   { action: "health" }          diagnostic des réseaux, sans clé ni envoi.
+//   { action: "reconcile" }       vérifie sur la blockchain les envois en
+//                                 cours et termine les ordres confirmés. Sans
+//                                 effet de bord risqué : appelé par une tâche
+//                                 planifiée, sans authentification.
+//
+// Garde-fous : un seul envoi actif par ordre (index unique en base), plafond
+// sur 24 heures, solde vérifié avant l'envoi, hash enregistré AVANT la
+// diffusion. Une issue incertaine passe l'envoi en « review » : personne ne
+// le relance sans vérification humaine.
+//
+// Secrets : PAYOUT_TRON_KEY, PAYOUT_EVM_KEY (clés privées du portefeuille
+// chaud), TRONGRID_API_KEY et RPC_* (facultatifs).
+// Déployée sans vérification JWT (--no-verify-jwt) : l'authentification est
+// faite ici.
+
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  SUPPORTED, SafeError, balances, explorerUrl, fromAddress, hasKey, health, prepare, txState, validateAddress,
+  type Net,
+} from "./chains.ts";
+
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
+
+const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const SITE = Deno.env.get("SITE_URL") ?? "https://ooble.ca";
+
+const ref = (id: string) => `OOB-${id.slice(0, 8).toUpperCase()}`;
+const NET_LABEL: Record<string, string> = {
+  trc20: "Tron · TRC20", bep20: "BNB Chain · BEP20", polygon: "Polygon", avalanche: "Avalanche · C-Chain", erc20: "Ethereum · ERC20", spl: "Solana",
+};
+const nfUsdt = (n: number) => new Intl.NumberFormat("fr-CA", { maximumFractionDigits: 2 }).format(n);
+
+async function event(db: SupabaseClient, orderId: string, prev: string | null, next: string, note: string) {
+  await db.from("order_events").insert({ order_id: orderId, previous_status: prev, new_status: next, actor: "system", note });
+}
+
+async function email(to: string | null | undefined, template: string, vars: Record<string, string>) {
+  if (!to) return;
+  try {
+    await fetch(`${SB_URL}/functions/v1/send-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}` },
+      body: JSON.stringify({ to, template, vars }),
+    });
+  } catch (e) { console.error("usdt-payout: courriel", e); }
+}
+
+/** Termine l'ordre d'un envoi confirmé (idempotent). */
+async function complete(db: SupabaseClient, payoutId: string) {
+  const { data: p } = await db.from("usdt_payouts").select("*").eq("id", payoutId).maybeSingle();
+  if (!p) return;
+  await db.from("usdt_payouts").update({ status: "confirmed", updated_at: new Date().toISOString() }).eq("id", p.id);
+  await db.from("blockchain_transactions").update({ confirmed: true, confirmations: 1, updated_at: new Date().toISOString() })
+    .eq("tx_hash", p.tx_hash);
+  const { data: o } = await db.from("orders").update({ status: "completed" })
+    .eq("id", p.order_id).eq("status", "settling").select("id, user_id, usdt_amount, network").maybeSingle();
+  if (!o) return; // déjà terminé
+  await event(db, o.id, "settling", "completed", `USDT envoyés automatiquement — ${p.tx_hash}`);
+  const { data: prof } = await db.from("profiles").select("email").eq("id", o.user_id).maybeSingle();
+  await email(prof?.email, "order-completed", {
+    ref: ref(o.id),
+    summaryLabel: "Vous avez reçu",
+    summaryValue: `${nfUsdt(Number(o.usdt_amount))} USDT`,
+    network: NET_LABEL[o.network] ?? o.network,
+    txHash: p.tx_hash,
+    orderUrl: `${SITE}/app/activite/${o.id}`,
+  });
+}
+
+/** Envoi incertain ou échoué après diffusion : à vérifier par l'équipe. */
+async function review(db: SupabaseClient, payoutId: string, msg: string) {
+  await db.from("usdt_payouts").update({ status: "review", error: msg, updated_at: new Date().toISOString() }).eq("id", payoutId);
+}
+
+async function send(db: SupabaseClient, orderId: string, trigger: "auto" | "staff", by: string | null) {
+  const { data: settings } = await db.from("settlement_settings").select("*").eq("id", 1).single();
+  const { data: o } = await db.from("orders")
+    .select("id, user_id, side, status, network, wallet_address, usdt_amount, cad_amount").eq("id", orderId).maybeSingle();
+  if (!o) return { ok: false, error: "Ordre introuvable." };
+  if (o.side !== "buy") return { ok: false, error: "Seuls les achats donnent lieu à un envoi d'USDT." };
+  if (o.status !== "payment_received") return { ok: false, error: `L'ordre doit être « paiement reçu » (statut actuel : ${o.status}).` };
+  const net = o.network as Net;
+  if (!SUPPORTED.includes(net)) return { ok: false, error: `Envoi automatique indisponible sur ${NET_LABEL[net] ?? net} : à faire à la main.` };
+  if (!hasKey(net)) return { ok: false, error: "Portefeuille chaud non configuré pour ce réseau." };
+  const amount = Number(o.usdt_amount);
+
+  if (trigger === "auto") {
+    if (!settings?.auto_payout) return { ok: false, error: "Envoi automatique désactivé." };
+    if (Number(o.cad_amount) > Number(settings.auto_payout_max_cad)) return { ok: false, error: "Montant au-dessus du seuil automatique : clic de l'équipe requis." };
+  }
+
+  // Plafond du portefeuille chaud sur 24 heures.
+  const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+  const { data: recent } = await db.from("usdt_payouts").select("usdt_amount, network, status, created_at")
+    .neq("status", "failed").gt("created_at", since);
+  const used = (recent ?? []).reduce((s, r) => s + Number(r.usdt_amount), 0);
+  if (used + amount > Number(settings?.daily_payout_max_usdt ?? 0)) {
+    return { ok: false, error: `Plafond de ${settings?.daily_payout_max_usdt} USDT sur 24 h atteint (${nfUsdt(used)} déjà envoyés).` };
+  }
+  // Un envoi à la fois par réseau (le numéro de transaction suivant en dépend).
+  const twoMin = Date.now() - 2 * 60 * 1000;
+  if ((recent ?? []).some((r) => r.network === net && r.status === "sending" && new Date(r.created_at).getTime() > twoMin)) {
+    return { ok: false, error: "Un autre envoi est en cours sur ce réseau. Réessayez dans une minute." };
+  }
+
+  let from: string;
+  try {
+    validateAddress(net, o.wallet_address);
+    from = fromAddress(net);
+    const b = await balances(net);
+    if (b.usdt < amount) return { ok: false, error: `Solde USDT insuffisant sur ${NET_LABEL[net]} : ${nfUsdt(b.usdt)} disponibles, ${nfUsdt(amount)} requis.` };
+    if (b.gas < b.minGas) return { ok: false, error: `Pas assez de ${b.gasSymbol} pour les frais : ${b.gas} (minimum ${b.minGas}).` };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+
+  // Réservation : l'index unique refuse un second envoi actif pour l'ordre.
+  const { data: p, error: insErr } = await db.from("usdt_payouts").insert({
+    order_id: o.id, network: net, from_address: from, to_address: o.wallet_address,
+    usdt_amount: amount, status: "sending", trigger, requested_by: by,
+  }).select("id").single();
+  if (insErr || !p) return { ok: false, error: "Un envoi existe déjà pour cet ordre." };
+
+  const { data: moved } = await db.from("orders").update({ status: "settling" })
+    .eq("id", o.id).eq("status", "payment_received").select("id").maybeSingle();
+  if (!moved) {
+    await db.from("usdt_payouts").update({ status: "failed", error: "Statut de l'ordre modifié entre-temps." }).eq("id", p.id);
+    return { ok: false, error: "Le statut de l'ordre a changé entre-temps." };
+  }
+  await event(db, o.id, "payment_received", "settling", trigger === "auto" ? "Envoi automatique des USDT" : "Envoi des USDT lancé par l'équipe");
+
+  const undo = async (msg: string) => {
+    await db.from("usdt_payouts").update({ status: "failed", error: msg, updated_at: new Date().toISOString() }).eq("id", p.id);
+    await db.from("orders").update({ status: "payment_received" }).eq("id", o.id).eq("status", "settling");
+    await event(db, o.id, "settling", "payment_received", `Envoi échoué, rien n'est parti : ${msg}`);
+  };
+
+  let tx;
+  try {
+    tx = await prepare(net, o.wallet_address, amount);
+  } catch (e) {
+    await undo((e as Error).message);
+    return { ok: false, error: (e as Error).message };
+  }
+  await db.from("usdt_payouts").update({ tx_hash: tx.hash, updated_at: new Date().toISOString() }).eq("id", p.id);
+
+  try {
+    await tx.broadcast();
+  } catch (e) {
+    if (e instanceof SafeError) {
+      await undo(e.message);
+      return { ok: false, error: e.message };
+    }
+    await review(db, p.id, (e as Error).message);
+    return { ok: false, review: true, error: `${(e as Error).message} À vérifier : ${explorerUrl(net, tx.hash)}` };
+  }
+
+  await db.from("usdt_payouts").update({ status: "broadcast", updated_at: new Date().toISOString() }).eq("id", p.id);
+  await db.from("blockchain_transactions").insert({
+    order_id: o.id, direction: "outbound", network: net, tx_hash: tx.hash, usdt_amount: amount, confirmations: 0, confirmed: false,
+  });
+
+  // Attente de l'inclusion dans un bloc (quelques secondes en général).
+  for (let i = 0; i < 12; i++) {
+    await new Promise((r) => setTimeout(r, 4000));
+    try {
+      const s = await txState(net, tx.hash);
+      if (s === "success") { await complete(db, p.id); return { ok: true, status: "confirmed", hash: tx.hash, url: explorerUrl(net, tx.hash) }; }
+      if (s === "reverted") { await review(db, p.id, "Transaction rejetée par le contrat."); return { ok: false, review: true, error: "Transaction rejetée sur la blockchain.", url: explorerUrl(net, tx.hash) }; }
+    } catch { /* on réessaie */ }
+  }
+  return { ok: true, status: "broadcast", hash: tx.hash, url: explorerUrl(net, tx.hash) };
+}
+
+async function reconcile(db: SupabaseClient) {
+  const { data: rows } = await db.from("usdt_payouts").select("id, network, tx_hash, status, created_at")
+    .in("status", ["broadcast", "sending"]).not("tx_hash", "is", null).limit(20);
+  const out: Record<string, string> = {};
+  for (const r of rows ?? []) {
+    try {
+      const s = await txState(r.network as Net, r.tx_hash);
+      if (s === "success") { await complete(db, r.id); out[r.id] = "confirmed"; }
+      else if (s === "reverted") { await review(db, r.id, "Transaction rejetée par le contrat."); out[r.id] = "review"; }
+      else if (Date.now() - new Date(r.created_at).getTime() > 30 * 60 * 1000) {
+        await review(db, r.id, "Toujours introuvable sur la blockchain après 30 minutes."); out[r.id] = "review";
+      } else out[r.id] = "pending";
+    } catch (e) { out[r.id] = `erreur : ${(e as Error).message}`; }
+  }
+  return { ok: true, checked: out };
+}
+
+async function status(db: SupabaseClient) {
+  const { data: settings } = await db.from("settlement_settings").select("*").eq("id", 1).single();
+  const wallets = await Promise.all(SUPPORTED.map(async (net) => {
+    if (!hasKey(net)) return { network: net, label: NET_LABEL[net], configured: false };
+    try { return { network: net, label: NET_LABEL[net], configured: true, ...(await balances(net)) }; }
+    catch (e) { return { network: net, label: NET_LABEL[net], configured: true, address: (() => { try { return fromAddress(net); } catch { return null; } })(), error: (e as Error).message }; }
+  }));
+  return { ok: true, settings, wallets };
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  if (req.method !== "POST") return json({ error: "POST uniquement" }, 405);
+  if (!SB_URL || !SERVICE) return json({ error: "Configuration serveur incomplète." }, 500);
+  const db = createClient(SB_URL, SERVICE);
+
+  let body: { action?: string; order_id?: string };
+  try { body = await req.json(); } catch { body = {}; }
+  const action = body.action ?? "send";
+
+  if (action === "reconcile") return json(await reconcile(db));
+  if (action === "health") return json({ ok: true, networks: await health() });
+
+  // Authentification : clé service (appel interne) ou membre de l'équipe.
+  const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
+  let trigger: "auto" | "staff" = "auto";
+  let by: string | null = null;
+  if (token !== SERVICE) {
+    const { data: auth } = token ? await db.auth.getUser(token) : { data: { user: null } };
+    const uid = auth?.user?.id;
+    if (!uid) return json({ error: "Authentification requise." }, 401);
+    const { data: roles } = await db.from("user_roles").select("role").eq("user_id", uid);
+    if (!(roles ?? []).some((r) => r.role === "admin" || r.role === "operator")) return json({ error: "Réservé à l'équipe." }, 403);
+    trigger = "staff";
+    by = uid;
+  }
+
+  if (action === "status") return json(await status(db));
+  if (action === "send") {
+    if (!body.order_id) return json({ error: "order_id manquant." }, 400);
+    const r = await send(db, body.order_id, trigger, by);
+    return json(r);
+  }
+  return json({ error: "Action inconnue." }, 400);
+});

@@ -11,6 +11,7 @@
 //
 // Secrets requis :
 //   SUMSUB_WEBHOOK_SECRET   secret partagé pour vérifier `x-payload-digest`
+//                           (OBLIGATOIRE : sans lui, tout appel est refusé)
 //   (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY injectés automatiquement)
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -34,6 +35,14 @@ async function hmacHex(secret: string, msg: string, alg: string): Promise<string
   return [...new Uint8Array(mac)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+/** Comparaison à temps constant. */
+function sameHex(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let r = 0;
+  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return r === 0;
+}
+
 /** Type d'événement Sumsub → statut interne (ou null si on ignore). */
 function toStatus(type: string, reviewAnswer?: string): "pending" | "approved" | "rejected" | null {
   if (type === "applicantReviewed") {
@@ -52,15 +61,17 @@ Deno.serve(async (req) => {
 
   const raw = await req.text();
 
-  // Vérifie la signature du webhook si un secret est configuré.
-  const secret = Deno.env.get("SUMSUB_WEBHOOK_SECRET");
-  if (secret) {
-    const provided = req.headers.get("x-payload-digest") ?? "";
-    const alg = (req.headers.get("x-payload-digest-alg") ?? "HMAC_SHA256_HEX").toUpperCase();
-    const computed = await hmacHex(secret, raw, alg);
-    if (!provided || computed.toLowerCase() !== provided.toLowerCase()) {
-      return new Response("Signature invalide", { status: 401 });
-    }
+  // Signature obligatoire. Sans secret configuré, on refuse tout : ce webhook
+  // n'est pas authentifié autrement, et un message non signé pourrait sinon
+  // approuver n'importe quel compte (faille constatée le 2026-10-08).
+  const secret = Deno.env.get("SUMSUB_WEBHOOK_SECRET") ?? "";
+  if (!secret) return new Response("Webhook non configuré", { status: 503 });
+  const provided = (req.headers.get("x-payload-digest") ?? "").toLowerCase();
+  const alg = (req.headers.get("x-payload-digest-alg") ?? "HMAC_SHA256_HEX").toUpperCase();
+  if (!(alg in HASH)) return new Response("Algorithme refusé", { status: 401 });
+  const computed = (await hmacHex(secret, raw, alg)).toLowerCase();
+  if (!provided || !sameHex(computed, provided)) {
+    return new Response("Signature invalide", { status: 401 });
   }
 
   let evt: Record<string, unknown>;

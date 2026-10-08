@@ -116,6 +116,9 @@ const FAQ = () => {
               </li>
             ))}
           </ol>
+          <Link to="/guide/payer-par-interac" className="mt-9 inline-flex items-center gap-2 text-[15px] font-medium underline-offset-4 hover:underline">
+            {t("faqp.rules.video")} <ArrowRight className="h-4 w-4" />
+          </Link>
         </section>
 
         <section className="pt-16 lg:pt-20">

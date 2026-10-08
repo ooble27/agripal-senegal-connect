@@ -2,7 +2,7 @@ import type { Lang } from "./i18n";
 import type { TKey } from "./translations";
 
 /** Guides vidéo du centre d'aide (/guide). L'ordre du tableau est l'ordre de lecture. */
-export type GuideKey = "account" | "kyc" | "buy" | "sell";
+export type GuideKey = "account" | "kyc" | "buy" | "pay" | "sell";
 export type GuideGroup = "start" | "trade";
 
 export interface GuideDef {
@@ -19,6 +19,7 @@ export const GUIDES: GuideDef[] = [
   { slug: "creer-un-compte", key: "account", group: "start", to: "/inscription", duration: { fr: 40, en: 37 } },
   { slug: "verifier-identite", key: "kyc", group: "start", to: "/app/verification", duration: { fr: 48, en: 43 } },
   { slug: "acheter-usdt", key: "buy", group: "trade", to: "/app/acheter", duration: { fr: 47, en: 42 } },
+  { slug: "payer-par-interac", key: "pay", group: "trade", to: "/faq#regles-interac", duration: { fr: 66, en: 61 } },
   { slug: "vendre-usdt", key: "sell", group: "trade", to: "/app/vendre", duration: { fr: 46, en: 43 } },
 ];
 

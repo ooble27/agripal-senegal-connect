@@ -362,6 +362,7 @@ const dict = {
     en: "The sender name on the transfer must match your Ooble account, as verified with your ID. For a business account: the company's bank account.",
   },
 
+  "faqp.rules.video": { fr: "Voir la vidéo : payer par Interac", en: "Watch the video: paying with Interac" },
   "faqp.topic1": { fr: "Le service", en: "The service" },
   "faqp.topicAccount": { fr: "Compte et vérification", en: "Account and verification" },
   "faqp.topic2": { fr: "Acheter des USDT", en: "Buying USDT" },
@@ -1133,6 +1134,55 @@ const dict = {
   "guide.buy.tip3": {
     fr: "Vos USDT arrivent directement dans votre wallet : vous gardez le contrôle de vos clés.",
     en: "Your USDT lands directly in your wallet: you stay in control of your keys.",
+  },
+
+  "guide.pay.title": { fr: "Payer par Interac sans erreur", en: "Paying with Interac, error-free" },
+  "guide.pay.desc": {
+    fr: "Les quatre règles du virement Interac pour que vos USDT partent automatiquement, en quelques minutes.",
+    en: "The four Interac transfer rules that let your USDT go out automatically, within minutes.",
+  },
+  "guide.pay.cta": { fr: "Voir toutes les règles", en: "See all the rules" },
+  "guide.pay.s1": { fr: "Gardez l'écran de paiement", en: "Keep the payment screen" },
+  "guide.pay.s1d": {
+    fr: "Après avoir validé votre achat, l'écran affiche le destinataire (interac@ooble.ca), le montant exact et la référence de l'ordre (OOB-…). Gardez-le ouvert pendant le virement.",
+    en: "After you confirm your purchase, the screen shows the recipient (interac@ooble.ca), the exact amount and the order reference (OOB-…). Keep it open while you make the transfer.",
+  },
+  "guide.pay.s2": { fr: "Ajoutez interac@ooble.ca", en: "Add interac@ooble.ca" },
+  "guide.pay.s2d": {
+    fr: "Dans votre banque, ajoutez le destinataire interac@ooble.ca. Il est en dépôt automatique : aucune question de sécurité n'est demandée.",
+    en: "In your bank, add the recipient interac@ooble.ca. It's on autodeposit: no security question is asked.",
+  },
+  "guide.pay.s3": { fr: "Entrez le montant exact", en: "Enter the exact amount" },
+  "guide.pay.s3d": {
+    fr: "Au cent près, en un seul virement. N'arrondissez pas, ne divisez pas le paiement et ne payez pas deux ordres ensemble.",
+    en: "To the cent, in a single transfer. Don't round it, don't split the payment, and don't pay two orders together.",
+  },
+  "guide.pay.s4": { fr: "Collez la référence en message", en: "Paste the reference as the message" },
+  "guide.pay.s4d": {
+    fr: "Dans le champ « Message » du virement, collez uniquement la référence de l'ordre, qui commence par OOB-.",
+    en: "In the transfer's “Message” field, paste only the order reference, which starts with OOB-.",
+  },
+  "guide.pay.s5": { fr: "Payez depuis un compte à votre nom", en: "Pay from an account in your name" },
+  "guide.pay.s5d": {
+    fr: "Le nom de l'expéditeur doit être celui de votre compte Ooble vérifié (ou la raison sociale pour un compte entreprise). Le paiement d'une autre personne est remboursé.",
+    en: "The sender name must match your verified Ooble account (or the legal business name for a business account). A payment from someone else is refunded.",
+  },
+  "guide.pay.s6": { fr: "Recevez vos USDT", en: "Receive your USDT" },
+  "guide.pay.s6d": {
+    fr: "Le virement est vérifié automatiquement et vos USDT partent tout seuls. Vous recevez un courriel avec le lien de la transaction sur la blockchain.",
+    en: "The transfer is checked automatically and your USDT go out on their own. You get an email with the link to the transaction on the blockchain.",
+  },
+  "guide.pay.tip1": {
+    fr: "Une seule référence dans le message, rien d'autre : pas de mot, pas d'autre numéro.",
+    en: "Just one reference in the message, nothing else: no words, no other number.",
+  },
+  "guide.pay.tip2": {
+    fr: "Vous avez fait une erreur ? N'envoyez pas de second virement : écrivez au support avec la référence de l'ordre.",
+    en: "Made a mistake? Don't send a second transfer: write to support with the order reference.",
+  },
+  "guide.pay.tip3": {
+    fr: "Votre banque a son propre plafond Interac par jour : vérifiez-le avant un gros achat.",
+    en: "Your bank has its own daily Interac limit: check it before a large purchase.",
   },
 
   "guide.sell.title": { fr: "Vendre des USDT", en: "Sell USDT" },

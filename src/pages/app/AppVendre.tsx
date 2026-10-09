@@ -23,9 +23,8 @@ type Step = "amount" | "reception" | "network" | "deposit" | "done";
 /**
  * Adresses de dépôt des ventes. Réseaux EVM : le portefeuille MetaMask d'Ooble
  * (le même que celui d'envoi des achats : les USDT vendus servent aux achats).
- * Tron : même compte MetaMask. Solana : adresse du compte Binance, en
- * attendant un portefeuille dédié. Mêmes valeurs dans
- * supabase/functions/sell-watch (lecture des dépôts).
+ * Tron et Solana : même compte MetaMask. Mêmes valeurs dans
+ * supabase/functions/sell-watch (lecture des dépôts, sauf Solana).
  */
 const OOBLE_EVM = "0x0aC6f6202Ebff35D36A2Dca04C4f556FF95Fc093";
 const OOBLE_DEPOSIT: Record<NetId, string> = {
@@ -33,7 +32,7 @@ const OOBLE_DEPOSIT: Record<NetId, string> = {
   bnb: OOBLE_EVM,
   eth: OOBLE_EVM,
   matic: OOBLE_EVM,
-  sol: "8ES2hxsfqZVX3cjxWLBJ8jCdzSu9hTBYELSkX82UdnhN",
+  sol: "BKLnZeaEccUbBSR2WjBQ1j9arjBy82m9fZXRoH3w3M2i",
   avax: OOBLE_EVM,
 };
 

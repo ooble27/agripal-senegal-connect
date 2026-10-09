@@ -1157,7 +1157,7 @@ const monthFr = (iso: string) =>
 
 const DossiersView = ({ stats, onExport, busyKind }: {
   stats: RegisterStats | null;
-  onExport: (kind: RecordCategoryId, from?: string, to?: string) => void;
+  onExport: (kind: RecordCategoryId, from?: string, to?: string, format?: "pdf" | "csv") => void;
   busyKind: RecordCategoryId | null;
 }) => {
   const [period, setPeriod] = useState<PeriodId>("tout");
@@ -1225,14 +1225,23 @@ const DossiersView = ({ stats, onExport, busyKind }: {
                 <p className="mt-0.5 text-[12px] text-muted-foreground">{cat.description}</p>
                 {detail(cat.id) && <p className="mt-0.5 text-[11.5px] text-muted-foreground">{detail(cat.id)}</p>}
               </div>
-              <button
-                onClick={() => { const [f, t] = range(); onExport(cat.id, f, t); }}
-                disabled={busyKind !== null}
-                className="inline-flex items-center gap-1.5 text-[13px] font-medium underline-offset-4 hover:underline disabled:opacity-50"
-              >
-                <Download className={cn("h-3.5 w-3.5", busyKind === cat.id && "animate-pulse")} />
-                {busyKind === cat.id ? "Export…" : "Exporter CSV"}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { const [f, t] = range(); onExport(cat.id, f, t, "pdf"); }}
+                  disabled={busyKind !== null}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-foreground px-3 text-[12.5px] font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+                >
+                  <Download className={cn("h-3.5 w-3.5", busyKind === cat.id && "animate-pulse")} />
+                  {busyKind === cat.id ? "Export…" : "PDF"}
+                </button>
+                <button
+                  onClick={() => { const [f, t] = range(); onExport(cat.id, f, t, "csv"); }}
+                  disabled={busyKind !== null}
+                  className="inline-flex h-8 items-center rounded-lg border border-border px-3 text-[12.5px] font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+                >
+                  CSV
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -1555,12 +1564,12 @@ const CompliancePanel = ({ orders }: { orders: AdminOrder[] }) => {
       setSuccessMsg(`Alerte ${created.ref} ouverte et prise en charge.`);
     });
 
-  const exportRegister = async (kind: RecordCategoryId, from?: string, to?: string) => {
+  const exportRegister = async (kind: RecordCategoryId, from?: string, to?: string, format: "pdf" | "csv" = "pdf") => {
     setExporting(kind); setErrorMsg(null);
     try {
-      const n = await downloadRegister(kind, from, to);
+      const n = await downloadRegister(kind, from, to, format);
       setSuccessMsg(n > 0 ? `${n} ligne${n > 1 ? "s" : ""} exportée${n > 1 ? "s" : ""}.` : "Aucune donnée sur cette période.");
-      void logAdminAction({ action: "compliance.register_export", entityKind: "compliance_register", metadata: { kind, from: from ?? null, to: to ?? null, rows: n } });
+      void logAdminAction({ action: "compliance.register_export", entityKind: "compliance_register", metadata: { kind, format, from: from ?? null, to: to ?? null, rows: n } });
     } catch (e) {
       setErrorMsg(`Export impossible : ${(e as Error).message}`);
     } finally {

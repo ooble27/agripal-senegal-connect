@@ -5,7 +5,8 @@
 -- destinataires enregistrés, question Interac. Le compte est seulement
 -- fermé (connexion bloquée par la fonction edge delete-account, adresse
 -- e-mail libérée) et la fermeture est inscrite au registre
--- account_closures, sans limite de durée. Plus de suppression complète,
+-- account_closures, avec la date de conservation minimale (5 ans, LRPCFAT) ;
+-- rien n'est jamais effacé automatiquement. Plus de suppression complète,
 -- même pour un compte sans historique.
 -- Appliquée en production le 2026-10-09.
 
@@ -39,10 +40,10 @@ begin
     raise exception 'ACTIVE_ORDERS' using errcode = '55000';
   end if;
 
-  -- Fermeture : rien n'est effacé du dossier (profil, ordres, vérifications,
-  -- destinataires). Le registre garde la trace de la fermeture.
+  -- Fermeture : rien n'est effacé du dossier. retain_until = conservation
+  -- minimale légale (5 ans, LRPCFAT) ; aucune suppression automatique.
   insert into public.account_closures (user_id, mode, email, full_name, account_type, retain_until)
-  values (_uid, 'closed', p.email, coalesce(p.business_name, p.full_name), p.account_type::text, null)
+  values (_uid, 'closed', p.email, coalesce(p.business_name, p.full_name), p.account_type::text, now() + interval '5 years')
   on conflict (user_id) do nothing;
 
   update public.profiles set closed_at = now() where id = _uid;
@@ -54,3 +55,5 @@ revoke execute on function public.close_account(uuid) from public, anon, authent
 grant execute on function public.close_account(uuid) to service_role;
 
 comment on table public.account_closures is 'Registre des comptes fermés à la demande du client. Le dossier (profil, ordres, vérifications) est conservé sans limite de durée.';
+
+comment on column public.account_closures.retain_until is 'Conservation minimale légale (5 ans, LRPCFAT). Le dossier n''est jamais effacé automatiquement.';

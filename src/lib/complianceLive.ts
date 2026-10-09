@@ -288,10 +288,11 @@ const csvCell = (v: unknown) => {
 };
 
 /**
- * Télécharge un registre en CSV (séparateur « ; » et BOM UTF-8 : s'ouvre
- * directement dans Excel en français). Renvoie le nombre de lignes.
+ * Télécharge un registre : en PDF (lisible partout, téléphone compris, et
+ * imprimable) ou en CSV (séparateur « ; » et BOM UTF-8 : s'ouvre directement
+ * dans Excel en français). Renvoie le nombre de lignes.
  */
-export async function downloadRegister(kind: RegisterKind, from?: string, to?: string): Promise<number> {
+export async function downloadRegister(kind: RegisterKind, from?: string, to?: string, format: "pdf" | "csv" = "pdf"): Promise<number> {
   const { data, error } = await db.rpc("compliance_register", {
     _kind: kind,
     _from: from ? new Date(`${from}T00:00:00`).toISOString() : null,
@@ -299,6 +300,11 @@ export async function downloadRegister(kind: RegisterKind, from?: string, to?: s
   });
   if (error) throw new Error(error.message);
   const rows = (data ?? []) as Record<string, unknown>[];
+  if (format === "pdf") {
+    const [{ downloadRegisterPdf }, { RECORD_RETENTION_YEARS }] = await Promise.all([import("@/lib/registerPdf"), import("@/lib/compliance")]);
+    await downloadRegisterPdf({ kind, rows, from, to, retentionYears: RECORD_RETENTION_YEARS });
+    return rows.length;
+  }
   const cols = rows.length ? Object.keys(rows[0]) : [];
   const lines = [cols.join(";"), ...rows.map((r) => cols.map((c) => csvCell(r[c])).join(";"))];
   const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });

@@ -7,6 +7,7 @@ import ThemeToggle from "./ThemeToggle";
 import BottomNav from "./BottomNav";
 import { useAuth } from "@/lib/auth";
 import { warmAppData } from "@/lib/warm";
+import { ensurePush } from "@/lib/pushNotifications";
 
 /**
  * Marque <html> pendant que l'app est montée pour que la racine, le <body> et
@@ -67,8 +68,10 @@ interface AppShellProps {
 const AppShell = ({ children, header, backTo, wide, wider, center, className }: AppShellProps) => {
   useAppScope();
   const { user } = useAuth();
-  useEffect(() => { warmAppData(user?.id); }, [user?.id]);
   const [lang] = useLang();
+  useEffect(() => { warmAppData(user?.id); }, [user?.id]);
+  // Notifications actives pour tout le monde, sans bouton à activer.
+  useEffect(() => { if (user?.id) ensurePush(lang); }, [user?.id, lang]);
   return (
   <div className="app-surface app-type min-h-screen bg-background">
     <div className={cn("mx-auto flex min-h-screen max-w-[400px] flex-col px-5 pb-28 pt-[max(1.25rem,env(safe-area-inset-top))] md:max-w-[720px] lg:max-w-[960px]", wider && "md:max-w-[840px] lg:max-w-[1040px] xl:max-w-[1180px] md:px-8")}>

@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-// Edge function Ooble — notification PUSH uniquement quand le statut
-// d'un ordre change (pas d'e-mail, ceux-ci sont gérés par le frontend).
+// Edge function Ooble — notification PUSH quand le statut d'un ordre change
+// (paiement reçu, terminé, annulé, expiré, remboursé), en français ou en
+// anglais selon l'appareil. Pas d'e-mail ici (envoyés ailleurs).
 //
 // Appelée par le trigger Postgres `trg_order_status_notify` via pg_net.
 
@@ -11,15 +12,35 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-const STATUS_FR: Record<string, string> = {
-  created: "Créée",
-  awaiting_payment: "En attente de paiement",
-  payment_received: "Paiement reçu",
-  settling: "En traitement",
-  completed: "Terminée",
-  cancelled: "Annulée",
-  expired: "Expirée",
-};
+type Msg = { title: string; body: string };
+type Ctx = { ref: string; usdt: string; cad: string };
+
+/** Messages par sens et statut ; null : pas de notification (étape trop brève). */
+function messages(side: string, status: string, c: Ctx, e: Ctx): { fr: Msg; en: Msg } | null {
+  const buy = side === "buy";
+  switch (status) {
+    case "payment_received":
+      return buy
+        ? { fr: { title: "Paiement reçu", body: `Votre virement de ${c.cad} $ est arrivé. Vos ${c.usdt} USDT partent. (${c.ref})` },
+            en: { title: "Payment received", body: `Your $${e.cad} transfer arrived. Your ${e.usdt} USDT are on their way. (${e.ref})` } }
+        : { fr: { title: "USDT reçus", body: `Nous avons reçu vos ${c.usdt} USDT. Votre virement Interac de ${c.cad} $ est en préparation. (${c.ref})` },
+            en: { title: "USDT received", body: `We received your ${e.usdt} USDT. Your $${e.cad} Interac transfer is being prepared. (${e.ref})` } };
+    case "completed":
+      return buy
+        ? { fr: { title: "USDT envoyés", body: `${c.usdt} USDT sont dans votre wallet. (${c.ref})` },
+            en: { title: "USDT sent", body: `${e.usdt} USDT are in your wallet. (${e.ref})` } }
+        : { fr: { title: "Virement envoyé", body: `${c.cad} $ vous ont été envoyés par Interac. (${c.ref})` },
+            en: { title: "Transfer sent", body: `$${e.cad} has been sent to you by Interac. (${e.ref})` } };
+    case "cancelled":
+      return { fr: { title: "Ordre annulé", body: `L'ordre ${c.ref} a été annulé.` }, en: { title: "Order cancelled", body: `Order ${e.ref} was cancelled.` } };
+    case "expired":
+      return { fr: { title: "Ordre expiré", body: `L'ordre ${c.ref} a expiré : aucun paiement reçu à temps.` }, en: { title: "Order expired", body: `Order ${e.ref} expired: no payment received in time.` } };
+    case "refunded":
+      return { fr: { title: "Ordre remboursé", body: `L'ordre ${c.ref} a été remboursé.` }, en: { title: "Order refunded", body: `Order ${e.ref} was refunded.` } };
+    default:
+      return null;
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
@@ -54,15 +75,13 @@ Deno.serve(async (req) => {
     .maybeSingle();
   if (!row || row.status !== newStatus) return json({ ok: true, skipped: "mismatch" });
   const userId = row.user_id as string;
-  const side = row.side as string;
-  const cadAmount = row.cad_amount as number;
-  const usdtAmount = row.usdt_amount as number;
   const ref = `OOB-${orderId.slice(0, 8).toUpperCase()}`;
-
-  const sideLabel = side === "buy" ? "Achat" : "Vente";
-  const statusLabel = STATUS_FR[newStatus] ?? newStatus;
-  const title = `${sideLabel} ${ref}`;
-  const body = `Statut : ${statusLabel} · ${usdtAmount} USDT / ${cadAmount} $ CAD`;
+  const nf = (n: number, loc: string) => Number(n).toLocaleString(loc, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/\u202f|\u00a0/g, " ");
+  const usdt = row.usdt_amount as number, cad = row.cad_amount as number;
+  const i18n = messages(row.side as string, newStatus,
+    { ref, usdt: nf(usdt, "fr-CA"), cad: nf(cad, "fr-CA") },
+    { ref, usdt: nf(usdt, "en-CA"), cad: nf(cad, "en-CA") });
+  if (!i18n) return json({ ok: true, skipped: "silent_status" });
 
   // Envoyer la notification push via push-notify
   try {
@@ -72,12 +91,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${serviceKey}`,
       },
-      body: JSON.stringify({
-        user_id: userId,
-        title,
-        body,
-        url: `/app/activity`,
-      }),
+      body: JSON.stringify({ user_id: userId, i18n, url: `/app/activite/${orderId}` }),
     });
   } catch (e) {
     console.error("order-notify: push failed", e);

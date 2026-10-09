@@ -38,5 +38,6 @@ export const guideKey = (g: GuideDef, field: string) => `guide.${g.key}.${field}
 
 export const guideMedia = (g: GuideDef, lang: Lang) => {
   const base = `/guides/videos/${g.slug}-${lang}`;
-  return { video: `${base}.mp4`, poster: `${base}.jpg`, thumb: `${base}-thumb.jpg` };
+  // ?v : change à chaque nouvelle version des vidéos (évite l'ancienne en cache).
+  return { video: `${base}.mp4?v=2`, poster: `${base}.jpg`, thumb: `${base}-thumb.jpg` };
 };

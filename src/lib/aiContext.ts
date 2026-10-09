@@ -27,7 +27,7 @@ function snippet(text: string | null, len = 120): string {
 }
 
 const OOBLE_DEPOSIT_ADDRESSES: Record<string, string> = {
-  trx: "TSPUk2W5bcGGNPpKzx1xTDc2NuxpRJRCBb",
+  trx: "TPf6rXmbeRzueBB7SM19vQ4wDz2fcrEtAs",
   bnb: "0x0aC6f6202Ebff35D36A2Dca04C4f556FF95Fc093",
   eth: "0x0aC6f6202Ebff35D36A2Dca04C4f556FF95Fc093",
   matic: "0x0aC6f6202Ebff35D36A2Dca04C4f556FF95Fc093",

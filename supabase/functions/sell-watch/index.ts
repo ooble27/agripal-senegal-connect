@@ -31,9 +31,9 @@ const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const SITE = Deno.env.get("SITE_URL") ?? "https://ooble.ca";
 
 /** Adresses de dépôt affichées aux clients (mêmes valeurs que src/pages/app/AppVendre.tsx).
- *  EVM : portefeuille MetaMask d'Ooble (aussi portefeuille d'envoi des achats). */
+ *  Tron et EVM : portefeuille MetaMask d'Ooble. */
 const DEPOSIT = {
-  trc20: "TSPUk2W5bcGGNPpKzx1xTDc2NuxpRJRCBb",
+  trc20: "TPf6rXmbeRzueBB7SM19vQ4wDz2fcrEtAs",
   evm: "0x0aC6f6202Ebff35D36A2Dca04C4f556FF95Fc093",
 };
 
@@ -78,16 +78,25 @@ const units = (raw: bigint, decimals: number) => {
 
 // ───────────────────────── Tron ─────────────────────────
 
+/** Ancienne adresse Tron (Binance), encore surveillée pour les ventes passées
+ *  avant le changement d'adresse. À retirer une fois ces ventes réglées. */
+const OLD_TRC20 = "TSPUk2W5bcGGNPpKzx1xTDc2NuxpRJRCBb";
+
 async function scanTron(cursorMs: number): Promise<{ deposits: Deposit[]; cursor: number }> {
+  const all = await Promise.all([DEPOSIT.trc20, OLD_TRC20].map((a) => scanTronAddress(a, cursorMs)));
+  return { deposits: all.flatMap((r) => r.deposits), cursor: Math.min(...all.map((r) => r.cursor)) };
+}
+
+async function scanTronAddress(address: string, cursorMs: number): Promise<{ deposits: Deposit[]; cursor: number }> {
   const key = Deno.env.get("TRONGRID_API_KEY");
-  const url = `https://api.trongrid.io/v1/accounts/${DEPOSIT.trc20}/transactions/trc20?only_to=true&only_confirmed=true`
+  const url = `https://api.trongrid.io/v1/accounts/${address}/transactions/trc20?only_to=true&only_confirmed=true`
     + `&contract_address=${TRON_USDT}&min_timestamp=${cursorMs}&order_by=block_timestamp,asc&limit=200`;
   const r = await fetch(url, { headers: key ? { "TRON-PRO-API-KEY": key } : {} });
   if (!r.ok) throw new Error(`TronGrid ${r.status}`);
   const body = await r.json() as { data?: { transaction_id: string; from: string; to: string; value: string; block_timestamp: number; token_info?: { decimals?: number } }[] };
   let cursor = cursorMs;
   const deposits = (body.data ?? [])
-    .filter((x) => x.to === DEPOSIT.trc20)
+    .filter((x) => x.to === address)
     .map((x) => {
       cursor = Math.max(cursor, x.block_timestamp + 1);
       return {

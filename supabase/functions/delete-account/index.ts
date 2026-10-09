@@ -3,16 +3,12 @@
 // POST JSON { confirm: "SUPPRIMER" | "DELETE", lang?: "fr" | "en" }, avec le
 // jeton de l'utilisateur connecté (vérifié par Supabase, JWT obligatoire).
 //
-// La base décide (public.close_account) :
-//   • « delete » : aucun ordre, aucune vérification, aucun dossier de
-//     conformité. L'utilisateur est supprimé ; son profil et ses données
-//     partent avec lui (cascade).
-//   • « closed » : Ooble doit garder 5 ans les dossiers d'identité et
-//     d'opérations (CANAFE). Le profil, les ordres et les vérifications
-//     restent ; le reste est effacé (destinataires enregistrés,
-//     notifications, question Interac, téléphone). La connexion est
-//     bloquée et l'adresse e-mail libérée (remplacée par une adresse
-//     interne), pour pouvoir rouvrir un compte plus tard.
+// Ooble ne supprime jamais le dossier d'un client : profil, ordres,
+// vérifications et destinataires restent en base, sans limite de durée.
+// Le compte est fermé (public.close_account inscrit la fermeture au
+// registre account_closures), la connexion est bloquée, l'adresse e-mail
+// libérée (remplacée par une adresse interne) pour pouvoir rouvrir un compte
+// plus tard, et les notifications du téléphone coupées.
 // Refusée tant qu'un ordre est en cours (409) et pour un compte de l'équipe
 // (403). Un courriel de confirmation part à l'adresse d'origine.
 
@@ -31,34 +27,18 @@ const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
 const MAIL = {
   fr: {
-    deleted: {
-      subject: "Votre compte Ooble est supprimé",
-      html: `<p>Bonjour,</p>
-<p>Votre compte Ooble a bien été supprimé, avec les informations qui y étaient liées.</p>
-<p>Si vous n'êtes pas à l'origine de cette demande, répondez simplement à ce message.</p>`,
-    },
-    closed: {
-      subject: "Votre compte Ooble est fermé",
-      html: `<p>Bonjour,</p>
-<p>Votre compte Ooble est fermé : vous ne pouvez plus vous y connecter, et vos destinataires enregistrés, vos notifications et votre question Interac ont été effacés.</p>
-<p>Comme toute entreprise de services monétaires au Canada, Ooble doit conserver vos vérifications d'identité et l'historique de vos opérations pendant 5 ans (exigence du CANAFE). Ces informations ne sont utilisées qu'à cette fin, puis supprimées.</p>
+    subject: "Votre compte Ooble est supprimé",
+    html: `<p>Bonjour,</p>
+<p>Votre compte Ooble est supprimé : vous ne pouvez plus vous y connecter.</p>
+<p>Comme toute entreprise de services monétaires au Canada, Ooble conserve le dossier de ses clients (vérification d'identité et historique des opérations), conformément à ses obligations envers le CANAFE.</p>
 <p>Vous pouvez ouvrir un nouveau compte à tout moment avec la même adresse. Si vous n'êtes pas à l'origine de cette demande, répondez simplement à ce message.</p>`,
-    },
   },
   en: {
-    deleted: {
-      subject: "Your Ooble account has been deleted",
-      html: `<p>Hello,</p>
-<p>Your Ooble account has been deleted, along with the information linked to it.</p>
-<p>If you didn't make this request, just reply to this message.</p>`,
-    },
-    closed: {
-      subject: "Your Ooble account is closed",
-      html: `<p>Hello,</p>
-<p>Your Ooble account is closed: you can no longer sign in, and your saved recipients, notifications and Interac question have been erased.</p>
-<p>Like every money services business in Canada, Ooble must keep your identity verifications and transaction history for 5 years (a FINTRAC requirement). This information is used only for that purpose, then deleted.</p>
+    subject: "Your Ooble account has been deleted",
+    html: `<p>Hello,</p>
+<p>Your Ooble account has been deleted: you can no longer sign in.</p>
+<p>Like every money services business in Canada, Ooble keeps its clients' records (identity verification and transaction history), in line with its obligations to FINTRAC.</p>
 <p>You can open a new account at any time with the same address. If you didn't make this request, just reply to this message.</p>`,
-    },
   },
 } as const;
 
@@ -83,7 +63,7 @@ Deno.serve(async (req) => {
   const { data: prof } = await admin.from("profiles").select("email").eq("id", user.id).maybeSingle();
   const to = prof?.email || user.email || null;
 
-  const { data: mode, error } = await admin.rpc("close_account", { _uid: user.id });
+  const { error } = await admin.rpc("close_account", { _uid: user.id });
   if (error) {
     if (/ACTIVE_ORDERS/.test(error.message)) return json({ error: "active_orders" }, 409);
     if (/STAFF/.test(error.message)) return json({ error: "staff" }, 403);
@@ -91,32 +71,23 @@ Deno.serve(async (req) => {
     return json({ error: "server" }, 500);
   }
 
-  if (mode === "delete") {
-    const { error: delErr } = await admin.auth.admin.deleteUser(user.id);
-    if (delErr) {
-      console.error("delete-account: deleteUser", delErr);
-      return json({ error: "server" }, 500);
-    }
-  } else {
-    // Fermeture : données non exigées par la loi effacées, connexion bloquée,
-    // adresse e-mail libérée.
-    await admin.from("saved_recipients").delete().eq("user_id", user.id);
-    await admin.from("push_subscriptions").delete().eq("user_id", user.id);
-    const { error: updErr } = await admin.auth.admin.updateUserById(user.id, {
-      email: `closed-${user.id}@closed.ooble.ca`,
-      email_confirm: true,
-      ban_duration: "876000h",
-      user_metadata: { ...(user.user_metadata ?? {}), closed: true },
-    });
-    if (updErr) {
-      console.error("delete-account: updateUserById", updErr);
-      return json({ error: "server" }, 500);
-    }
-    await admin.auth.admin.signOut(token, "global").catch(() => {});
+  // Le dossier reste entier. On coupe seulement l'accès : notifications du
+  // téléphone, connexion bloquée, adresse e-mail libérée.
+  await admin.from("push_subscriptions").delete().eq("user_id", user.id);
+  const { error: updErr } = await admin.auth.admin.updateUserById(user.id, {
+    email: `closed-${user.id}@closed.ooble.ca`,
+    email_confirm: true,
+    ban_duration: "876000h",
+    user_metadata: { ...(user.user_metadata ?? {}), closed: true },
+  });
+  if (updErr) {
+    console.error("delete-account: updateUserById", updErr);
+    return json({ error: "server" }, 500);
   }
+  await admin.auth.admin.signOut(token, "global").catch(() => {});
 
   if (to) {
-    const m = MAIL[lang][mode === "delete" ? "deleted" : "closed"];
+    const m = MAIL[lang];
     await fetch(`${SB_URL}/functions/v1/send-email`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${SERVICE}` },
@@ -124,5 +95,5 @@ Deno.serve(async (req) => {
     }).catch((e) => console.error("delete-account: courriel", e));
   }
 
-  return json({ ok: true, mode: mode === "delete" ? "deleted" : "closed" });
+  return json({ ok: true, mode: "closed" });
 });

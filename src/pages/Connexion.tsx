@@ -90,6 +90,7 @@ const Connexion = () => {
     if (m.includes("invalid login")) return t("login.errInvalid");
     if (m.includes("email not confirmed")) return t("login.errNotConfirmed");
     if (m.includes("unable to validate email")) return t("login.errBadEmail");
+    if (m.includes("banned")) return t("login.errClosed");
     return message;
   };
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   BadgeCheck, Building2, Check, ChevronRight, Copy, Gauge, Globe, Handshake, LayoutGrid, Lock, LogOut, Mail,
-  ShieldCheck, SunMoon,
+  ShieldCheck, SunMoon, Trash2,
 } from "lucide-react";
 import BusinessMark from "@/components/app/BusinessMark";
 import { useLang, useT } from "@/lib/i18n";
@@ -255,6 +255,14 @@ const MobileAccount = ({ profile, kyc, name, email, isStaff, otc, onLogout }: Pr
       <Group title={t("acct.security")}>
         <Row to="/app/changer-email" chip={<Chip icon={Mail} />} label={t("acct.email")} value={email} />
         <Row to="/reinitialiser" chip={<Chip icon={Lock} />} label={t("acct.password")} value="••••••••" />
+        {!isStaff && (
+          <Row
+            to="/app/supprimer-compte"
+            chip={<span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-destructive/10 text-destructive"><Trash2 className="h-[17px] w-[17px]" strokeWidth={1.9} /></span>}
+            label={t("del.row")}
+            value={t("del.rowSub")}
+          />
+        )}
       </Group>
 
       {/* ─── Préférences ─── */}
@@ -278,15 +286,17 @@ const MobileAccount = ({ profile, kyc, name, email, isStaff, otc, onLogout }: Pr
         {isStaff && <Row to="/admin" chip={<Chip icon={LayoutGrid} strong />} label={t("acct.backoffice")} />}
       </Group>
 
-      {/* ─── Déconnexion ─── */}
-      <button
-        type="button"
-        onClick={onLogout}
-        className="mt-7 flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-card py-4 text-[15px] font-medium text-destructive transition-colors active:bg-secondary/60"
-      >
-        <LogOut className="h-[18px] w-[18px]" strokeWidth={1.9} /> {t("acct.logout")}
-      </button>
-      <p className="mt-4 text-center text-[11.5px] text-muted-foreground/70">{t("acct.nonCustodial")}</p>
+      {/* ─── Déconnexion : discrète, à droite ─── */}
+      <div className="mt-6 flex items-center justify-between gap-4">
+        <p className="text-[11.5px] text-muted-foreground/70">{t("acct.nonCustodial")}</p>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-[13px] font-medium text-foreground transition-colors active:bg-secondary/60"
+        >
+          <LogOut className="h-4 w-4" strokeWidth={1.9} /> {t("acct.logout")}
+        </button>
+      </div>
     </div>
   );
 };

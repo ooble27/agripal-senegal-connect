@@ -25,6 +25,8 @@ import AppOTC from "./pages/app/AppOTC";
 import Compte from "./pages/app/Compte";
 import ChangerEmail from "./pages/app/ChangerEmail";
 import Limites from "./pages/app/Limites";
+import SupprimerCompte from "./pages/app/SupprimerCompte";
+import AuRevoir from "./pages/AuRevoir";
 import Activite from "./pages/app/Activite";
 import OrderDetail from "./pages/app/OrderDetail";
 import Verification from "./pages/app/Verification";
@@ -82,6 +84,7 @@ const App = () => (
         <Route path="/otc" element={<OTC />} />
         <Route path="/entreprises" element={<Entreprises />} />
         <Route path="/connexion" element={<Connexion />} />
+        <Route path="/au-revoir" element={<AuRevoir />} />
         <Route path="/inscription" element={<Inscription />} />
         <Route path="/inscription/individuel" element={<InscriptionIndividuel />} />
         <Route path="/inscription/entreprise" element={<InscriptionEntreprise />} />
@@ -100,6 +103,7 @@ const App = () => (
         <Route path="/app/compte" element={<RequireAuth><Compte /></RequireAuth>} />
         <Route path="/app/changer-email" element={<RequireAuth><ChangerEmail /></RequireAuth>} />
         <Route path="/app/limites" element={<RequireAuth><Limites /></RequireAuth>} />
+        <Route path="/app/supprimer-compte" element={<RequireAuth><SupprimerCompte /></RequireAuth>} />
         <Route path="/app/verification" element={<RequireAuth><Verification /></RequireAuth>} />
         <Route path="/app/entreprise" element={<RequireAuth><Entreprise /></RequireAuth>} />
 

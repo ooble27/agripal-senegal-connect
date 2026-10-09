@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, ShieldCheck, LayoutGrid, ChevronRight, Gauge, Building2, Globe, Mail, User, Lock, SunMoon, Handshake } from "lucide-react";
+import { LogOut, ShieldCheck, LayoutGrid, ChevronRight, Gauge, Building2, Globe, Mail, User, Lock, SunMoon, Handshake, Trash2 } from "lucide-react";
 import { useOtcVisible } from "@/lib/otc";
 import { Link } from "react-router-dom";
 import AppShell from "@/components/app/AppShell";
@@ -209,6 +209,7 @@ function DesktopAccount({
           <Eyebrow>{t("acct.security")}</Eyebrow>
           <LinkRow to="/app/changer-email" icon={Mail} label={t("acct.email")} sub={email} right={modify} />
           <LinkRow to="/reinitialiser" icon={Lock} label={t("acct.password")} right={modify} />
+          {!isStaff && <LinkRow to="/app/supprimer-compte" icon={Trash2} label={t("del.row")} sub={t("del.rowSub")} right={<ChevronRight className="h-[18px] w-[18px] shrink-0 text-muted-foreground" />} />}
         </Card>
 
         <Card className="order-4 xl:order-none">

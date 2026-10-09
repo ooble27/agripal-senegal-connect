@@ -33,5 +33,6 @@ jobs:
           supabase functions deploy interac-ingest --project-ref uukxacjjviiktmbikdwp --no-verify-jwt
           supabase functions deploy sumsub-webhook --project-ref uukxacjjviiktmbikdwp --no-verify-jwt
           supabase functions deploy sell-watch --project-ref uukxacjjviiktmbikdwp --no-verify-jwt
+          supabase functions deploy delete-account --project-ref uukxacjjviiktmbikdwp
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}

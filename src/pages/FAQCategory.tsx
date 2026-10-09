@@ -214,8 +214,8 @@ const FAQCategory = () => {
                           <Plus className="h-4 w-4" strokeWidth={1.8} />
                         </span>
                       </button>
-                      {isOpen && (
-                        <div className="animate-up pb-8 pr-14">
+                      {/* Toujours dans la page (moteurs de recherche), affichée à l'ouverture. */}
+                      <div hidden={!isOpen} className="animate-up pb-8 pr-14">
                           <p className="max-w-[620px] text-[16px] leading-[1.75] text-muted-foreground">{t(it.a)}</p>
                           <button
                             type="button"
@@ -225,8 +225,7 @@ const FAQCategory = () => {
                             {copied === it.id ? <Check className="h-3.5 w-3.5" strokeWidth={2} /> : <Link2 className="h-3.5 w-3.5" strokeWidth={1.8} />}
                             {copied === it.id ? t("faqp.linkCopied") : t("faqp.copyLink")}
                           </button>
-                        </div>
-                      )}
+                      </div>
                     </div>
                   );
                 })}

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /admin
+Disallow: /en/app
+Disallow: /en/admin
+
+Sitemap: https://ooble.ca/sitemap.xml

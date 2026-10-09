@@ -6,9 +6,16 @@ import { initLang } from "./lib/i18n";
 import { registerServiceWorker } from "./lib/pushNotifications";
 
 initTheme();
-initLang();
+const { basename, redirect } = initLang();
 
-createRoot(document.getElementById("root")!).render(<App />);
+if (redirect) {
+  // Le visiteur a choisi l'anglais : version anglaise de la même page.
+  window.location.replace(redirect);
+} else {
+  // Les pages publiques arrivent déjà rendues (pré-rendu SEO) ; React les
+  // remplace par l'app, à l'identique.
+  createRoot(document.getElementById("root")!).render(<App basename={basename} />);
+}
 
 // Service worker : notifications push (abonnement automatique une fois connecté).
 registerServiceWorker();

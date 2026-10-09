@@ -17,7 +17,7 @@ const OtcVideo = ({ className, name = "otc", label }: { className?: string; name
   const [lang] = useLang();
   const ref = useRef<HTMLVideoElement>(null);
   const [sound, setSound] = useState(false);
-  const [reduced] = useState(() => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
+  const [reduced] = useState(() => typeof window !== "undefined" && (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false));
   const [started, setStarted] = useState(!reduced);
 
   // Changement de langue : on repart sans le son, en aperçu.

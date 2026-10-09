@@ -16,13 +16,13 @@ export interface GuideDef {
 }
 
 export const GUIDES: GuideDef[] = [
-  { slug: "ooble-en-une-minute", key: "service", group: "start", to: "/inscription", duration: { fr: 47, en: 44 } },
-  { slug: "creer-un-compte", key: "account", group: "start", to: "/inscription", duration: { fr: 41, en: 37 } },
-  { slug: "verifier-identite", key: "kyc", group: "start", to: "/app/verification", duration: { fr: 48, en: 43 } },
-  { slug: "acheter-usdt", key: "buy", group: "trade", to: "/app/acheter", duration: { fr: 50, en: 44 } },
-  { slug: "payer-par-interac", key: "pay", group: "trade", to: "/faq/payer-par-interac", duration: { fr: 66, en: 61 } },
-  { slug: "vendre-usdt", key: "sell", group: "trade", to: "/app/vendre", duration: { fr: 46, en: 43 } },
-  { slug: "votre-securite", key: "safety", group: "safety", to: "/contact", duration: { fr: 51, en: 48 } },
+  { slug: "ooble-en-une-minute", key: "service", group: "start", to: "/inscription", duration: { fr: 44, en: 44 } },
+  { slug: "creer-un-compte", key: "account", group: "start", to: "/inscription", duration: { fr: 42, en: 37 } },
+  { slug: "verifier-identite", key: "kyc", group: "start", to: "/app/verification", duration: { fr: 46, en: 43 } },
+  { slug: "acheter-usdt", key: "buy", group: "trade", to: "/app/acheter", duration: { fr: 46, en: 44 } },
+  { slug: "payer-par-interac", key: "pay", group: "trade", to: "/faq/payer-par-interac", duration: { fr: 65, en: 61 } },
+  { slug: "vendre-usdt", key: "sell", group: "trade", to: "/app/vendre", duration: { fr: 42, en: 43 } },
+  { slug: "votre-securite", key: "safety", group: "safety", to: "/contact", duration: { fr: 50, en: 48 } },
 ];
 
 export const GUIDE_GROUPS: { id: GuideGroup; titleKey: TKey; subKey: TKey }[] = [

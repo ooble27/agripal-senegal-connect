@@ -41,21 +41,24 @@ import GlobalNotice from "./components/GlobalNotice";
 import ScrollToTop from "./components/ScrollToTop";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AuthProvider } from "./lib/auth";
+import { stripEn } from "./lib/i18n";
+import SeoHead from "./components/SeoHead";
 
 const queryClient = new QueryClient();
 
 function RecoveryRedirect() {
   const navigate = useNavigate();
   useEffect(() => {
-    if (window.location.hash.includes("type=recovery") && window.location.pathname !== "/reinitialiser") {
+    const path = () => stripEn(window.location.pathname);
+    if (window.location.hash.includes("type=recovery") && path() !== "/reinitialiser") {
       navigate("/reinitialiser", { replace: true });
     }
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (
         event === "PASSWORD_RECOVERY" &&
-        window.location.pathname !== "/reinitialiser" &&
-        window.location.pathname !== "/connexion" &&
-        !window.location.pathname.startsWith("/app")
+        path() !== "/reinitialiser" &&
+        path() !== "/connexion" &&
+        !path().startsWith("/app")
       ) {
         navigate("/reinitialiser", { replace: true });
       }
@@ -65,14 +68,8 @@ function RecoveryRedirect() {
   return null;
 }
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <BrowserRouter>
-          <RecoveryRedirect />
-          <ScrollToTop />
-          <GlobalNotice />
+/** Toutes les pages. Partagé avec le pré-rendu (src/entry-server.tsx). */
+export const AppRoutes = () => (
           <Routes>
         {/* Site public */}
         <Route path="/" element={<Index />} />
@@ -113,6 +110,19 @@ const App = () => (
 
           <Route path="*" element={<NotFound />} />
           </Routes>
+);
+
+/** basename : "/en" pour la version anglaise du site. */
+const App = ({ basename }: { basename?: string }) => (
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BrowserRouter basename={basename}>
+          <RecoveryRedirect />
+          <ScrollToTop />
+          <SeoHead />
+          <GlobalNotice />
+          <AppRoutes />
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>

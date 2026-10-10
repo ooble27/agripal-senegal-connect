@@ -93,6 +93,10 @@ export interface ClientDirectoryEntry {
   email: string;
   kycStatus: KycStatus;
   accountType: AccountType;
+  /** Langue choisie dans l'app (null si jamais enregistrée). */
+  lang?: "fr" | "en" | null;
+  /** Province ou région d'inscription (code, ex. « QC »). */
+  region?: string | null;
 }
 
 /** Déduit un prénom exploitable pour la personnalisation d'un mail. */
@@ -111,23 +115,33 @@ function pickFirstName(fullName: string | null | undefined, email: string | null
  * (la politique RLS `is_staff(auth.uid())` sur `profiles` doit être active).
  */
 export async function fetchClientDirectory(limit = 500): Promise<ClientDirectoryEntry[]> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, full_name, email, kyc_status, account_type")
-    .not("email", "is", null)
-    .order("full_name", { ascending: true })
-    .limit(limit);
+  const [{ data, error }, origins] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, full_name, email, kyc_status, account_type, preferred_lang" as "id, full_name, email, kyc_status, account_type")
+      .not("email", "is", null)
+      .order("full_name", { ascending: true })
+      .limit(limit),
+    supabase.from("signup_origins" as never).select("user_id, region").limit(5000)
+      .then((r) => (r.data ?? []) as unknown as { user_id: string; region: string | null }[]),
+  ]);
   if (error || !data) return [];
+  const regionOf = new Map(origins.map((o) => [o.user_id, o.region]));
   return data
     .filter((p) => (p.email ?? "").length > 0)
-    .map((p) => ({
-      id: p.id,
-      fullName: (p.full_name ?? "").trim() || (p.email ?? "").split("@")[0] || "Client",
-      firstName: pickFirstName(p.full_name, p.email),
-      email: p.email as string,
-      kycStatus: p.kyc_status,
-      accountType: p.account_type,
-    }));
+    .map((p) => {
+      const lang = (p as unknown as { preferred_lang?: string | null }).preferred_lang;
+      return {
+        id: p.id,
+        fullName: (p.full_name ?? "").trim() || (p.email ?? "").split("@")[0] || "Client",
+        firstName: pickFirstName(p.full_name, p.email),
+        email: p.email as string,
+        kycStatus: p.kyc_status,
+        accountType: p.account_type,
+        lang: lang === "fr" || lang === "en" ? lang : null,
+        region: regionOf.get(p.id) ?? null,
+      };
+    });
 }
 
 export async function fetchClientOrders(userId: string): Promise<ClientOrder[]> {

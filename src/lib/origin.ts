@@ -80,6 +80,15 @@ export async function recordOrigin(uid: string | null | undefined) {
   if (!error) try { localStorage.setItem(DONE(uid), "1"); } catch { /* ignore */ }
 }
 
+/** Langue préférée du client (une fois par langue et par appareil). */
+export async function recordLang(uid: string | null | undefined, lang: string) {
+  if (!uid || (lang !== "fr" && lang !== "en")) return;
+  const key = `ooble.lang-saved:${uid}`;
+  try { if (localStorage.getItem(key) === lang) return; } catch { return; }
+  const { error } = await supabase.rpc("set_my_lang" as never, { p_lang: lang } as never);
+  if (!error) try { localStorage.setItem(key, lang); } catch { /* ignore */ }
+}
+
 // ─── Back-office ───
 
 export interface SignupOrigin {

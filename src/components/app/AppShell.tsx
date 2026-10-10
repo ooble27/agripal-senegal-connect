@@ -8,7 +8,7 @@ import BottomNav from "./BottomNav";
 import { useAuth } from "@/lib/auth";
 import { warmAppData } from "@/lib/warm";
 import { ensurePush } from "@/lib/pushNotifications";
-import { recordOrigin } from "@/lib/origin";
+import { recordOrigin, recordLang } from "@/lib/origin";
 
 /**
  * Marque <html> pendant que l'app est montée pour que la racine, le <body> et
@@ -73,6 +73,8 @@ const AppShell = ({ children, header, backTo, wide, wider, center, className }: 
   useEffect(() => { warmAppData(user?.id); }, [user?.id]);
   // Lieu et source de l'inscription, enregistrés une fois.
   useEffect(() => { void recordOrigin(user?.id); }, [user?.id]);
+  // Langue de l'app, pour recevoir les courriels d'information dans sa langue.
+  useEffect(() => { void recordLang(user?.id, lang); }, [user?.id, lang]);
   // Notifications actives pour tout le monde, sans bouton à activer.
   useEffect(() => { if (user?.id) ensurePush(lang); }, [user?.id, lang]);
   return (

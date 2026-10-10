@@ -26,15 +26,17 @@ export interface CampaignRecord {
   segment: CampaignSegment;
   /** Anciens envois : design (« announcement »…). Nouveaux : id du modèle. */
   design: CampaignDesign | string;
-  /** Modèle de campagnesTemplates.ts et champs saisis (nouveaux envois). */
+  /** Modèle de campaignTemplates.ts et champs saisis (nouveaux envois). */
   templateId?: string;
   values?: Record<string, string>;
+  /** Champs saisis par langue (envois bilingues). */
+  valuesByLang?: { fr?: Record<string, string>; en?: Record<string, string> };
   subject: string;
   preheader: string;
   body: string;
   sentAt: string;
   sentBy: string;
-  stats: { total: number; ok: number; failed: number; skipped?: number };
+  stats: { total: number; ok: number; failed: number; skipped?: number; fr?: number; en?: number };
 }
 
 const KEY = "ooble.campaigns";

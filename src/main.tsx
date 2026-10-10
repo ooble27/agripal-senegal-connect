@@ -3,7 +3,8 @@ import App from "./App";
 import "./index.css";
 import { initTheme } from "./lib/theme";
 import { initLang } from "./lib/i18n";
-import { registerServiceWorker } from "./lib/pushNotifications";
+import { registerServiceWorker, dropOrphanPush } from "./lib/pushNotifications";
+import { supabase } from "./integrations/supabase/client";
 
 initTheme();
 const { basename, redirect } = initLang();
@@ -19,3 +20,5 @@ if (redirect) {
 
 // Service worker : notifications push (abonnement automatique une fois connecté).
 registerServiceWorker();
+// Personne de connecté sur cet appareil : pas de notifications de compte.
+void supabase.auth.getSession().then(({ data }) => { if (!data.session) void dropOrphanPush(); });

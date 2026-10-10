@@ -3,6 +3,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { clearCache } from "@/lib/cache";
+import { forgetPushDevice } from "@/lib/pushNotifications";
 
 export type AppRole = Database["public"]["Enums"]["app_role"];
 
@@ -194,7 +195,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return error ? { error: error.message } : {};
       },
       signOut: async () => {
-        await supabase.auth.signOut();
+        // Cet appareil seulement : les autres appareils du compte restent
+        // connectés. Et il ne reçoit plus les notifications du compte.
+        await forgetPushDevice();
+        await supabase.auth.signOut({ scope: "local" });
         clearCache();
       },
     }),

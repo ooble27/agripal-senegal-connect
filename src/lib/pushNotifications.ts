@@ -81,3 +81,36 @@ export function ensurePush(lang: string) {
   };
   document.addEventListener("click", pendingGesture, true);
 }
+
+/**
+ * À la déconnexion : cet appareil ne reçoit plus les notifications du compte.
+ * Retire l'abonnement côté serveur (tant que la session est encore valide),
+ * puis le désactive dans le navigateur. Au prochain compte connecté sur
+ * l'appareil, ensurePush le recrée pour ce compte. Ne bloque jamais plus de
+ * deux secondes.
+ */
+export async function forgetPushDevice(): Promise<void> {
+  if (!pushSupported()) return;
+  const work = (async () => {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = await reg?.pushManager.getSubscription();
+    if (!sub) return;
+    // Table absente des types générés : appel non typé.
+    await (supabase.from("push_subscriptions" as never) as unknown as { delete: () => { eq: (c: string, v: string) => Promise<unknown> } })
+      .delete().eq("endpoint", sub.endpoint);
+    await sub.unsubscribe().catch(() => {});
+  })().catch(() => {});
+  await Promise.race([work, new Promise((r) => setTimeout(r, 2000))]);
+}
+
+/**
+ * Appareil sans compte connecté (par exemple déconnecté avec une ancienne
+ * version) : on coupe l'abonnement du navigateur. Le service push répond
+ * ensuite « abonnement disparu » et push-notify efface la ligne côté serveur.
+ */
+export async function dropOrphanPush(): Promise<void> {
+  if (!pushSupported()) return;
+  const reg = await navigator.serviceWorker.getRegistration().catch(() => undefined);
+  const sub = await reg?.pushManager.getSubscription().catch(() => null);
+  await sub?.unsubscribe().catch(() => {});
+}

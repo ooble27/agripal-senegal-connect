@@ -34,8 +34,14 @@ export interface SendEmailInput {
 
 interface SendResult { id?: string; error?: string }
 
-async function invoke(body: unknown): Promise<SendResult> {
-  const { data, error } = await supabase.functions.invoke("send-email", { body });
+async function invoke(input: unknown): Promise<SendResult> {
+  const body = input as Record<string, unknown>;
+  let { data, error } = await supabase.functions.invoke("send-email", { body });
+  // Session refusée (jeton périmé) : on la rafraîchit, puis un seul nouvel essai.
+  if (error && (error as unknown as { context?: Response }).context?.status === 401) {
+    const { error: refreshErr } = await supabase.auth.refreshSession();
+    if (!refreshErr) ({ data, error } = await supabase.functions.invoke("send-email", { body }));
+  }
   // Le SDK Supabase renvoie « Edge Function returned a non-2xx status code »
   // et cache le vrai message dans `error.context.body`. On extrait le détail
   // pour que l'UI puisse afficher ce qui a vraiment échoué (clé Resend absente,

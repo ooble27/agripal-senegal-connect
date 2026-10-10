@@ -113,7 +113,7 @@ const ClientProfile = ({ userId, clientName, onBack, onOpenOrder }: Props) => {
   const name = profile?.fullName ?? clientName;
 
   return (
-    <div className="mx-auto w-full max-w-[720px] space-y-4">
+    <div className="w-full space-y-4">
       {/* En-tête */}
       <div className="flex items-start gap-3">
         <button

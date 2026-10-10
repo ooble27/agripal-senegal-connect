@@ -351,7 +351,7 @@ const OrderDetail = ({ order, onBack, onPatch, onDelete, onShowClient, onRefresh
   const createdAt = dateFmt.format(new Date(Date.now() - order.createdMinsAgo * 60000));
 
   return (
-    <div className="mx-auto w-full max-w-[720px] space-y-4">
+    <div className="mx-auto w-full max-w-[980px] space-y-4">
       {/* En-tête */}
       <div className="flex items-start gap-3">
         <button

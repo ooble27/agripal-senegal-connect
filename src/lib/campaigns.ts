@@ -2,8 +2,8 @@
  * Persistance locale des campagnes marketing.
  *
  * Stocke l'historique dans localStorage sous la clé `ooble.campaigns`.
- * Chaque campagne enregistre : nom interne, segment ciblé, sujet, corps,
- * design choisi, timestamp d'envoi, décompte succès/échec.
+ * Chaque campagne enregistre : nom interne, modèle et champs saisis, sujet,
+ * timestamp d'envoi, décompte succès/échec/désabonnés.
  *
  * Pas de table Supabase pour rester léger — l'historique est visible par
  * l'agent qui a lancé la campagne depuis son navigateur. Un besoin
@@ -14,6 +14,7 @@ export type CampaignSegment =
   | "all"
   | "kyc_approved"
   | "kyc_pending"
+  | "not_verified"
   | "business"
   | "manual";
 
@@ -23,13 +24,17 @@ export interface CampaignRecord {
   id: string;
   name: string;
   segment: CampaignSegment;
-  design: CampaignDesign;
+  /** Anciens envois : design (« announcement »…). Nouveaux : id du modèle. */
+  design: CampaignDesign | string;
+  /** Modèle de campagnesTemplates.ts et champs saisis (nouveaux envois). */
+  templateId?: string;
+  values?: Record<string, string>;
   subject: string;
   preheader: string;
   body: string;
   sentAt: string;
   sentBy: string;
-  stats: { total: number; ok: number; failed: number };
+  stats: { total: number; ok: number; failed: number; skipped?: number };
 }
 
 const KEY = "ooble.campaigns";
@@ -57,6 +62,7 @@ export const SEGMENT_LABEL: Record<CampaignSegment, string> = {
   all: "Tous les clients",
   kyc_approved: "KYC approuvés uniquement",
   kyc_pending: "KYC en attente",
+  not_verified: "Identité non vérifiée",
   business: "Comptes entreprise",
   manual: "Sélection manuelle",
 };

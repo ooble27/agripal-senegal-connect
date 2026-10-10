@@ -120,6 +120,8 @@ interface Payload {
   order?: StaffOrderPayload;
   // Mode contact (page /contact, ouvert à tous)
   contact?: ContactPayload;
+  // Mode campagne (staff) : `html` est un courriel complet, envoyé tel quel
+  campaign?: { unsubscribeUrl?: string };
 }
 
 interface ContactPayload {
@@ -225,6 +227,12 @@ Deno.serve(async (req) => {
     finalHtml = render(TEMPLATES[template], data);
     finalSubject = render(subject ?? SUBJECTS[template] ?? "Ooble", data);
     finalText = text; // laissé optionnel pour les templates
+  } else if (html && payload.campaign) {
+    // ─── Mode campagne : courriel complet construit par le back-office ─
+    if (!subject?.trim()) return json({ error: "Champ 'subject' requis en mode campagne." }, 400);
+    finalHtml = html;
+    finalSubject = subject.trim();
+    finalText = text ?? htmlToText(html);
   } else if (html) {
     // ─── Mode custom (staff a écrit le contenu) ───────────
     if (!subject?.trim()) return json({ error: "Champ 'subject' requis en mode custom." }, 400);
@@ -245,6 +253,11 @@ Deno.serve(async (req) => {
   if (cc?.length) body.cc = cc;
   if (bcc?.length) body.bcc = bcc;
   if (replyTo) body.reply_to = replyTo;
+  const unsub = payload.campaign?.unsubscribeUrl ?? "";
+  if (payload.campaign && /^https:\/\//.test(unsub)) {
+    // Lien de désabonnement reconnu par Gmail et Apple Mail (bouton natif).
+    body.headers = { "List-Unsubscribe": `<${unsub}>` };
+  }
 
   const res = await resendPost(apiKey, body);
 

@@ -148,3 +148,18 @@ export async function sendRefundEmail(input: {
 function escHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+
+/**
+ * Courriel de campagne : `html` est déjà complet (modèle du back-office),
+ * il part tel quel, avec l'en-tête de désabonnement. Réservé au staff.
+ */
+export async function sendCampaignEmail(input: {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  unsubscribeUrl: string;
+}): Promise<SendResult> {
+  const { unsubscribeUrl, ...rest } = input;
+  return invoke({ ...rest, campaign: { unsubscribeUrl } });
+}

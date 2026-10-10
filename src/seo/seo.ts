@@ -134,6 +134,7 @@ const PAGES: Record<string, { fr: Copy; en: Copy; noindex?: boolean }> = {
   ),
   "/reinitialiser": { ...page({ title: "Nouveau mot de passe | Ooble", description: "" }, { title: "New password | Ooble", description: "" }), noindex: true },
   "/au-revoir": { ...page({ title: "Au revoir | Ooble", description: "" }, { title: "Goodbye | Ooble", description: "" }), noindex: true },
+  "/desabonnement": { ...page({ title: "Désabonnement | Ooble", description: "" }, { title: "Unsubscribe | Ooble", description: "" }), noindex: true },
 };
 
 export const urlFor = (path: string, lang: Lang) => `${SITE}${lang === "en" ? withEn(path) : path}`;

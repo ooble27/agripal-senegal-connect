@@ -27,6 +27,7 @@ import ChangerEmail from "./pages/app/ChangerEmail";
 import Limites from "./pages/app/Limites";
 import SupprimerCompte from "./pages/app/SupprimerCompte";
 import AuRevoir from "./pages/AuRevoir";
+import Desabonnement from "./pages/Desabonnement";
 import Activite from "./pages/app/Activite";
 import OrderDetail from "./pages/app/OrderDetail";
 import Verification from "./pages/app/Verification";
@@ -82,6 +83,7 @@ export const AppRoutes = () => (
         <Route path="/entreprises" element={<Entreprises />} />
         <Route path="/connexion" element={<Connexion />} />
         <Route path="/au-revoir" element={<AuRevoir />} />
+        <Route path="/desabonnement" element={<Desabonnement />} />
         <Route path="/inscription" element={<Inscription />} />
         <Route path="/inscription/individuel" element={<InscriptionIndividuel />} />
         <Route path="/inscription/entreprise" element={<InscriptionEntreprise />} />

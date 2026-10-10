@@ -29,7 +29,7 @@ import AIFloatingChat from "@/components/admin/AIFloatingChat";
 import { C, FONT, ADMIN_THEME_CSS, ADMIN_BG } from "@/components/admin/adminTheme";
 import ThemeToggle from "@/components/app/ThemeToggle";
 
-type TabId = "dashboard" | "queue" | "orders" | "clients" | "kyc" | "accounting" | "compliance" | "settlement" | "mailbox" | "campaigns" | "announcements" | "team" | "audit" | "platform";
+type TabId = "dashboard" | "queue" | "orders" | "clients" | "kyc" | "accounting" | "compliance" | "settlement" | "mailbox" | "campaigns" | "announcements" | "team" | "platform";
 
 const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
   { id: "dashboard",  label: "Tableau de bord", desc: "Vue d'ensemble : volumes, marge, alertes et actions à traiter.", icon: LayoutDashboard },
@@ -42,14 +42,13 @@ const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
   { id: "settlement",  label: "Règlement auto", desc: "Soldes du portefeuille, virements Interac lus automatiquement, envoi des USDT et réglages.", icon: Zap },
   { id: "mailbox",     label: "Messagerie",     desc: "Envoyer un e-mail à un client à partir d'un template, historique des envois, boîte de réception.", icon: Mail },
   { id: "campaigns",   label: "Campagnes",      desc: "Campagnes marketing bien designées avec segmentation, aperçu live et historique.", icon: Megaphone },
-  { id: "announcements", label: "Annonces",     desc: "Bannière publique et mode maintenance côté client.", icon: Bell },
-  { id: "team",        label: "Équipe",         desc: "Membres, rôles et permissions du back-office.", icon: Users },
-  { id: "audit",       label: "Journal d'audit", desc: "Historique immuable de toutes les actions administratives.", icon: ScrollText },
+  { id: "announcements", label: "Bannière et maintenance", desc: "Message affiché en haut du site pour tous les clients, et mode maintenance qui suspend les commandes.", icon: Bell },
+  { id: "team",        label: "Équipe",         desc: "Membres, rôles et permissions, et le journal de toutes les actions de l'équipe.", icon: Users },
   { id: "platform",    label: "Plateforme",     desc: "Réinitialiser les commandes de test (comptes et vérifications gardés), puis démarrer les activités.", icon: Power },
 ];
 
 const ROLE_TABS: Record<AppRole, TabId[]> = {
-  admin:        ["dashboard", "queue", "orders", "clients", "kyc", "accounting", "compliance", "settlement", "mailbox", "campaigns", "announcements", "team", "audit", "platform"],
+  admin:        ["dashboard", "queue", "orders", "clients", "kyc", "accounting", "compliance", "settlement", "mailbox", "campaigns", "announcements", "team", "platform"],
   operator:     ["queue", "orders", "clients", "settlement", "mailbox"],
   kyc_reviewer: ["kyc", "mailbox"],
   support:      ["queue", "orders", "clients", "mailbox"],
@@ -314,8 +313,19 @@ const AdminPortal = () => {
                   {tab === "mailbox" && <MailboxPanel />}
                   {tab === "campaigns" && <CampaignsPanel />}
                   {tab === "announcements" && <AnnouncementsPanel />}
-                  {tab === "team" && <TeamPanel />}
-                  {tab === "audit" && <AuditLogPanel />}
+                  {tab === "team" && (
+                    <div style={{ display: "grid", gap: 28 }}>
+                      <TeamPanel />
+                      {/* Journal d'audit : chaque action de l'équipe, non modifiable (CANAFE). */}
+                      <section aria-label="Journal d'audit" style={{ display: "grid", gap: 12 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <ScrollText style={{ width: 14, height: 14, color: C.t3 }} />
+                          <span style={{ color: C.t3, fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase" }}>Journal d'audit</span>
+                        </div>
+                        <AuditLogPanel />
+                      </section>
+                    </div>
+                  )}
                   {tab === "platform" && <PlatformPanel />}
                 </>
               )}

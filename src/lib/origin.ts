@@ -120,7 +120,11 @@ export async function fetchOrigins(limit = 5000): Promise<SignupOrigin[]> {
   return (data ?? []).map(toOrigin);
 }
 
-const COUNTRY: Record<string, string> = { CA: "Canada", US: "États-Unis", FR: "France", SN: "Sénégal", CI: "Côte d'Ivoire", MA: "Maroc", BE: "Belgique", CH: "Suisse", GB: "Royaume-Uni" };
+const COUNTRY: Record<string, string> = {
+  CA: "Canada", US: "États-Unis", FR: "France", SN: "Sénégal", CI: "Côte d'Ivoire", MA: "Maroc", BE: "Belgique", CH: "Suisse",
+  GB: "Royaume-Uni", TH: "Thaïlande", LK: "Sri Lanka", NG: "Nigeria", PL: "Pologne", IN: "Inde", DZ: "Algérie", TN: "Tunisie",
+  CM: "Cameroun", ML: "Mali", GN: "Guinée", HT: "Haïti", MX: "Mexique", DE: "Allemagne", ES: "Espagne", IT: "Italie", AE: "Émirats arabes unis",
+};
 
 /** Province (Canada) ou région, en toutes lettres. */
 export function regionName(o: Pick<SignupOrigin, "country" | "region">): string | null {

@@ -55,7 +55,7 @@ export const ActivityRow = ({ o, onClick }: { o: OrderRow; onClick?: () => void 
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-3 py-3.5 text-left transition-colors",
-        onClick && "hover:bg-secondary/30 active:bg-secondary/50",
+        onClick && "transition-opacity hover:opacity-80 active:opacity-60",
       )}
     >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-foreground/70">

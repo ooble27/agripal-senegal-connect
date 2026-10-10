@@ -62,7 +62,7 @@ const Row = ({ to, chip, label, value, right }: { to?: string; chip: React.React
   );
   const cls = "flex min-h-[60px] items-center gap-3.5 px-4 py-3";
   return to ? (
-    <Link to={to} className={cn(cls, "transition-colors active:bg-secondary/60")}>{inner}</Link>
+    <Link to={to} className={cn(cls, "transition-opacity active:opacity-60")}>{inner}</Link>
   ) : (
     <div className={cls}>{inner}</div>
   );
@@ -216,7 +216,7 @@ const MobileAccount = ({ profile, kyc, name, email, isStaff, otc, onLogout }: Pr
 
       {/* ─── Limites et desk OTC : une seule carte compacte, en deux ─── */}
       <div className={cn("mt-3 grid divide-x divide-border overflow-hidden rounded-2xl border border-border bg-card", otc ? "grid-cols-2" : "grid-cols-1")}>
-        <Link to="/app/limites" className="flex min-w-0 items-center gap-3 px-3.5 py-3 transition-colors active:bg-secondary/60">
+        <Link to="/app/limites" className="flex min-w-0 items-center gap-3 px-3.5 py-3 transition-opacity active:opacity-60">
           <Chip icon={Gauge} />
           <span className="min-w-0">
             <span className="block text-[11.5px] text-muted-foreground">{t("acct.limits")}</span>
@@ -226,7 +226,7 @@ const MobileAccount = ({ profile, kyc, name, email, isStaff, otc, onLogout }: Pr
           </span>
         </Link>
         {otc && (
-          <Link to="/app/otc" className="flex min-w-0 items-center gap-3 px-3.5 py-3 transition-colors active:bg-secondary/60">
+          <Link to="/app/otc" className="flex min-w-0 items-center gap-3 px-3.5 py-3 transition-opacity active:opacity-60">
             <Chip icon={Handshake} />
             <span className="min-w-0">
               <span className="block text-[11.5px] text-muted-foreground">{t("nav.otc")}</span>

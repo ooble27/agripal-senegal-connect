@@ -4,6 +4,9 @@ import animate from "tailwindcss-animate";
 export default {
   darkMode: ["class"],
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  // Effets de survol seulement avec une souris : sur téléphone, ils
+  // restaient affichés après un toucher (rectangle gris sur les listes).
+  future: { hoverOnlyWhenSupported: true },
   prefix: "",
   theme: {
     container: {

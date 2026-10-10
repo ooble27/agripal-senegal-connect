@@ -1,7 +1,7 @@
 -- Lancement de la plateforme.
 --
--- Avant le lancement, tout ce qui est en base vient des tests de l'équipe :
--- le back-office peut le réinitialiser (fonction edge reset-test-data, clé
+-- Avant le lancement, les commandes en base viennent des tests de l'équipe :
+-- le back-office peut les réinitialiser (fonction edge reset-test-data, clé
 -- service uniquement). Une fois la plateforme lancée (launched_at rempli,
 -- bouton « Démarrer les activités »), la réinitialisation est refusée pour
 -- toujours et les protections du registre (conservation 5 ans) s'appliquent

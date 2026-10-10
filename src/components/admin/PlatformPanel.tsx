@@ -5,10 +5,10 @@ import {
 } from "@/components/admin/adminTheme";
 
 /*
- * Plateforme : réinitialiser les données de test, puis démarrer les
- * activités. Tant que la plateforme n'est pas lancée, tout ce qui est en base
- * vient des tests de l'équipe et peut être remis à zéro. Une fois lancée, la
- * réinitialisation est refusée pour toujours (dossiers clients : 5 ans).
+ * Plateforme : réinitialiser les commandes de test, puis démarrer les
+ * activités. Seules les commandes et ce qui s'y rattache sont effacés ;
+ * comptes clients, vérifications et registre de conformité ne sont jamais
+ * touchés. Une fois la plateforme lancée, plus de réinitialisation.
  * Le travail est fait côté serveur (fonction edge reset-test-data).
  */
 
@@ -19,18 +19,18 @@ interface Preview {
   core: Count[];
   mail: Count[];
   logs: Count[];
-  clients: number;
-  staff: string[];
-  documents: number;
+  keptOrders: number;
 }
-interface ResetResult { ok: boolean; clients: number; documents: number; tables: Record<string, number>; failed: string[] }
+interface ResetResult { ok: boolean; tables: Record<string, number>; keptOrders: number }
 
 const KEPT = [
+  "Tous les comptes clients : ils restent inscrits",
+  "Vérifications d'identité et d'entreprise, avec leurs documents",
+  "Destinataires enregistrés des clients",
+  "Registre de conformité (alertes, déclarations), et les commandes qu'il cite",
   "Comptes de l'équipe et leurs rôles",
   "Règlement auto : réglages, portefeuilles et soldes",
-  "Trésorerie : adresses et soldes enregistrés",
-  "Programme de conformité (liste des obligations)",
-  "Historique des taux, domaines de courriel refusés",
+  "Trésorerie, programme de conformité, historique des taux",
 ];
 
 const fmtDate = (s: string) => new Date(s).toLocaleString("fr-CA", { dateStyle: "long", timeStyle: "short" });
@@ -102,7 +102,7 @@ export default function PlatformPanel() {
   }
 
   const launched = !!p.launchedAt;
-  const total = p.core.reduce((t, c) => t + c.n, 0) + p.clients + p.documents;
+  const total = [...p.core, ...(mail ? p.mail : []), ...(logs ? p.logs : [])].reduce((t, c) => t + c.n, 0);
 
   return (
     <div style={{ display: "grid", gap: 18, maxWidth: 760, fontFamily: FONT }}>
@@ -115,7 +115,7 @@ export default function PlatformPanel() {
             <p style={{ ...cardSubtitle, fontSize: 12 }}>
               {launched
                 ? `Depuis le ${fmtDate(p.launchedAt!)}. Les dossiers clients se conservent au moins 5 ans.`
-                : "Tout ce qui est en base vient de vos tests et peut être remis à zéro."}
+                : "Les commandes passées jusqu'ici sont des tests et peuvent être remises à zéro."}
               {p.lastResetAt && ` Dernière réinitialisation : ${fmtDate(p.lastResetAt)}.`}
             </p>
           </div>
@@ -127,12 +127,12 @@ export default function PlatformPanel() {
       {result && (
         <div style={{ ...card, padding: "16px 20px", borderColor: result.ok ? C.successBd : C.warnBd }}>
           <p style={{ ...cardTitle, color: result.ok ? C.successText : C.warnText }}>
-            {result.ok ? "Réinitialisation terminée" : "Réinitialisation terminée, avec des comptes non supprimés"}
+            Réinitialisation terminée
           </p>
           <p style={{ ...cardSubtitle, fontSize: 12 }}>
-            {result.clients} comptes clients, {result.documents} documents et {Object.values(result.tables).reduce((a, b) => a + b, 0)} enregistrements effacés.
+            {result.tables.orders ?? 0} commandes et {Object.values(result.tables).reduce((a, b) => a + b, 0)} enregistrements effacés.
+            {result.keptOrders > 0 && ` ${result.keptOrders} commande(s) gardée(s) : citée(s) par le registre de conformité.`}
           </p>
-          {result.failed.map((f) => <p key={f} style={{ fontSize: 12, color: C.warnText, margin: "6px 0 0" }}>{f}</p>)}
           <button type="button" style={{ ...btnGhost, marginTop: 12 }} onClick={() => window.location.reload()}>Recharger le back-office</button>
         </div>
       )}
@@ -141,15 +141,13 @@ export default function PlatformPanel() {
         <div style={card}>
           <div style={cardHeaderRow}>
             <div>
-              <p style={cardTitle}>Réinitialiser les données de test</p>
-              <p style={cardSubtitle}>Repartir de zéro avant le lancement. Possible autant de fois que vous voulez.</p>
+              <p style={cardTitle}>Réinitialiser les commandes de test</p>
+              <p style={cardSubtitle}>Repartir de zéro avant le lancement. Les comptes et vérifications restent. Possible autant de fois que vous voulez.</p>
             </div>
           </div>
 
           <div style={{ padding: "16px 20px 4px" }}><p style={sH}>Sera effacé</p></div>
-          <Line label="Comptes clients (tous sauf l'équipe)" n={p.clients} last={false} />
-          {p.core.map((c) => <Line key={c.table} label={c.label} n={c.n} last={false} />)}
-          <Line label="Documents d'identité (photos)" n={p.documents} last />
+          {p.core.map((c, i) => <Line key={c.table} label={c.label} n={c.n} last={i === p.core.length - 1} />)}
 
           <div style={{ padding: "14px 20px 0", borderTop: `1px solid ${C.bds}` }}>
             <p style={sH}>En option</p>
@@ -163,7 +161,6 @@ export default function PlatformPanel() {
             <p style={sH}>Toujours gardé</p>
             <ul style={{ margin: "10px 0 0", paddingLeft: 18, color: C.t2, fontSize: 12.5, lineHeight: 1.9 }}>
               {KEPT.map((k) => <li key={k}>{k}</li>)}
-              <li>Comptes de l'équipe : {p.staff.join(", ")}</li>
             </ul>
           </div>
 
@@ -176,7 +173,7 @@ export default function PlatformPanel() {
                 autoComplete="off" style={{ ...inputStyle, flex: "1 1 220px", letterSpacing: "0.08em" }} />
               <button type="button" onClick={reset} disabled={plain(typed) !== "REINITIALISER" || busy || total === 0}
                 style={{ ...btnPrimary, background: C.dangerText, color: "#fff", opacity: plain(typed) !== "REINITIALISER" || busy || total === 0 ? 0.4 : 1 }}>
-                {busy ? "Réinitialisation…" : "Tout réinitialiser"}
+                {busy ? "Réinitialisation…" : "Réinitialiser les commandes"}
               </button>
             </div>
           </div>
@@ -192,14 +189,14 @@ export default function PlatformPanel() {
         </div>
         {launched ? (
           <p style={{ padding: "16px 20px", margin: 0, fontSize: 13, color: C.t2 }}>
-            La plateforme est lancée. La réinitialisation n'est plus possible : chaque commande, vérification et déclaration fait
-            partie du registre et se conserve au moins 5 ans (CANAFE).
+            La plateforme est lancée. La réinitialisation n'est plus possible : chaque commande fait partie du registre des
+            opérations et se conserve au moins 5 ans (CANAFE).
           </p>
         ) : (
           <div style={{ padding: "16px 20px 20px" }}>
             <p style={{ margin: 0, fontSize: 13, color: C.t2, lineHeight: 1.6 }}>
               Une fois les activités démarrées, la réinitialisation disparaît pour toujours, et plus personne, serveur compris,
-              ne peut effacer une commande payée ou une déclaration. Réinitialisez d'abord les données de test.
+              ne peut effacer une commande payée. Réinitialisez d'abord les commandes de test.
             </p>
             <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
               <input value={launchTyped} onChange={(e) => setLaunchTyped(e.target.value)} placeholder="DÉMARRER" aria-label="Tapez DÉMARRER pour confirmer"

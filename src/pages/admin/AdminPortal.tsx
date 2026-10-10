@@ -46,7 +46,7 @@ const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
   { id: "announcements", label: "Annonces",     desc: "Bannière publique et mode maintenance côté client.", icon: Bell },
   { id: "team",        label: "Équipe",         desc: "Membres, rôles et permissions du back-office.", icon: Users },
   { id: "audit",       label: "Journal d'audit", desc: "Historique immuable de toutes les actions administratives.", icon: ScrollText },
-  { id: "platform",    label: "Plateforme",     desc: "Réinitialiser les données de test, puis démarrer les activités.", icon: Power },
+  { id: "platform",    label: "Plateforme",     desc: "Réinitialiser les commandes de test (comptes et vérifications gardés), puis démarrer les activités.", icon: Power },
 ];
 
 const ROLE_TABS: Record<AppRole, TabId[]> = {

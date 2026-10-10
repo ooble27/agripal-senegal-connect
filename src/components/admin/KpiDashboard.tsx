@@ -23,7 +23,7 @@ import {
   type CustomerFunnel, type ComplianceAlertsCount,
 } from "@/lib/kpi";
 import {
-  C, FONT, card, sH, cardHeader, numeric, heroNumber, heroUnit,
+  C, FONT, card, sH, cardHeader, numeric,
   listRowStyle, listRowHoverIn, listRowHoverOut, pillSmall,
 } from "./adminTheme";
 import AdminHero from "./AdminHero";
@@ -232,7 +232,7 @@ const KpiDashboard = ({ onNavigate }: KpiDashboardProps) => {
           jamais. */}
       <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[3fr_2fr] lg:items-start">
 
-        {/* ─── Colonne gauche : héro + tuiles + graphique ─── */}
+        {/* ─── Colonne gauche : héro, tuiles, entonnoir client ─── */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
           {/* Héro — volume total */}
@@ -311,51 +311,6 @@ const KpiDashboard = ({ onNavigate }: KpiDashboardProps) => {
               </>
             )}
           </div>
-        </div>
-
-        {/* ─── Colonne droite : marge + statuts + funnel + conformité ─── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-
-          {/* Statuts */}
-          <div style={card}>
-            <div style={cardHeader}>
-              <span style={sH}><T en="By status">Par statut</T></span>
-            </div>
-            {loading || !statuses ? (
-              <div style={{ padding: "40px 20px", textAlign: "center" }}>
-                <p style={{ fontSize: 12, color: C.t3, margin: 0 }}>N/D</p>
-              </div>
-            ) : (() => {
-              const rows: Array<{ label: string; en: string; count: number }> = [
-                { label: "En attente",        en: "Awaiting",     count: statuses.awaiting_payment + statuses.created },
-                { label: "Paiement reçu",     en: "Paid",         count: statuses.payment_received },
-                { label: "En traitement",     en: "Processing",   count: statuses.settling },
-                { label: "Terminées",         en: "Completed",    count: statuses.completed },
-                { label: "Annulées / expirées", en: "Cancelled / expired", count: statuses.cancelled + statuses.expired },
-              ];
-              return rows.map((r, i) => (
-                <div
-                  key={r.label}
-                  style={{ ...listRowStyle(i === rows.length - 1), justifyContent: "space-between" }}
-                  onMouseEnter={(e) => listRowHoverIn(e.currentTarget)}
-                  onMouseLeave={(e) => listRowHoverOut(e.currentTarget)}
-                >
-                  <span style={{ fontSize: 12.5, color: C.t2 }}><T en={r.en}>{r.label}</T></span>
-                  <span style={{ fontSize: 13, fontWeight: 400, color: C.t1, ...numeric }}>
-                    {r.count}
-                  </span>
-                </div>
-              ));
-            })()}
-          </div>
-
-          {/* Conformité */}
-          <StatTile
-            label={<><ShieldCheck style={{ width: 11, height: 11, display: "inline", verticalAlign: "-1px", marginRight: 6 }} /><T en="Compliance">Conformité</T></>}
-            value={complianceCount.open}
-            sub={<T en="unresolved alerts">alertes non résolues</T>}
-            onClick={() => onNavigate?.("compliance")}
-          />
 
           {/* Funnel clients */}
           <div style={card}>
@@ -443,6 +398,51 @@ const KpiDashboard = ({ onNavigate }: KpiDashboardProps) => {
               );
             })()}
           </div>
+        </div>
+
+        {/* ─── Colonne droite : statuts, conformité, origine des inscriptions ─── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* Statuts */}
+          <div style={card}>
+            <div style={cardHeader}>
+              <span style={sH}><T en="By status">Par statut</T></span>
+            </div>
+            {loading || !statuses ? (
+              <div style={{ padding: "40px 20px", textAlign: "center" }}>
+                <p style={{ fontSize: 12, color: C.t3, margin: 0 }}>N/D</p>
+              </div>
+            ) : (() => {
+              const rows: Array<{ label: string; en: string; count: number }> = [
+                { label: "En attente",        en: "Awaiting",     count: statuses.awaiting_payment + statuses.created },
+                { label: "Paiement reçu",     en: "Paid",         count: statuses.payment_received },
+                { label: "En traitement",     en: "Processing",   count: statuses.settling },
+                { label: "Terminées",         en: "Completed",    count: statuses.completed },
+                { label: "Annulées / expirées", en: "Cancelled / expired", count: statuses.cancelled + statuses.expired },
+              ];
+              return rows.map((r, i) => (
+                <div
+                  key={r.label}
+                  style={{ ...listRowStyle(i === rows.length - 1), justifyContent: "space-between" }}
+                  onMouseEnter={(e) => listRowHoverIn(e.currentTarget)}
+                  onMouseLeave={(e) => listRowHoverOut(e.currentTarget)}
+                >
+                  <span style={{ fontSize: 12.5, color: C.t2 }}><T en={r.en}>{r.label}</T></span>
+                  <span style={{ fontSize: 13, fontWeight: 400, color: C.t1, ...numeric }}>
+                    {r.count}
+                  </span>
+                </div>
+              ));
+            })()}
+          </div>
+
+          {/* Conformité */}
+          <StatTile
+            label={<><ShieldCheck style={{ width: 11, height: 11, display: "inline", verticalAlign: "-1px", marginRight: 6 }} /><T en="Compliance">Conformité</T></>}
+            value={complianceCount.open}
+            sub={<T en="unresolved alerts">alertes non résolues</T>}
+            onClick={() => onNavigate?.("compliance")}
+          />
 
           <OriginsCard />
         </div>

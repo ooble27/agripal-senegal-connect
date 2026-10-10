@@ -3,9 +3,8 @@ import { Link } from "react-router-dom";
 import {
   Inbox, ShoppingCart, ScanFace, Calculator, Users, ArrowLeft,
   BadgeCheck, UserRound, Megaphone, Headphones, ShieldCheck, ScrollText,
-  LayoutDashboard, Bell, Wallet, Mail, Zap, Power, BookUser,
+  LayoutDashboard, Bell, Mail, Zap, Power, BookUser,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useAuth, type AppRole } from "@/lib/auth";
 import { type AdminOrder } from "@/lib/adminOrders";
 import { fetchAdminOrders, persistOrderPatch, deleteOrder } from "@/lib/adminOrdersLive";
@@ -21,7 +20,6 @@ import CompliancePanel from "@/components/admin/CompliancePanel";
 import AuditLogPanel from "@/components/admin/AuditLogPanel";
 import KpiDashboard from "@/components/admin/KpiDashboard";
 import AnnouncementsPanel from "@/components/admin/AnnouncementsPanel";
-import TreasuryPanel from "@/components/admin/TreasuryPanel";
 import SettlementPanel from "@/components/admin/SettlementPanel";
 import MailboxPanel from "@/components/admin/MailboxPanel";
 import CampaignsPanel from "@/components/admin/CampaignsPanel";
@@ -31,7 +29,7 @@ import AIFloatingChat from "@/components/admin/AIFloatingChat";
 import { C, FONT, ADMIN_THEME_CSS, ADMIN_BG } from "@/components/admin/adminTheme";
 import ThemeToggle from "@/components/app/ThemeToggle";
 
-type TabId = "dashboard" | "queue" | "orders" | "clients" | "kyc" | "accounting" | "compliance" | "treasury" | "settlement" | "mailbox" | "campaigns" | "announcements" | "team" | "audit" | "platform";
+type TabId = "dashboard" | "queue" | "orders" | "clients" | "kyc" | "accounting" | "compliance" | "settlement" | "mailbox" | "campaigns" | "announcements" | "team" | "audit" | "platform";
 
 const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
   { id: "dashboard",  label: "Tableau de bord", desc: "Vue d'ensemble : volumes, marge, alertes et actions à traiter.", icon: LayoutDashboard },
@@ -41,8 +39,7 @@ const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
   { id: "kyc",        label: "KYC",            desc: "Vérifiez l'identité des clients avant leurs transactions.", icon: ScanFace },
   { id: "accounting",  label: "Comptabilité",   desc: "Revenus, marges et volumes traités.", icon: Calculator },
   { id: "compliance",  label: "Conformité",     desc: "Alertes CANAFE, déclarations, dossiers et programme de conformité.", icon: ShieldCheck },
-  { id: "treasury",    label: "Trésorerie",     desc: "Inventaire USDT multi-réseaux, snapshots, mouvements et alertes de solde bas.", icon: Wallet },
-  { id: "settlement",  label: "Règlement auto", desc: "Virements Interac lus automatiquement, envoi des USDT depuis le portefeuille chaud, réglages et soldes.", icon: Zap },
+  { id: "settlement",  label: "Règlement auto", desc: "Soldes du portefeuille, virements Interac lus automatiquement, envoi des USDT et réglages.", icon: Zap },
   { id: "mailbox",     label: "Messagerie",     desc: "Envoyer un e-mail à un client à partir d'un template, historique des envois, boîte de réception.", icon: Mail },
   { id: "campaigns",   label: "Campagnes",      desc: "Campagnes marketing bien designées avec segmentation, aperçu live et historique.", icon: Megaphone },
   { id: "announcements", label: "Annonces",     desc: "Bannière publique et mode maintenance côté client.", icon: Bell },
@@ -52,7 +49,7 @@ const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
 ];
 
 const ROLE_TABS: Record<AppRole, TabId[]> = {
-  admin:        ["dashboard", "queue", "orders", "clients", "kyc", "accounting", "compliance", "treasury", "settlement", "mailbox", "campaigns", "announcements", "team", "audit", "platform"],
+  admin:        ["dashboard", "queue", "orders", "clients", "kyc", "accounting", "compliance", "settlement", "mailbox", "campaigns", "announcements", "team", "audit", "platform"],
   operator:     ["queue", "orders", "clients", "settlement", "mailbox"],
   kyc_reviewer: ["kyc", "mailbox"],
   support:      ["queue", "orders", "clients", "mailbox"],
@@ -313,7 +310,6 @@ const AdminPortal = () => {
                   {tab === "kyc" && <KycPanel />}
                   {tab === "accounting" && <AccountingPanel orders={orders} />}
                   {tab === "compliance" && <CompliancePanel orders={orders} />}
-                  {tab === "treasury" && <TreasuryPanel orders={orders} />}
                   {tab === "settlement" && <SettlementPanel />}
                   {tab === "mailbox" && <MailboxPanel />}
                   {tab === "campaigns" && <CampaignsPanel />}

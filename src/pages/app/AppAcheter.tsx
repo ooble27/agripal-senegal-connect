@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Coins, Check, ShieldOff } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import CopyRow from "@/components/app/CopyRow";
 import RecipientBook from "@/components/app/RecipientBook";
-import { NETWORKS, type NetId } from "@/components/app/networks";
+import { NETWORKS, ORDER_NETWORKS, type NetId } from "@/components/app/networks";
 import { Button } from "@/components/ui/button";
 import { useUsdtRate } from "@/hooks/useUsdtRate";
 import { createOrder, getAllowance, orderRef, peekAllowance, type TradeAllowance } from "@/lib/orders";
@@ -253,7 +253,7 @@ const AppAcheter = () => {
       <AppShell center>
         <StepHeader title={t("buy.dest")} sub={t("buy.destSub")} onBack={() => setStep("amount")} backLabel={t("misc.back")} />
         <div className="flex flex-wrap gap-2">
-          {NETWORKS.map((n) => {
+          {ORDER_NETWORKS.map((n) => {
             const sel = net === n.id;
             return (
               <button

@@ -4,7 +4,7 @@ import { ArrowLeft, Check, Handshake, ShieldOff } from "lucide-react";
 import AppShell from "@/components/app/AppShell";
 import CopyRow from "@/components/app/CopyRow";
 import RecipientBook from "@/components/app/RecipientBook";
-import { NETWORKS, type NetId } from "@/components/app/networks";
+import { NETWORKS, ORDER_NETWORKS, type NetId } from "@/components/app/networks";
 import { Button } from "@/components/ui/button";
 import { useUsdtRate } from "@/hooks/useUsdtRate";
 import { useAuth } from "@/lib/auth";
@@ -318,7 +318,7 @@ function OtcFlow() {
           backLabel={t("misc.back")}
         />
         <div className="flex flex-wrap gap-2">
-          {NETWORKS.map((n) => (
+          {ORDER_NETWORKS.map((n) => (
             <button
               key={n.id}
               type="button"

@@ -99,7 +99,7 @@ const dict = {
   },
 
   // ── Landing — Networks ──
-  "net.kicker": { fr: "Recevez sur 6 réseaux", en: "Receive on 6 networks" },
+  "net.kicker": { fr: "Recevez sur 4 réseaux", en: "Receive on 4 networks" },
   "net.title": { fr: "La chaîne de votre choix", en: "The chain of your choice" },
   "net.sub": {
     fr: "Le réseau se choisit à la création de l'ordre. Les frais de réseau varient, le taux ne change pas.",
@@ -175,8 +175,8 @@ const dict = {
   },
   "faq.4q": { fr: "Quels réseaux sont pris en charge ?", en: "Which networks are supported?" },
   "faq.4a": {
-    fr: "Tron (TRC20), Ethereum (ERC20), BNB Chain (BEP20), Polygon, Solana et Avalanche (C-Chain).",
-    en: "Tron (TRC20), Ethereum (ERC20), BNB Chain (BEP20), Polygon, Solana and Avalanche (C-Chain).",
+    fr: "Tron (TRC20), BNB Chain (BEP20), Polygon et Solana.",
+    en: "Tron (TRC20), BNB Chain (BEP20), Polygon and Solana.",
   },
   "faq.5q": { fr: "Pourquoi une vérification d'identité ?", en: "Why is identity verification required?" },
   "faq.5a": {
@@ -208,7 +208,7 @@ const dict = {
   "dash.rate": { fr: "Taux USDT / CAD", en: "USDT / CAD Rate" },
   "dash.buy": { fr: "Acheter", en: "Buy" },
   "dash.sell": { fr: "Vendre", en: "Sell" },
-  "dash.networks": { fr: "Recevez sur 6 réseaux", en: "Receive on 6 networks" },
+  "dash.networks": { fr: "Recevez sur 4 réseaux", en: "Receive on 4 networks" },
   "dash.recent": { fr: "Activité récente", en: "Recent activity" },
   "dash.viewAll": { fr: "Voir tout", en: "View all" },
   "dash.loading": { fr: "Chargement…", en: "Loading…" },
@@ -480,8 +480,8 @@ const dict = {
   },
   "faqp.6q": { fr: "Quels réseaux sont pris en charge ?", en: "Which networks are supported?" },
   "faqp.6a": {
-    fr: "Tron (TRC20), Ethereum (ERC20), BNB Chain (BEP20), Polygon, Solana et Avalanche (C-Chain). L'adresse doit correspondre au réseau choisi : une adresse Tron commence par T, une adresse Ethereum, BNB Chain, Polygon ou Avalanche par 0x. Une transaction blockchain ne peut pas être annulée : vérifiez deux fois.",
-    en: "Tron (TRC20), Ethereum (ERC20), BNB Chain (BEP20), Polygon, Solana and Avalanche (C-Chain). The address must match the chosen network: a Tron address starts with T, an Ethereum, BNB Chain, Polygon or Avalanche address with 0x. A blockchain transaction can't be reversed: check twice.",
+    fr: "Tron (TRC20), BNB Chain (BEP20), Polygon et Solana. L'adresse doit correspondre au réseau choisi : une adresse Tron commence par T, une adresse BNB Chain ou Polygon par 0x. Une transaction blockchain ne peut pas être annulée : vérifiez deux fois.",
+    en: "Tron (TRC20), BNB Chain (BEP20), Polygon and Solana. The address must match the chosen network: a Tron address starts with T, a BNB Chain or Polygon address with 0x. A blockchain transaction can't be reversed: check twice.",
   },
   "faqp.7q": { fr: "Combien de temps pour recevoir mes USDT ?", en: "How long until I receive my USDT?" },
   "faqp.7a": {
@@ -1266,8 +1266,8 @@ const dict = {
   },
   "guide.buy.s2": { fr: "Choisissez le réseau", en: "Choose the network" },
   "guide.buy.s2d": {
-    fr: "Sélectionnez le réseau sur lequel vous voulez recevoir vos USDT : Tron, BNB Chain, Ethereum, Polygon, Solana ou Avalanche.",
-    en: "Select the network you want to receive your USDT on: Tron, BNB Chain, Ethereum, Polygon, Solana or Avalanche.",
+    fr: "Sélectionnez le réseau sur lequel vous voulez recevoir vos USDT : Tron, BNB Chain, Polygon ou Solana.",
+    en: "Select the network you want to receive your USDT on: Tron, BNB Chain, Polygon or Solana.",
   },
   "guide.buy.s3": { fr: "Collez votre adresse", en: "Paste your address" },
   "guide.buy.s3d": {

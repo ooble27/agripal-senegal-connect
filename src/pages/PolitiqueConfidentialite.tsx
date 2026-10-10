@@ -160,7 +160,7 @@ const PARTS: Part[] = [
           <Ul>
             <li>le type d'opération (achat ou vente) ;</li>
             <li>les montants en CAD et en USDT ;</li>
-            <li>le réseau blockchain choisi (Tron, Ethereum, BNB Chain, Polygon, Solana ou Avalanche) ;</li>
+            <li>le réseau blockchain choisi (Tron, BNB Chain, Polygon ou Solana) ;</li>
             <li>votre adresse de portefeuille numérique (wallet), pour les achats ;</li>
             <li>votre adresse courriel Interac, pour les ventes.</li>
           </Ul>
@@ -213,7 +213,7 @@ const PARTS: Part[] = [
           <Ul>
             <li>the transaction type (buy or sell);</li>
             <li>the amounts in CAD and USDT;</li>
-            <li>the blockchain network chosen (Tron, Ethereum, BNB Chain, Polygon, Solana, or Avalanche);</li>
+            <li>the blockchain network chosen (Tron, BNB Chain, Polygon, or Solana);</li>
             <li>your digital wallet address, for purchases;</li>
             <li>your Interac email address, for sales.</li>
           </Ul>

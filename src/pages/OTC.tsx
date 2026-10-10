@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Reveal from "@/components/Reveal";
 import OtcVideo from "@/components/OtcVideo";
-import { NETWORKS } from "@/components/app/networks";
+import { ORDER_NETWORKS } from "@/components/app/networks";
 import { OOBLE_OTC_EMAIL, TRADE_DAILY_MAX_CAD } from "@/lib/config";
 import { useOtcVisible } from "@/lib/otc";
 import { useLang } from "@/lib/i18n";
@@ -187,7 +187,7 @@ const OTC = () => {
                 </p>
                 <p className="mt-8 text-[12px] uppercase tracking-[0.16em] text-muted-foreground">{L({ fr: "Sur les mêmes réseaux que l'app", en: "On the same networks as the app" })}</p>
                 <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3">
-                  {NETWORKS.map((n) => (
+                  {ORDER_NETWORKS.map((n) => (
                     <span key={n.id} className="flex items-center gap-2 text-[14px]">
                       <img src={`/coins/${n.id}.svg`} alt="" className="h-6 w-6 rounded-full" />
                       {n.name}

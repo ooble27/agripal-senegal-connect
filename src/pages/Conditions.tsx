@@ -620,8 +620,8 @@ const PARTS: Part[] = [
             inviter à en créer un nouveau au taux courant.
           </P>
           <P>
-            Ooble prend en charge les réseaux Tron (TRC20), Ethereum (ERC20), BNB Chain (BEP20),
-            Polygon, Solana et Avalanche (C-Chain). Il vous appartient de vérifier que l'adresse de
+            Ooble prend en charge les réseaux Tron (TRC20), BNB Chain (BEP20), Polygon et
+            Solana. Il vous appartient de vérifier que l'adresse de
             destination correspond exactement au réseau choisi : les transferts de monnaie virtuelle
             sont irréversibles, et Ooble ne peut ni annuler ni récupérer un envoi effectué vers une
             adresse erronée ou un réseau incompatible.
@@ -643,8 +643,8 @@ const PARTS: Part[] = [
             a new one at the current rate.
           </P>
           <P>
-            Ooble supports the Tron (TRC20), Ethereum (ERC20), BNB Chain (BEP20), Polygon, Solana,
-            and Avalanche (C-Chain) networks. It is your responsibility to verify that the
+            Ooble supports the Tron (TRC20), BNB Chain (BEP20), Polygon, and Solana networks. It
+            is your responsibility to verify that the
             destination address exactly matches the selected network: virtual currency transfers
             are irreversible, and Ooble can neither cancel nor recover a transfer made to an
             incorrect address or an incompatible network.

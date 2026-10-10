@@ -59,11 +59,9 @@ const Index = () => {
 
   const networks = [
     { id: "trx", tick: "TRC20", name: "Tron", note: t("net.trx") },
-    { id: "eth", tick: "ERC20", name: "Ethereum", note: t("net.eth") },
     { id: "bnb", tick: "BEP20", name: "BNB Chain", note: t("net.bnb") },
     { id: "matic", tick: "POL", name: "Polygon", note: t("net.matic") },
     { id: "sol", tick: "SOL", name: "Solana", note: t("net.sol") },
-    { id: "avax", tick: "AVAX-C", name: "Avalanche", note: t("net.avax") },
   ];
 
   const essentials: { tKey: TKey; dKey: TKey }[] = [

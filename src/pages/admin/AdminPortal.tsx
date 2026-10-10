@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Inbox, ShoppingCart, ScanFace, Calculator, Users, ArrowLeft,
   BadgeCheck, UserRound, Megaphone, Headphones, ShieldCheck, ScrollText,
-  LayoutDashboard, Bell, Wallet, Mail, Zap,
+  LayoutDashboard, Bell, Wallet, Mail, Zap, Power,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, type AppRole } from "@/lib/auth";
@@ -25,11 +25,12 @@ import TreasuryPanel from "@/components/admin/TreasuryPanel";
 import SettlementPanel from "@/components/admin/SettlementPanel";
 import MailboxPanel from "@/components/admin/MailboxPanel";
 import CampaignsPanel from "@/components/admin/CampaignsPanel";
+import PlatformPanel from "@/components/admin/PlatformPanel";
 import AIFloatingChat from "@/components/admin/AIFloatingChat";
 import { C, FONT, ADMIN_THEME_CSS, ADMIN_BG } from "@/components/admin/adminTheme";
 import ThemeToggle from "@/components/app/ThemeToggle";
 
-type TabId = "dashboard" | "queue" | "orders" | "kyc" | "accounting" | "compliance" | "treasury" | "settlement" | "mailbox" | "campaigns" | "announcements" | "team" | "audit";
+type TabId = "dashboard" | "queue" | "orders" | "kyc" | "accounting" | "compliance" | "treasury" | "settlement" | "mailbox" | "campaigns" | "announcements" | "team" | "audit" | "platform";
 
 const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
   { id: "dashboard",  label: "Tableau de bord", desc: "Vue d'ensemble : volumes, marge, alertes et actions à traiter.", icon: LayoutDashboard },
@@ -45,10 +46,11 @@ const NAV: { id: TabId; label: string; desc: string; icon: typeof Inbox }[] = [
   { id: "announcements", label: "Annonces",     desc: "Bannière publique et mode maintenance côté client.", icon: Bell },
   { id: "team",        label: "Équipe",         desc: "Membres, rôles et permissions du back-office.", icon: Users },
   { id: "audit",       label: "Journal d'audit", desc: "Historique immuable de toutes les actions administratives.", icon: ScrollText },
+  { id: "platform",    label: "Plateforme",     desc: "Réinitialiser les données de test, puis démarrer les activités.", icon: Power },
 ];
 
 const ROLE_TABS: Record<AppRole, TabId[]> = {
-  admin:        ["dashboard", "queue", "orders", "kyc", "accounting", "compliance", "treasury", "settlement", "mailbox", "campaigns", "announcements", "team", "audit"],
+  admin:        ["dashboard", "queue", "orders", "kyc", "accounting", "compliance", "treasury", "settlement", "mailbox", "campaigns", "announcements", "team", "audit", "platform"],
   operator:     ["queue", "orders", "settlement", "mailbox"],
   kyc_reviewer: ["kyc", "mailbox"],
   support:      ["queue", "orders", "mailbox"],
@@ -315,6 +317,7 @@ const AdminPortal = () => {
                   {tab === "announcements" && <AnnouncementsPanel />}
                   {tab === "team" && <TeamPanel />}
                   {tab === "audit" && <AuditLogPanel />}
+                  {tab === "platform" && <PlatformPanel />}
                 </>
               )}
             </div>

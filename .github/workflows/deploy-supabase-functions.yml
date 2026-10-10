@@ -16,6 +16,10 @@ concurrency:
 
 jobs:
   deploy:
+    # Seul le dépôt principal déploie. Le dépôt de sauvegarde (copie du code)
+    # n'a pas la clé Supabase : sans cette condition, chaque envoi y échoue
+    # et GitHub envoie un courriel d'échec.
+    if: github.repository == 'ooble27/Ooble-'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

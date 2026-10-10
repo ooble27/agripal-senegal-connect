@@ -2,10 +2,11 @@ import { getMyProfile } from "@/lib/profile";
 import { getMyKyc } from "@/lib/kyc";
 import { getMyKyb } from "@/lib/kyb";
 import { getAllowance, listMyOrders } from "@/lib/orders";
+import { listRecipients } from "@/lib/recipients";
 
 /**
  * Précharge, une fois par session, les données des pages de l'app (profil,
- * vérifications, limites, activité). Chaque page s'affiche ensuite tout de
+ * vérifications, limites, activité, adresses enregistrées). Chaque page s'affiche ensuite tout de
  * suite, même à la première visite.
  */
 let warmedFor: string | null = null;
@@ -20,5 +21,6 @@ export function warmAppData(uid: string | null | undefined) {
     getAllowance("buy"),
     getAllowance("sell"),
     listMyOrders(100),
+    listRecipients("wallet"),
   ]);
 }

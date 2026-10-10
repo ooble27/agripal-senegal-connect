@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
+import { Check, Eraser, Lock, Power, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import AdminHero from "@/components/admin/AdminHero";
 import {
-  C, FONT, card, cardHeaderRow, cardTitle, cardSubtitle, btnPrimary, btnGhost, inputStyle, sH, rowStyle,
+  C, FONT, card, cardHeaderRow, cardTitle, cardSubtitle, btnPrimary, inputStyle, sH, listRowStyle,
 } from "@/components/admin/adminTheme";
 
 /*
- * Plateforme : réinitialiser les commandes de test, puis démarrer les
+ * Plateforme : remettre à zéro les commandes de test, puis démarrer les
  * activités. Seules les commandes et ce qui s'y rattache sont effacés ;
- * comptes clients, vérifications et registre de conformité ne sont jamais
- * touchés. Une fois la plateforme lancée, plus de réinitialisation.
- * Le travail est fait côté serveur (fonction edge reset-test-data).
+ * comptes clients, vérifications, adresses enregistrées et registre de
+ * conformité ne sont jamais touchés. Une fois la plateforme lancée, plus de
+ * remise à zéro. Le travail est fait côté serveur (fonction edge reset-test-data).
  */
 
 type Count = { table: string; label: string; n: number };
@@ -24,17 +26,16 @@ interface Preview {
 interface ResetResult { ok: boolean; tables: Record<string, number>; keptOrders: number }
 
 const KEPT = [
-  "Tous les comptes clients : ils restent inscrits",
-  "Vérifications d'identité et d'entreprise, avec leurs documents",
-  "Destinataires enregistrés des clients",
-  "Registre de conformité (alertes, déclarations), et les commandes qu'il cite",
-  "Comptes de l'équipe et leurs rôles",
-  "Règlement auto : réglages, portefeuilles et soldes",
-  "Trésorerie, programme de conformité, historique des taux",
+  "Comptes clients",
+  "Vérifications d'identité et d'entreprise, avec les documents",
+  "Adresses et courriels enregistrés par les clients",
+  "Registre de conformité, et les commandes qu'il cite",
+  "Équipe, règlement auto et trésorerie",
 ];
 
-const fmtDate = (s: string) => new Date(s).toLocaleString("fr-CA", { dateStyle: "long", timeStyle: "short" });
+const fmtDate = (s: string) => new Date(s).toLocaleString("fr-CA", { dateStyle: "medium", timeStyle: "short" });
 const plain = (s: string) => s.trim().toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const sum = (rows: Count[]) => rows.reduce((t, c) => t + c.n, 0);
 
 async function call<T>(body: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke("reset-test-data", { body });
@@ -46,22 +47,68 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
   return data as T;
 }
 
-const Line = ({ label, n, last }: { label: string; n: number; last: boolean }) => (
-  <div style={{ ...rowStyle(last), display: "flex", justifyContent: "space-between", fontSize: 13, color: n ? C.t1 : C.t3 }}>
-    <span>{label}</span>
-    <span style={{ fontVariantNumeric: "tabular-nums" }}>{n}</span>
+/** Interrupteur (case à cocher). */
+const Switch = ({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={on}
+    aria-label={label}
+    onClick={() => onChange(!on)}
+    style={{
+      width: 36, height: 20, borderRadius: 99, border: "none", padding: 2, cursor: "pointer", flexShrink: 0,
+      background: on ? C.accent : C.l4, transition: "background 0.15s",
+    }}
+  >
+    <span style={{
+      display: "block", width: 16, height: 16, borderRadius: 99, background: on ? C.btnText : C.t2,
+      transform: `translateX(${on ? 16 : 0}px)`, transition: "transform 0.15s",
+    }} />
+  </button>
+);
+
+const Num = ({ n }: { n: number }) => (
+  <span style={{ fontVariantNumeric: "tabular-nums", fontSize: 13, color: n ? C.t1 : C.t3, minWidth: 28, textAlign: "right" }}>{n}</span>
+);
+
+/** Étape numérotée de la mise en route (vraie séquence : remise à zéro, puis lancement). */
+const Step = ({ n, done, children }: { n: number; done: boolean; children: React.ReactNode }) => (
+  <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12.5, color: done ? C.t1 : C.t2 }}>
+    <span style={{
+      width: 22, height: 22, borderRadius: 99, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+      background: done ? C.accent : "transparent", color: done ? C.btnText : C.t3, border: done ? "none" : `1px solid ${C.bd}`, fontSize: 11,
+    }}>
+      {done ? <Check style={{ width: 12, height: 12 }} strokeWidth={2.5} /> : n}
+    </span>
+    {children}
   </div>
 );
 
-const Check = ({ on, onChange, label, hint }: { on: boolean; onChange: (v: boolean) => void; label: string; hint: string }) => (
-  <label style={{ display: "flex", gap: 10, alignItems: "flex-start", cursor: "pointer", padding: "10px 0" }}>
-    <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} style={{ marginTop: 3, accentColor: "currentColor" }} />
-    <span>
-      <span style={{ display: "block", fontSize: 13, color: C.t1 }}>{label}</span>
-      <span style={{ display: "block", fontSize: 12, color: C.t3, marginTop: 2 }}>{hint}</span>
-    </span>
-  </label>
-);
+/** Champ de confirmation : le mot à taper, puis le bouton. */
+const Confirm = ({ word, value, onChange, onSubmit, disabled, busy, label, danger }: {
+  word: string; value: string; onChange: (v: string) => void; onSubmit: () => void;
+  disabled: boolean; busy: boolean; label: string; danger?: boolean;
+}) => {
+  const ready = plain(value) === plain(word) && !disabled && !busy;
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); if (ready) onSubmit(); }} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <input
+        value={value} onChange={(e) => onChange(e.target.value)} placeholder={`Tapez ${word}`} aria-label={`Tapez ${word} pour confirmer`}
+        autoComplete="off" spellCheck={false}
+        style={{ ...inputStyle, flex: "1 1 200px", height: 36, padding: "0 12px", letterSpacing: "0.06em" }}
+      />
+      <button
+        type="submit" disabled={!ready}
+        style={{
+          ...btnPrimary, ...(danger ? { background: C.dangerText, color: "#fff" } : {}),
+          opacity: ready ? 1 : 0.35, cursor: ready ? "pointer" : "default",
+        }}
+      >
+        {busy ? "Un instant…" : label}
+      </button>
+    </form>
+  );
+};
 
 export default function PlatformPanel() {
   const [p, setP] = useState<Preview | null>(null);
@@ -69,146 +116,160 @@ export default function PlatformPanel() {
   const [mail, setMail] = useState(true);
   const [logs, setLogs] = useState(true);
   const [typed, setTyped] = useState("");
+  const [launchTyped, setLaunchTyped] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ResetResult | null>(null);
-  const [launchTyped, setLaunchTyped] = useState("");
 
   const load = useCallback(() => {
-    setErr(null);
-    call<Preview>({ action: "preview" }).then(setP).catch((e) => setErr(e.message));
+    call<Preview>({ action: "preview" }).then((d) => { setP(d); setErr(null); }).catch((e) => setErr(e.message));
   }, []);
   useEffect(load, [load]);
 
-  const reset = async () => {
-    if (plain(typed) !== "REINITIALISER" || busy) return;
+  const run = async (body: Record<string, unknown>, after: (r: unknown) => void) => {
     setBusy(true); setErr(null);
-    try {
-      const r = await call<ResetResult>({ action: "reset", confirm: typed, mail, logs });
-      setResult(r); setTyped(""); load();
-    } catch (e) { setErr((e as Error).message); }
+    try { after(await call(body)); load(); } catch (e) { setErr((e as Error).message); }
     setBusy(false);
   };
 
-  const launch = async () => {
-    if (plain(launchTyped) !== "DEMARRER" || busy) return;
-    setBusy(true); setErr(null);
-    try { await call({ action: "launch", confirm: launchTyped }); setLaunchTyped(""); load(); }
-    catch (e) { setErr((e as Error).message); }
-    setBusy(false);
-  };
-
-  if (!p) {
-    return <p style={{ color: err ? C.dangerText : C.t3, fontSize: 13, fontFamily: FONT }}>{err ?? "Chargement…"}</p>;
-  }
-
-  const launched = !!p.launchedAt;
-  const total = [...p.core, ...(mail ? p.mail : []), ...(logs ? p.logs : [])].reduce((t, c) => t + c.n, 0);
+  const launched = !!p?.launchedAt;
+  const orders = p?.core.find((c) => c.table === "orders")?.n ?? 0;
+  const linked = p ? sum(p.core.filter((c) => c.table !== "orders")) : 0;
+  const total = p ? sum(p.core) + (mail ? sum(p.mail) : 0) + (logs ? sum(p.logs) : 0) : 0;
 
   return (
-    <div style={{ display: "grid", gap: 18, maxWidth: 760, fontFamily: FONT }}>
-      {/* État */}
-      <div style={card}>
-        <div style={{ padding: "18px 20px", display: "flex", alignItems: "center", gap: 14 }}>
-          <span style={{ width: 10, height: 10, borderRadius: 99, background: launched ? C.successText : C.warnText, flexShrink: 0 }} />
-          <div>
-            <p style={{ ...cardTitle, fontSize: 15 }}>{launched ? "Activités démarrées" : "Plateforme en test"}</p>
-            <p style={{ ...cardSubtitle, fontSize: 12 }}>
-              {launched
-                ? `Depuis le ${fmtDate(p.launchedAt!)}. Les dossiers clients se conservent au moins 5 ans.`
-                : "Les commandes passées jusqu'ici sont des tests et peuvent être remises à zéro."}
-              {p.lastResetAt && ` Dernière réinitialisation : ${fmtDate(p.lastResetAt)}.`}
-            </p>
-          </div>
-        </div>
-      </div>
+    <div style={{ display: "grid", gap: 16, fontFamily: FONT, maxWidth: 980 }}>
+      <AdminHero
+        eyebrow="État"
+        loading={!p}
+        value={launched ? "Activités démarrées" : "En test"}
+        size={34}
+        stats={p ? (launched
+          ? [{ label: "Depuis le", value: fmtDate(p.launchedAt!) }]
+          : [
+            { label: "Commandes", value: orders },
+            { label: "Remise à zéro", value: p.lastResetAt ? new Date(p.lastResetAt).toLocaleDateString("fr-CA", { day: "numeric", month: "short" }) : "Jamais" },
+          ]) : []}
+      />
 
-      {err && <p style={{ color: C.dangerText, fontSize: 13, margin: 0 }}>{err}</p>}
+      {err && (
+        <div style={{ ...card, padding: "12px 16px", borderColor: C.dangerBd, background: C.dangerBg, color: C.dangerText, fontSize: 13 }}>{err}</div>
+      )}
 
       {result && (
-        <div style={{ ...card, padding: "16px 20px", borderColor: result.ok ? C.successBd : C.warnBd }}>
-          <p style={{ ...cardTitle, color: result.ok ? C.successText : C.warnText }}>
-            Réinitialisation terminée
+        <div style={{ ...card, padding: "14px 18px", display: "flex", alignItems: "center", gap: 12, borderColor: C.successBd, background: C.successBg }}>
+          <Check style={{ width: 16, height: 16, color: C.successText, flexShrink: 0 }} strokeWidth={2.2} />
+          <p style={{ margin: 0, fontSize: 13, color: C.successText, flex: 1 }}>
+            {result.tables.orders ?? 0} commandes de test effacées.
+            {result.keptOrders > 0 && ` ${result.keptOrders} gardée(s), citée(s) par le registre de conformité.`}
           </p>
-          <p style={{ ...cardSubtitle, fontSize: 12 }}>
-            {result.tables.orders ?? 0} commandes et {Object.values(result.tables).reduce((a, b) => a + b, 0)} enregistrements effacés.
-            {result.keptOrders > 0 && ` ${result.keptOrders} commande(s) gardée(s) : citée(s) par le registre de conformité.`}
-          </p>
-          <button type="button" style={{ ...btnGhost, marginTop: 12 }} onClick={() => window.location.reload()}>Recharger le back-office</button>
+          <button type="button" onClick={() => window.location.reload()}
+            style={{ background: "none", border: "none", color: C.successText, fontSize: 12, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5, fontFamily: FONT }}>
+            <RotateCcw style={{ width: 12, height: 12 }} /> Recharger
+          </button>
         </div>
       )}
 
-      {!launched && (
+      {p && !launched && (
         <div style={card}>
           <div style={cardHeaderRow}>
             <div>
-              <p style={cardTitle}>Réinitialiser les commandes de test</p>
-              <p style={cardSubtitle}>Repartir de zéro avant le lancement. Les comptes et vérifications restent. Possible autant de fois que vous voulez.</p>
+              <p style={cardTitle}>Remettre les commandes à zéro</p>
+              <p style={cardSubtitle}>Pour partir propre au lancement. Autant de fois que vous voulez d'ici là.</p>
+            </div>
+            <Eraser style={{ width: 16, height: 16, color: C.t3 }} strokeWidth={1.8} />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+            {/* Effacé */}
+            <div style={{ borderRight: `1px solid ${C.bds}` }}>
+              <p style={{ ...sH, padding: "16px 18px 8px" }}>Effacé</p>
+              <div style={{ ...listRowStyle(false), display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ flex: 1, fontSize: 13, color: C.t1 }}>Commandes et leur historique</span>
+                <Num n={orders} />
+              </div>
+              <div style={{ ...listRowStyle(false), display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ flex: 1, fontSize: 13, color: C.t1 }}>
+                  Virements reçus, envois USDT, dépôts reçus
+                </span>
+                <Num n={linked} />
+              </div>
+              <div style={{ ...listRowStyle(false), display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ flex: 1 }}>
+                  <span style={{ display: "block", fontSize: 13, color: mail ? C.t1 : C.t3 }}>Messagerie</span>
+                  <span style={{ display: "block", fontSize: 11.5, color: C.t3, marginTop: 2 }}>{sum(p.mail)} conversations. Décochez si un vrai contact y figure.</span>
+                </span>
+                <Switch on={mail} onChange={setMail} label="Effacer aussi la messagerie" />
+              </div>
+              <div style={{ ...listRowStyle(true), display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ flex: 1 }}>
+                  <span style={{ display: "block", fontSize: 13, color: logs ? C.t1 : C.t3 }}>Journaux</span>
+                  <span style={{ display: "block", fontSize: 11.5, color: C.t3, marginTop: 2 }}>{sum(p.logs)} entrées : activité de l'équipe, assistant IA.</span>
+                </span>
+                <Switch on={logs} onChange={setLogs} label="Effacer aussi les journaux" />
+              </div>
+            </div>
+
+            {/* Gardé */}
+            <div>
+              <p style={{ ...sH, padding: "16px 18px 8px" }}>Toujours gardé</p>
+              {KEPT.map((k, i) => (
+                <div key={k} style={{ ...listRowStyle(i === KEPT.length - 1), display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: C.t2 }}>
+                  <Lock style={{ width: 13, height: 13, color: C.t3, flexShrink: 0 }} strokeWidth={1.8} />
+                  {k}
+                </div>
+              ))}
             </div>
           </div>
 
-          <div style={{ padding: "16px 20px 4px" }}><p style={sH}>Sera effacé</p></div>
-          {p.core.map((c, i) => <Line key={c.table} label={c.label} n={c.n} last={i === p.core.length - 1} />)}
-
-          <div style={{ padding: "14px 20px 0", borderTop: `1px solid ${C.bds}` }}>
-            <p style={sH}>En option</p>
-            <Check on={mail} onChange={setMail} label={`Messagerie (${p.mail.reduce((t, c) => t + c.n, 0)} conversations)`}
-              hint="Courriels reçus et envoyés depuis le back-office. Décochez si certains viennent de vrais contacts." />
-            <Check on={logs} onChange={setLogs} label={`Journaux (${p.logs.reduce((t, c) => t + c.n, 0)} entrées)`}
-              hint="Journal d'activité de l'équipe et questions posées à l'assistant IA." />
-          </div>
-
-          <div style={{ padding: "14px 20px 0", borderTop: `1px solid ${C.bds}` }}>
-            <p style={sH}>Toujours gardé</p>
-            <ul style={{ margin: "10px 0 0", paddingLeft: 18, color: C.t2, fontSize: 12.5, lineHeight: 1.9 }}>
-              {KEPT.map((k) => <li key={k}>{k}</li>)}
-            </ul>
-          </div>
-
-          <div style={{ padding: "18px 20px 20px", marginTop: 14, borderTop: `1px solid ${C.bds}` }}>
-            <label htmlFor="reset-confirm" style={{ fontSize: 12.5, color: C.t2 }}>
-              Pour confirmer, tapez <strong style={{ color: C.t1, fontWeight: 500 }}>RÉINITIALISER</strong>. Cette action ne peut pas être annulée.
-            </label>
-            <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-              <input id="reset-confirm" value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="RÉINITIALISER"
-                autoComplete="off" style={{ ...inputStyle, flex: "1 1 220px", letterSpacing: "0.08em" }} />
-              <button type="button" onClick={reset} disabled={plain(typed) !== "REINITIALISER" || busy || total === 0}
-                style={{ ...btnPrimary, background: C.dangerText, color: "#fff", opacity: plain(typed) !== "REINITIALISER" || busy || total === 0 ? 0.4 : 1 }}>
-                {busy ? "Réinitialisation…" : "Réinitialiser les commandes"}
-              </button>
-            </div>
+          <div style={{ padding: "16px 18px", borderTop: `1px solid ${C.bds}`, display: "grid", gap: 10 }}>
+            <p style={{ margin: 0, fontSize: 12, color: C.t3 }}>
+              {total} éléments seront effacés. Cette action ne peut pas être annulée.
+              {p.keptOrders > 0 && ` ${p.keptOrders} commande(s) citée(s) par le registre de conformité seront gardées.`}
+            </p>
+            <Confirm
+              word="RÉINITIALISER" value={typed} onChange={setTyped} busy={busy} disabled={total === 0} danger
+              label="Remettre à zéro"
+              onSubmit={() => run({ action: "reset", confirm: typed, mail, logs }, (r) => { setResult(r as ResetResult); setTyped(""); })}
+            />
           </div>
         </div>
       )}
 
-      <div style={card}>
-        <div style={cardHeaderRow}>
-          <div>
-            <p style={cardTitle}>Démarrer les activités</p>
-            <p style={cardSubtitle}>À faire une seule fois, le jour où les vrais clients arrivent.</p>
+      {p && (
+        <div style={card}>
+          <div style={cardHeaderRow}>
+            <div>
+              <p style={cardTitle}>Démarrer les activités</p>
+              <p style={cardSubtitle}>Une seule fois, le jour où les vrais clients arrivent.</p>
+            </div>
+            <Power style={{ width: 16, height: 16, color: C.t3 }} strokeWidth={1.8} />
+          </div>
+          <div style={{ padding: "16px 18px", display: "grid", gap: 14 }}>
+            {launched ? (
+              <p style={{ margin: 0, fontSize: 13, color: C.t2, lineHeight: 1.6 }}>
+                Lancée le {fmtDate(p.launchedAt!)}. Chaque commande fait maintenant partie du registre des opérations et se
+                conserve au moins 5 ans (CANAFE) : la remise à zéro n'existe plus.
+              </p>
+            ) : (
+              <>
+                <div style={{ display: "grid", gap: 8 }}>
+                  <Step n={1} done={orders === 0}>Remettre les commandes de test à zéro</Step>
+                  <Step n={2} done={false}>Démarrer les activités</Step>
+                </div>
+                <p style={{ margin: 0, fontSize: 12, color: C.t3, lineHeight: 1.6 }}>
+                  Après ce clic, la remise à zéro disparaît pour toujours et plus personne, serveur compris, ne peut effacer
+                  une commande payée.
+                </p>
+                <Confirm
+                  word="DÉMARRER" value={launchTyped} onChange={setLaunchTyped} busy={busy} disabled={false}
+                  label="Démarrer les activités"
+                  onSubmit={() => run({ action: "launch", confirm: launchTyped }, () => setLaunchTyped(""))}
+                />
+              </>
+            )}
           </div>
         </div>
-        {launched ? (
-          <p style={{ padding: "16px 20px", margin: 0, fontSize: 13, color: C.t2 }}>
-            La plateforme est lancée. La réinitialisation n'est plus possible : chaque commande fait partie du registre des
-            opérations et se conserve au moins 5 ans (CANAFE).
-          </p>
-        ) : (
-          <div style={{ padding: "16px 20px 20px" }}>
-            <p style={{ margin: 0, fontSize: 13, color: C.t2, lineHeight: 1.6 }}>
-              Une fois les activités démarrées, la réinitialisation disparaît pour toujours, et plus personne, serveur compris,
-              ne peut effacer une commande payée. Réinitialisez d'abord les commandes de test.
-            </p>
-            <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
-              <input value={launchTyped} onChange={(e) => setLaunchTyped(e.target.value)} placeholder="DÉMARRER" aria-label="Tapez DÉMARRER pour confirmer"
-                autoComplete="off" style={{ ...inputStyle, flex: "1 1 220px", letterSpacing: "0.08em" }} />
-              <button type="button" onClick={launch} disabled={plain(launchTyped) !== "DEMARRER" || busy}
-                style={{ ...btnPrimary, opacity: plain(launchTyped) !== "DEMARRER" || busy ? 0.4 : 1 }}>
-                Démarrer les activités
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }

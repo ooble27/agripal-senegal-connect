@@ -3,6 +3,7 @@ import type { Database } from "@/integrations/supabase/types";
 import type { NetId } from "@/components/app/networks";
 import { DB_TO_NET, NET_TO_DB } from "@/lib/orders";
 import { getLang } from "@/lib/i18n";
+import { peekCache, putCache } from "@/lib/cache";
 
 /** Carnet de destinataires : adresses wallet (achat) et courriels Interac (vente). */
 export type RecipientKind = Database["public"]["Enums"]["recipient_kind"];
@@ -31,10 +32,29 @@ const toRecipient = (r: Row): SavedRecipient => ({
 
 const SELECT = "id, kind, label, value, network, last_used_at" as const;
 
+const cacheKey = (uid: string) => `recipients:${uid}`;
+
+const only = (rows: SavedRecipient[], kind: RecipientKind, network?: NetId | null) =>
+  rows.filter((r) => r.kind === kind && (kind !== "wallet" || !network || r.network === network));
+
+/**
+ * Carnet déjà chargé (cache), filtré comme listRecipients : la page
+ * s'affiche tout de suite, sans attendre le serveur. undefined si jamais chargé.
+ */
+export function peekRecipients(
+  uid: string | null | undefined,
+  kind: RecipientKind,
+  network?: NetId | null,
+): SavedRecipient[] | undefined {
+  const all = peekCache<SavedRecipient[]>(uid ? cacheKey(uid) : null);
+  return all ? only(all, kind, network) : undefined;
+}
+
 /**
  * Destinataires enregistrés, les plus récemment utilisés d'abord.
  * `network` filtre les adresses wallet : une adresse TRC20 n'a rien à faire
- * dans la liste d'un ordre ERC20.
+ * dans la liste d'un ordre BEP20. Lit tout le carnet (il est petit) et le
+ * garde en cache pour les prochains affichages.
  */
 export async function listRecipients(
   kind: RecipientKind,
@@ -44,19 +64,16 @@ export async function listRecipients(
   const uid = auth.session?.user?.id;
   if (!uid) return [];
 
-  let query = supabase
+  const { data, error } = await supabase
     .from("saved_recipients")
     .select(SELECT)
     .eq("user_id", uid)
-    .eq("kind", kind)
     .order("last_used_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });
 
-  if (kind === "wallet" && network) query = query.eq("network", NET_TO_DB[network]);
-
-  const { data, error } = await query;
-  if (error || !data) return [];
-  return (data as Row[]).map(toRecipient);
+  if (error || !data) return peekRecipients(uid, kind, network) ?? [];
+  const all = putCache(cacheKey(uid), (data as Row[]).map(toRecipient));
+  return only(all, kind, network);
 }
 
 /** Cherche une entrée exacte du carnet, sans la créer. */

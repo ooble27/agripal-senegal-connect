@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { T, useLang } from "@/lib/i18n";
 import {
   listRecipients,
+  peekRecipients,
   removeRecipient,
   saveRecipient,
   touchRecipient,
@@ -12,6 +13,7 @@ import {
 } from "@/lib/recipients";
 import type { NetId } from "@/components/app/networks";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
 
 interface Props {
   kind: RecipientKind;
@@ -31,7 +33,9 @@ const short = (v: string) => (v.length > 22 ? `${v.slice(0, 10)}…${v.slice(-8)
  */
 const RecipientBook = ({ kind, network, value, onPick }: Props) => {
   const [lang] = useLang();
-  const [items, setItems] = useState<SavedRecipient[] | null>(null);
+  const { user } = useAuth();
+  // Carnet déjà en cache : affiché tout de suite, relu en arrière-plan.
+  const [items, setItems] = useState<SavedRecipient[] | null>(() => peekRecipients(user?.id, kind, network) ?? null);
   const [label, setLabel] = useState("");
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -46,14 +50,17 @@ const RecipientBook = ({ kind, network, value, onPick }: Props) => {
 
   useEffect(() => {
     let alive = true;
+    const known = peekRecipients(user?.id, kind, network);
+    if (known) setItems(known);
     listRecipients(kind, network).then((rows) => {
       if (alive) setItems(rows);
     });
     return () => { alive = false; };
-  }, [kind, network]);
+  }, [kind, network, user?.id]);
 
   const alreadySaved = (items ?? []).some((i) => i.value === trimmed);
-  const canOfferSave = trimmed.length >= (isWallet ? 12 : 5) && !alreadySaved;
+  // Pas de proposition tant que le carnet n'est pas connu (elle sauterait).
+  const canOfferSave = items !== null && trimmed.length >= (isWallet ? 12 : 5) && !alreadySaved;
 
   const pick = (r: SavedRecipient) => {
     onPick(r.value);

@@ -27,6 +27,7 @@ import {
   listRowStyle, listRowHoverIn, listRowHoverOut, pillSmall,
 } from "./adminTheme";
 import AdminHero from "./AdminHero";
+import OriginsCard from "./OriginsCard";
 
 interface KpiDashboardProps {
   orders: AdminOrder[];
@@ -443,6 +444,7 @@ const KpiDashboard = ({ onNavigate }: KpiDashboardProps) => {
             })()}
           </div>
 
+          <OriginsCard />
         </div>
       </div>
 

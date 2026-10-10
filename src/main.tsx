@@ -3,10 +3,12 @@ import App from "./App";
 import "./index.css";
 import { initTheme } from "./lib/theme";
 import { initLang } from "./lib/i18n";
+import { captureSource } from "./lib/origin";
 import { registerServiceWorker, dropOrphanPush } from "./lib/pushNotifications";
 import { supabase } from "./integrations/supabase/client";
 
 initTheme();
+captureSource();
 const { basename, redirect } = initLang();
 
 if (redirect) {

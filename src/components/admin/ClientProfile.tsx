@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/auth";
 import { resetKyb } from "@/lib/adminKyb";
 import ClientTimeline from "./ClientTimeline";
 import RiskScoreCard from "./RiskScoreCard";
+import { fetchOrigin, placeLabel, type SignupOrigin } from "@/lib/origin";
 
 interface Props {
   userId: string;
@@ -40,6 +41,7 @@ const STATUS_FR: Record<string, string> = {
 
 const ClientProfile = ({ userId, clientName, onBack, onOpenOrder }: Props) => {
   const [profile, setProfile] = useState<ClientProfileData | null>(null);
+  const [origin, setOrigin] = useState<SignupOrigin | null>(null);
   const { isAdmin } = useAuth();
   const [resetStep, setResetStep] = useState<"idle" | "confirm" | "busy">("idle");
   const [resetMsg, setResetMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -78,10 +80,11 @@ const ClientProfile = ({ userId, clientName, onBack, onOpenOrder }: Props) => {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    Promise.all([fetchClientProfile(userId), fetchClientOrders(userId)]).then(([p, o]) => {
+    Promise.all([fetchClientProfile(userId), fetchClientOrders(userId), fetchOrigin(userId)]).then(([p, o, g]) => {
       if (!active) return;
       setProfile(p);
       setOrders(o);
+      setOrigin(g);
       setLoading(false);
     });
     return () => { active = false; };
@@ -221,6 +224,14 @@ const ClientProfile = ({ userId, clientName, onBack, onOpenOrder }: Props) => {
               <Row label="Type" value={profile?.accountType === "business" ? "Entreprise" : "Individuel"} />
               <Row label="Statut KYC" value={profile ? KYC_LABEL[profile.kycStatus] : "N/D"} />
               <Row label="Limite quotidienne" value={profile ? `${nfCad.format(profile.dailyLimitCad)} CAD` : "N/D"} />
+              <Row
+                label={origin?.late ? "Lieu (connexion)" : "Lieu d'inscription"}
+                value={placeLabel(origin) ?? "Pas encore connu"}
+              />
+              <Row
+                label="Source"
+                value={origin?.source ? [origin.source, origin.campaign].filter(Boolean).join(" · ") : "Pas encore connue"}
+              />
               {profile?.interacQuestion && <Row label="Question Interac" value={profile.interacQuestion} />}
               {profile?.interacAnswer && <Row label="Réponse Interac" value={profile.interacAnswer} />}
             </div>

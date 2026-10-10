@@ -123,7 +123,11 @@ const PARTS: Part[] = [
             <li>votre nom complet ;</li>
             <li>votre adresse courriel ;</li>
             <li>un mot de passe (stocké sous forme chiffrée, jamais en clair) ;</li>
-            <li>le type de compte choisi (individuel ou entreprise).</li>
+            <li>le type de compte choisi (individuel ou entreprise) ;</li>
+            <li>le lieu approximatif de votre inscription (ville, province et pays, déduits de votre
+              connexion internet) et la façon dont vous avez connu Ooble (moteur de recherche, réseau
+              social, lien partagé), pour comprendre d'où viennent nos clients et repérer les
+              inscriptions inhabituelles.</li>
           </Ul>
           <P>
             Pour un compte entreprise, nous recueillons également :
@@ -176,7 +180,10 @@ const PARTS: Part[] = [
             <li>your full name;</li>
             <li>your email address;</li>
             <li>a password (stored in encrypted form, never in plain text);</li>
-            <li>the account type chosen (individual or business).</li>
+            <li>the account type chosen (individual or business);</li>
+            <li>the approximate location of your sign-up (city, province and country, derived from
+              your internet connection) and how you found Ooble (search engine, social network,
+              shared link), to understand where our customers come from and spot unusual sign-ups.</li>
           </Ul>
           <P>
             For a business account, we also collect:
